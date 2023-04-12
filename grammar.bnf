@@ -1,0 +1,17 @@
+<pattern> ::= <and>
+    | <or>
+    | <call>
+    | <dot>
+    | <literal>
+    | <variable>
+
+<and> ::= <pattern> '&&' <pattern>
+<or>  ::= <pattern> '||' <pattern>
+<call> ::= <pattern> '(' <args> ')'
+    | <pattern> '(' <args> ';' <kwargs> ')'
+<args> ::= <pattern> (',' <pattern>)*
+<kwargs> ::= <kwarg> (',' <kwarg>)*
+<kwarg> ::= <name> '=' <pattern>
+<dot> ::= <pattern> '.' <name>
+<literal> ::= <name>
+<variable> ::= <name>
