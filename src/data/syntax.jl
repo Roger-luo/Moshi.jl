@@ -23,7 +23,7 @@ struct Variant
     kind::Symbol # :struct, :call, :singleton
     name::Symbol
     is_mutable::Bool
-    fields::Union{Nothing, Vector{Field}, Vector{NamedField}}
+    fields::Union{Vector{Field}, Vector{NamedField}}
     source::Union{Nothing, LineNumberNode}
 
     function Variant(kind, name, is_mutable, fields, source)
@@ -41,6 +41,9 @@ struct Variant
             throw(ArgumentError("kind must be :struct, :call, or :singleton"))
         end
 
+        name in fieldnames(DataType) && throw(SyntaxError("cannot use reserved name $name for variant", source))
+        name in (:data, :tag) && throw(SyntaxError("cannot use reserved name $name for variant", source))
+
         new(kind, name, is_mutable, fields, source)
     end
 end
@@ -54,7 +57,7 @@ function Variant(ex::Union{Symbol, Expr}, source = nothing)
         ex.args[1] isa Symbol || throw(SyntaxError("variant name must be a symbol"; source))
         Variant(:call, ex.args[1], false, Field.(ex.args[2:end]), source)
     elseif ex isa Symbol
-        Variant(:singleton, ex, false, nothing, source)
+        Variant(:singleton, ex, false, Field[], source)
     else
         throw(SyntaxError("variant must be a struct, call, or symbol"; source))
     end
@@ -99,6 +102,9 @@ function TypeDef(mod::Module, head, body::Expr; source = nothing, export_variant
             push!(variants, Variant(each, source))
         end
     end # let
+
+    length(variants) > 0 || throw(SyntaxError("type $name must have at least one variant"; source))
+    length(variants) > 256 && throw(SyntaxError("too many variants in type $name, 256 maximum"; source))
     return TypeDef(mod, name, typevars, supertype, variants, source, export_variants)
 end
 

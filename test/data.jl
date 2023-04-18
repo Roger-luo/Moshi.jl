@@ -1,10 +1,9 @@
-using Moshi.Data: TypeDef, Variant, EmitInfo
+using Moshi.Data: Data, TypeDef, Variant, EmitInfo, emit
 using ExproniconLite
 
 ex = @expr begin
     Message
     Move(Int, Int)
-
 
     struct Port
         name::T
@@ -12,13 +11,30 @@ ex = @expr begin
     end
 end
 
-def = TypeDef(Main, :(Foo{T} <: Message), ex)
+x = Foo{Float64}.Port(name, type)
+Foo{Int}.Port(name, type)
+Foo.Port(name, type)
+
+@adt Result{T} begin
+    Ok(T)
+    Err(String)
+end
+
+def = TypeDef(Main, :(Foo{T}), ex)
 info = EmitInfo(def)
+emit(info)|>eval
+
+Data.generated_storage_cons(info)
+
+@expr function foo()
+    quote
+        $a + $b
+    end
+end
 
 ex = @expr begin
     Message
     Move(Int, Int)
-
 
     struct Port
         name::String
@@ -28,12 +44,19 @@ end
 
 def = TypeDef(Main, :(Foo{T} <: Message), ex)
 info = EmitInfo(def)
+emit(info)
 
+def = TypeDef(Main, :(Foo{T} <: Message), ex; export_variants=true)
+info = EmitInfo(def)
+emit(info)
+
+def = TypeDef(Main, :(Foo <: Message), ex)
+info = EmitInfo(def)
+emit(info)
 
 ex = @expr begin
     Message
     Move(Int, Int = [])
-
 
     struct Port
         name::T

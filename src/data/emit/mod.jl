@@ -29,9 +29,8 @@ end
 
 function foreach_variant(f, info::EmitInfo, type)
     body = JLIfElse()
-    for variant in info.parent.variants
-        idx = info.variant_type_map[variant.name]
-        body[:($type == $(info.tag.instance)($idx))] = f(variant)
+    for (variant, vinfo::VariantInfo) in info.variants
+        body[:($type == $(vinfo.tag))] = f(variant, vinfo)
     end
     body.otherwise = quote
         throw(ArgumentError("invalid variant type: $($type)"))
@@ -39,10 +38,8 @@ function foreach_variant(f, info::EmitInfo, type)
     return codegen_ast(body)
 end
 
-include("emit/type.jl")
-include("emit/cons.jl")
-include("emit/namespace.jl")
-include("emit/property.jl")
-include("emit/generated/size.jl")
-include("emit/generated/cons.jl")
-
+include("type.jl")
+include("cons.jl")
+include("namespace.jl")
+include("property.jl")
+include("generated/mod.jl")
