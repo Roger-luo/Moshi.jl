@@ -27,6 +27,17 @@ function emit(info::EmitInfo)
     return ret
 end
 
+"""
+    foreach_variant(f, info::EmitInfo, type) -> Expr
+
+Call `f` for each variant of `type`, and return a `Expr(:block)` of the results.
+
+# Args
+
+- `f`: `(variant::Variant, vinfo::VariantInfo) -> Expr`
+- `info`: `EmitInfo`
+- `type`: an expression that contains the tag value (`UInt8`).
+"""
 function foreach_variant(f, info::EmitInfo, type)
     body = JLIfElse()
     for (variant, vinfo::VariantInfo) in info.variants
@@ -42,4 +53,6 @@ include("type.jl")
 include("cons.jl")
 include("namespace.jl")
 include("property.jl")
+include("convert.jl")
+include("reflection.jl")
 include("generated/mod.jl")

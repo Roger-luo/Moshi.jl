@@ -7,6 +7,7 @@ include("syntax.jl")
 include("scan.jl")
 include("print.jl")
 include("emit/mod.jl")
-# include("reflection.jl")
+include("macro.jl")
+include("reflection.jl")
 
 end # module Data
