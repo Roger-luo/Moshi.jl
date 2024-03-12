@@ -1,13 +1,26 @@
+"""
+Provides the Algebraic Data Types (ADTs) for the project.
+"""
 module Data
 
-using ExproniconLite
+using DocStringExtensions
+using ExproniconLite: JLKwField, JLKwStruct, rm_lineinfo, rm_nothing, no_default
+using Jieko: @interface, INTERFACE, INTERFACE_LIST, @export_all_interfaces
 
-include("runtime.jl")
-include("syntax.jl")
-include("scan.jl")
-include("print.jl")
-include("emit/mod.jl")
+include("err.jl")
 include("macro.jl")
-include("reflection.jl")
+include("syntax.jl")
 
-end # module Data
+include("reflect.jl")
+include("guess.jl")
+include("scan.jl")
+include("show.jl")
+include("emit/mod.jl")
+include("runtime.jl")
+
+@export_all_interfaces begin
+    @data
+    pprint
+end
+
+end # Data

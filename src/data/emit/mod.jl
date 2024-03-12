@@ -1,16 +1,34 @@
+module Emit
+
+using ExproniconLite: JLStruct, JLFunction, JLIfElse, xtuple, expr_map, codegen_ast
+using Moshi.Data:
+    Data,
+    Variant,
+    VariantInfo,
+    TypeDef,
+    EmitInfo,
+    FieldInfo,
+    Singleton,
+    Anonymous,
+    Named,
+    NamedField,
+    Field,
+    no_default,
+    SelfType
+
 const EMIT_PASS = [[] for _ in 1:10] # priority => [pass]
 
 macro pass(fn)
-    jlfn = JLFunction(fn; source = __source__)
-    esc(pass_m(jlfn.name, fn))
+    jlfn = JLFunction(fn; source=__source__)
+    return esc(pass_m(jlfn.name, fn))
 end
 
 macro pass(priority::Int, fn)
-    jlfn = JLFunction(fn; source = __source__)
-    esc(pass_m(jlfn.name, fn, priority))
+    jlfn = JLFunction(fn; source=__source__)
+    return esc(pass_m(jlfn.name, fn, priority))
 end
 
-function pass_m(name, expr, priority::Int = 5)
+function pass_m(name, expr, priority::Int=5)
     quote
         $(expr)
         push!(EMIT_PASS[$(priority)], $name)
@@ -19,12 +37,21 @@ function pass_m(name, expr, priority::Int = 5)
 end
 
 function emit(info::EmitInfo)
-    ret = Expr(:block)
+    ret = quote
+        using Base: ==
+    end
     for pass in EMIT_PASS, fn in pass
         expr = fn(info)
         isnothing(expr) || push!(ret.args, expr)
     end
-    return ret
+
+    return Expr(
+        :toplevel,
+        Expr(:module, false, info.def.name, ret),
+        Expr(
+            :macrocall, GlobalRef(Core, Symbol("@__doc__")), info.def.source, info.def.name
+        ),
+    )
 end
 
 """
@@ -44,15 +71,17 @@ function foreach_variant(f, info::EmitInfo, type)
         body[:($type == $(vinfo.tag))] = f(variant, vinfo)
     end
     body.otherwise = quote
-        throw(ArgumentError("invalid variant type: $($type)"))
+        $Core.throw(ArgumentError("invalid variant type: $($type)"))
     end
     return codegen_ast(body)
 end
 
 include("type.jl")
 include("cons.jl")
-include("namespace.jl")
+include("binding.jl")
 include("property.jl")
+include("reflect.jl")
 include("convert.jl")
-include("reflection.jl")
-include("generated/mod.jl")
+include("show.jl")
+
+end # module Emit

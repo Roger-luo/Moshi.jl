@@ -5,10 +5,12 @@ version = "0.1.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ExproniconLite = "55351af7-c7e9-48d6-89ff-24e801d99491"
+Jieko = "ae98c720-c025-4a4a-838c-29b094483192"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 SumTypes = "8e1ec7a9-0e02-4297-b0fe-6433085c89f2"
 
 [compat]
-julia = "1.9"
 ExproniconLite = "0.10.3"
+julia = "1.9"
