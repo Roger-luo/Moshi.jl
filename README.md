@@ -1,6 +1,10 @@
 # Moshi
 
-pattern matching 2.0
+Moshi is the pattern in Chinese （模式）. This package is the refactor of MLStyle with
+
+- more correct pattern language
+- type-stable algebra data type/tagged union
+- traits, derive macro `@derive` from rust
 
 ## Installation
 
