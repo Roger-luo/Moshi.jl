@@ -1,0 +1,7 @@
+[deps]
+DocThemeIndigo = "8bac0ac5-51bf-41f9-885e-2bf1ac2bec5f"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Moshi2 = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
+
+[compat]
+DocThemeIndigo = "0.1.1"
