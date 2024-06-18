@@ -59,14 +59,11 @@ mutable struct TypeHead
     params::Vector{TypeVarExpr}
     supertype::Maybe{SymbolOrExpr}
 
-    function TypeHead(;name, params=[], supertype=nothing)
-        new(name, params, supertype)
-    end
-
-    function TypeHead()
+    function TypeHead(;name::Maybe{Symbol}=nothing, params=[], supertype=nothing)
         obj = new()
-        obj.params = []
-        obj.supertype = nothing
+        isnothing(name) || (obj.name = name)
+        obj.params = params
+        obj.supertype = supertype
         return obj
     end
 end
@@ -79,5 +76,4 @@ struct TypeDef
     mod::Module
     head::TypeHead
     variants::Vector{Variant}
-    doc::Maybe{String}
 end
