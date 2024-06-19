@@ -1,6 +1,6 @@
 using Test
 using ExproniconLite: @expr, no_default
-using Moshi.Data: Variant, Singleton, Named, Anonymous, Field, NamedField, TypeHead, TypeDef
+using Moshi.Data: Variant, Singleton, Named, Anonymous, Field, NamedField, TypeHead, TypeVarExpr, TypeDef
 
 @testset "basic TypeDef" begin
     ex = quote

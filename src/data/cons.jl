@@ -52,6 +52,7 @@ end
 function Variant(expr::Expr; doc=nothing, source=nothing)
     if Meta.isexpr(expr, :call)
         expr.args[1] isa Symbol || throw(ArgumentError("invalid variant expression: $expr"))
+        length(expr.args) > 1 || throw(ArgumentError("missing fields in variant expression: $expr, do you mean to use $(expr.args[1])?"))
         return Variant(Anonymous, expr.args[1], Field.(expr.args[2:end]), doc, source)
     elseif Meta.isexpr(expr, :struct)
         jl = JLKwStruct(expr)

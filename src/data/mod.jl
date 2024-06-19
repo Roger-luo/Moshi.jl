@@ -1,6 +1,6 @@
 module Data
 
-using ExproniconLite: Maybe, JLKwStruct, JLKwField
+using ExproniconLite: Maybe, JLKwStruct, JLKwField, no_default
 
 include("repr.jl")
 include("cons.jl")
