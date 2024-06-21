@@ -5,33 +5,25 @@ end
 function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
     jl = if storage.parent.kind == Singleton
         JLFunction(;
-            name=Expr(:curly, storage.parent.name, info.params...),
+            name=storage.variant_head,
             info.whereparams,
-            body=:(return Type{$(info.params...)}($(storage.name){$(info.params...)}())),
+            body=:(return $(info.type_head)($(storage.head)())),
         )
     elseif storage.parent.kind == Anonymous
         args = [Symbol(i) for i in 1:length(storage.parent.fields)]
         JLFunction(;
-            name=Expr(:curly, storage.parent.name, info.params...),
+            name=storage.variant_head,
             args=[Symbol(i) for (i, field) in enumerate(storage.parent.fields)],
             info.whereparams,
-            body=:(
-                return Type{$(info.params...)}(
-                    $(storage.name){$(info.params...)}($(args...))
-                )
-            ),
+            body=:(return $(info.type_head)($(storage.head)($(args...)))),
         )
     else
         args = [field.name for field in storage.parent.fields]
         JLFunction(;
-            name=Expr(:curly, storage.parent.name, info.params...),
+            name=storage.variant_head,
             args=[field.name for field in storage.parent.fields::Vector{NamedField}],
             info.whereparams,
-            body=:(
-                return Type{$(info.params...)}(
-                    $(storage.name){$(info.params...)}($(args...))
-                )
-            ),
+            body=:(return $(info.type_head)($(storage.head)($(args...)))),
         )
     end
 
@@ -47,7 +39,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
 
     args = [field.name for field in storage.parent.fields]
     jl = JLFunction(;
-        name=Expr(:curly, storage.parent.name, info.params...),
+        name=storage.variant_head,
         kwargs=[
             if field.default === no_default
                 field.name
@@ -57,7 +49,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
         ],
         info.whereparams,
         body=:(
-            return Type{$(info.params...)}($(storage.name){$(info.params...)}($(args...)))
+            return $(info.type_head)($(storage.head)($(args...)))
         ),
     )
 
