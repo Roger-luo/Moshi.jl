@@ -7,7 +7,10 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
         JLFunction(;
             name=storage.variant_head,
             info.whereparams,
-            body=:(return $(info.type_head)($(storage.head)())),
+            body=quote
+                $(Expr(:meta, :inline))
+                return $(info.type_head)($(storage.head)())
+            end,
         )
     elseif storage.parent.kind == Anonymous
         args = [Symbol(i) for i in 1:length(storage.parent.fields)]
@@ -15,7 +18,10 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
             name=storage.variant_head,
             args=[Symbol(i) for (i, field) in enumerate(storage.parent.fields)],
             info.whereparams,
-            body=:(return $(info.type_head)($(storage.head)($(args...)))),
+            body=quote
+                $(Expr(:meta, :inline))
+                return $(info.type_head)($(storage.head)($(args...)))
+            end,
         )
     else
         args = [field.name for field in storage.parent.fields]
@@ -23,7 +29,10 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
             name=storage.variant_head,
             args=[field.name for field in storage.parent.fields::Vector{NamedField}],
             info.whereparams,
-            body=:(return $(info.type_head)($(storage.head)($(args...)))),
+            body=quote
+                $(Expr(:meta, :inline))
+                return $(info.type_head)($(storage.head)($(args...)))
+            end,
         )
     end
 
@@ -44,13 +53,14 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
             if field.default === no_default
                 field.name
             else
-                Expr(:kw, field.name, field.default)
+                Expr(:kw, field.name, Base.eval(info.def.mod, field.default))
             end for field in storage.parent.fields
         ],
         info.whereparams,
-        body=:(
+        body=quote
+            $(Expr(:meta, :inline))
             return $(info.type_head)($(storage.head)($(args...)))
-        ),
+        end,
     )
 
     return codegen_ast(jl)

@@ -45,3 +45,31 @@ end
         end
     end
 end
+
+@pass function emit_isa_variant(info::EmitInfo)
+    if isempty(info.params) # non generic
+        return expr_map(info.storages) do storage::StorageInfo
+            return quote
+                $Base.@assume_effects :total function $Data.isa_variant(value::Type, variant::$Type{$(storage.parent.name)})
+                    data = $Base.getfield(value, :data)
+                    return data isa $(storage.name)
+                end
+            end
+        end
+    else
+        return expr_map(info.storages) do storage::StorageInfo
+            return quote
+                # type params not match
+                function $Data.isa_variant(value::Type, variant::$Type{$(storage.parent.name)})
+                    false
+                end
+
+                # type params match, check tag value
+                function $Data.isa_variant(value::$(info.type_head), variant::$Type{$(storage.variant_head)}) where {$(info.whereparams...)}
+                    data = $Base.getfield(value, :data)
+                    return data isa $(storage.name)
+                end
+            end
+        end
+    end
+end

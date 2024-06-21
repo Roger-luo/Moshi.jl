@@ -54,3 +54,7 @@ end
 function data_type_name(x)
     error("expected to be overloaded by @data")
 end
+
+function isa_variant(x, variant::Type)
+    error("expected to be overloaded by @data")
+end
