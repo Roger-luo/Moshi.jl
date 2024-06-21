@@ -1,5 +1,7 @@
 # concrete
-function TypeDef(mod::Module, head, body::Expr)
+function TypeDef(mod::Module, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
+    head = TypeHead(head)
+    Meta.isexpr(body, :block) || throw(ArgumentError("expect begin ... end block, got $body"))
     variants = Variant[]
     current_line = nothing
     for expr in body.args
@@ -11,7 +13,7 @@ function TypeDef(mod::Module, head, body::Expr)
         end
         push!(variants, Variant(expr; source=current_line))
     end
-    return TypeDef(mod, TypeHead(head), variants)
+    return TypeDef(mod, head, variants, source)
 end
 
 TypeHead(head) = scan_type_head!(TypeHead(), head)

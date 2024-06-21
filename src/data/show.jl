@@ -1,4 +1,6 @@
 function Base.show(io::IO, mime::MIME"text/plain", def::TypeDef)
+    printstyled(io, def.source; color=:light_black)
+    println(io)
     printstyled(io, "@data "; color=:red)
     show(io, def.head)
     printstyled(io, " begin\n"; color=:red)

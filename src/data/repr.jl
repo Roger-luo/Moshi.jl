@@ -76,4 +76,5 @@ struct TypeDef
     mod::Module
     head::TypeHead
     variants::Vector{Variant}
+    source::LineNumberNode
 end
