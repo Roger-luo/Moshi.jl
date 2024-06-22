@@ -10,7 +10,7 @@ using ExproniconLite: Maybe, JLFunction, JLIfElse, JLStruct, JLKwStruct, JLField
 
 Create a new algebraic data type (also known as a sum type) with the given head and variants.
 """
-@interface macro data(head, body)
+macro data(head, body)
     def = TypeDef(__module__, head, body; source = __source__)
     info = EmitInfo(def)
     return esc(emit(info))
