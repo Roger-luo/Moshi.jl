@@ -65,3 +65,53 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
 
     return codegen_ast(jl)
 end
+
+@pass function emit_variant_cons_inferred(info::EmitInfo)
+    return expr_map(x -> emit_each_variant_cons_inferred(info, x), info.storages)
+end
+
+function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
+    storage.parent.kind == Singleton && return nothing
+
+    types = Set([field.type for field in storage.parent.fields])
+    is_inferrable = all(param in types for param in info.params)
+    is_inferrable || return nothing
+    
+    args = if storage.parent.kind == Anonymous
+        [:($(Symbol(i))::$(field.type)) for (i, field) in enumerate(storage.parent.fields)]
+    else
+        [:($(field.name)::$(field.type)) for field in storage.parent.fields]
+    end
+
+    jl = JLFunction(;
+        name=storage.parent.name,
+        args,
+        info.whereparams,
+        body=quote
+            $(Expr(:meta, :inline))
+            return $(info.type_head)($(storage.head)($(args...)))
+        end,
+    )
+
+    return codegen_ast(jl)
+end
+
+# special singleton constructor with adaptive type parameters
+
+@pass function emit_variant_cons_singleton_bottom(info::EmitInfo)
+    isempty(info.params) && return nothing # no type parameters
+    return expr_map(info.storages) do storage::StorageInfo
+        storage.parent.kind == Singleton || return nothing
+
+        bottoms = [:(Union{}) for _ in 1:length(info.params)]
+        jl = JLFunction(;
+            name=storage.parent.name,
+            body=quote
+                $(Expr(:meta, :inline))
+                return Type{$(bottoms...)}($(storage.name){$(bottoms...)}())
+            end,
+        )
+
+        return codegen_ast(jl)
+    end
+end

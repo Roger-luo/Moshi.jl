@@ -26,7 +26,7 @@ function show_variant(io::IO, x)
             if i > 1
                 print(io, ", ")
             end
-            print(io, getfield(data, i))
+            show(io, getfield(data, i))
         end
     else
         for (i, name) in enumerate(propertynames(x))
@@ -37,24 +37,41 @@ function show_variant(io::IO, x)
             value = getproperty(x, name)
             print(io, name)
             print(io, "=")
-            print(io, value)
+            show(io, value)
         end
     end
     print(io, ")")
 end
 
 function variant_name(x)
-    error("expected to be overloaded by @data")
+    throw(IllegalDispatch())
 end
 
 function variant_kind(x)
-    error("expected to be overloaded by @data")
+    throw(IllegalDispatch())
 end
 
 function data_type_name(x)
-    error("expected to be overloaded by @data")
+    throw(IllegalDispatch())
 end
 
 function isa_variant(x, variant::Type)
-    error("expected to be overloaded by @data")
+    throw(IllegalDispatch())
+end
+
+"""
+Convert a singleton variant with Union{} as type parameters to
+a matching singleton variant with the correct type parameters.
+
+!!! note
+    `Base.convert(::Type{YourData.Type}, x::YourData.Type{Union{}})` fall back
+    to this method so it can be overloaded if necessary. This method fallback to
+    a generated method by `@data` by default.
+"""
+Base.@assume_effects :foldable @inline function convert_singleton_bottom(::Type{T}, x) where T
+    return convert_singleton_bottom_generated(T, x)
+end
+
+function convert_singleton_bottom_generated(::Type, x)
+    throw(IllegalDispatch())
 end

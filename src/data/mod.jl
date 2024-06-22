@@ -10,6 +10,7 @@ macro data(head, body)
     return esc(emit(info))
 end
 
+include("exception.jl")
 include("repr.jl")
 include("cons.jl")
 include("show.jl")
