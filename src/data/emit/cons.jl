@@ -77,10 +77,12 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
     is_inferrable = all(param in types for param in info.params)
     is_inferrable || return nothing
     
-    args = if storage.parent.kind == Anonymous
-        [:($(Symbol(i))::$(field.type)) for (i, field) in enumerate(storage.parent.fields)]
+    if storage.parent.kind == Anonymous
+        args = [:($(Symbol(i))::$(type)) for (i, type) in enumerate(storage.types)]
+        inputs = [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
-        [:($(field.name)::$(field.type)) for field in storage.parent.fields]
+        args = [:($(field.name)::$(type)) for (field, type) in zip(storage.parent.fields, storage.types)]
+        inputs = [field.name for field in storage.parent.fields]
     end
 
     jl = JLFunction(;
@@ -89,7 +91,7 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
-            return $(info.type_head)($(storage.head)($(args...)))
+            return $(info.type_head)($(storage.head)($(inputs...)))
         end,
     )
 

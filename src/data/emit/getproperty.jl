@@ -64,7 +64,7 @@ end
         jl[:(data isa $(storage.name))] = codegen_ast(variant_fields)
     end
     jl.otherwise = quote
-        $Base.throw($Data.Unreachable())
+        error("unreachable reached")
     end
 
     if isempty(info.params)
