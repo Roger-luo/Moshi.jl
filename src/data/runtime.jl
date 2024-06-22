@@ -1,8 +1,18 @@
-function show_variant(io::IO, ::MIME"text/plain", x)
+"""
+$INTERFACE
+
+Print the variant to the given IO stream in multiple lines.
+"""
+@interface function show_variant(io::IO, mime::MIME"text/plain", x)
     return show_variant(io::IO, x)
 end
 
-function show_variant(io::IO, x)
+"""
+$INTERFACE
+
+Print the variant to the given IO stream in a single line.
+"""
+@interface function show_variant(io::IO, x)
     print(io, data_type_name(x))
     print(io, ".")
     print(io, variant_name(x))
@@ -43,19 +53,39 @@ function show_variant(io::IO, x)
     print(io, ")")
 end
 
-function variant_name(x)
+"""
+$INTERFACE
+
+Return the name of the variant.
+"""
+@interface function variant_name(x)::Symbol
     throw(IllegalDispatch())
 end
 
-function variant_kind(x)
+"""
+$INTERFACE
+
+Return the kind of the variant, can be `Singleton`, `Anonymous`, or `Named`.
+"""
+@interface function variant_kind(x)::VariantKind
     throw(IllegalDispatch())
 end
 
-function data_type_name(x)
+"""
+$INTERFACE
+
+Return the data type name of the given variant.
+"""
+@interface function data_type_name(x)::Symbol
     throw(IllegalDispatch())
 end
 
-function isa_variant(x, variant::Type)
+"""
+$INTERFACE
+
+Check if the given variant is an instance of the given variant type.
+"""
+@interface function isa_variant(x, variant::Type)::Bool
     throw(IllegalDispatch())
 end
 
