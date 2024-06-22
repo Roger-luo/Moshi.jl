@@ -50,7 +50,7 @@ end
     if isempty(info.params) # non generic
         return expr_map(info.storages) do storage::StorageInfo
             return quote
-                $Base.@assume_effects :total function $Data.isa_variant(
+                $Base.@constprop :aggressive $Base.@assume_effects :total function $Data.isa_variant(
                     value::Type, variant::$Type{$(storage.parent.name)}
                 )
                     data = $Base.getfield(value, :data)
@@ -63,7 +63,7 @@ end
         return expr_map(info.storages) do storage::StorageInfo
             return quote
                 # just checking the tag value
-                function $Data.isa_variant(
+                $Base.@constprop :aggressive function $Data.isa_variant(
                     value::Type, variant::$Type{$(storage.parent.name)}
                 )
                     data = $Base.getfield(value, :data)
@@ -71,7 +71,7 @@ end
                 end
 
                 # type params match, check tag value
-                function $Data.isa_variant(
+                $Base.@constprop :aggressive function $Data.isa_variant(
                     value::$(info.type_head), variant::$Type{$(storage.variant_head)}
                 ) where {$(info.whereparams...)}
                     data = $Base.getfield(value, :data)
@@ -79,7 +79,7 @@ end
                 end
 
                 # type params mismatch
-                function $Data.isa_variant(
+                $Base.@constprop :aggressive function $Data.isa_variant(
                     value::$(info.type_head),
                     variant::$Type{$(storage.parent.name){$(others...)}},
                 ) where {$(info.whereparams...), $(others...)}
