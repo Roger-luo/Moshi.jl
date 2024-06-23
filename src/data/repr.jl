@@ -15,12 +15,12 @@ const SymbolOrExpr = Union{Symbol,Expr}
 end
 
 struct Field
-    type::SymbolOrExpr
+    type
 end
 
 struct NamedField
     name::Symbol
-    type::SymbolOrExpr
+    type
 
     default::Any # nothing,literal,Expr,Symbol
     source::Maybe{LineNumberNode}
