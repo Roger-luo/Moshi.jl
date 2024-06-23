@@ -74,6 +74,15 @@ end
 """
 $INTERFACE
 
+Return the variant type of the given variant.
+"""
+@interface function variant_type(x)
+    throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
 Return the data type name of the given variant.
 """
 @interface function data_type_name(x)::Symbol

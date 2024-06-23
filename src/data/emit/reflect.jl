@@ -82,9 +82,41 @@ end
                 $Base.@constprop :aggressive function $Data.isa_variant(
                     value::$(info.type_head),
                     variant::$Type{$(storage.parent.name){$(others...)}},
-                ) where {$(info.whereparams...), $(others...)}
+                ) where {$(info.whereparams...),$(others...)}
                     return false
                 end
+            end
+        end
+    end
+end
+
+@pass function emit_variant_type(info::EmitInfo)
+    jl = JLIfElse()
+    for storage in info.storages
+        jl[:(data isa $(storage.name))] = quote
+            return $(storage.variant_head)
+        end
+    end
+    jl.otherwise = quote
+        error("unreachable reached")
+    end
+
+    return if isempty(info.params)
+        quote
+            $Base.@constprop :aggressive $Base.Base.@assume_effects :foldable function $Data.variant_type(
+                value::$(info.type_head)
+            )
+                data = $Base.getfield(value, :data)
+                return $(codegen_ast(jl))
+            end
+        end
+    else
+        quote
+            $Base.@constprop :aggressive $Base.Base.@assume_effects :foldable function $Data.variant_type(
+                value::$(info.type_head)
+            ) where {$(info.whereparams...)}
+                data = $Base.getfield(value, :data)
+                return $(codegen_ast(jl))
             end
         end
     end
