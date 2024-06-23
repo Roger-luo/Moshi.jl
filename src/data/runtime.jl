@@ -86,7 +86,7 @@ $INTERFACE
 Check if the given variant is an instance of the given variant type.
 """
 @interface function isa_variant(x, variant::Type)::Bool
-    throw(IllegalDispatch())
+    throw(IllegalDispatch("got $(typeof(x)) for $variant"))
 end
 
 """

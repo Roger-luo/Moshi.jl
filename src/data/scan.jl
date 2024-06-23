@@ -47,6 +47,7 @@ function guess_self_as_any(def::TypeDef, expr)
         typevars = map(expr.args[2:end]) do param
             guess_self_as_any(def, param)
         end
+        Any in typevars && return Any # no need to specialize further
         return :($type{$(typevars...)})
     else
         return expr
