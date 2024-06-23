@@ -1,5 +1,5 @@
 using Test
-using Moshi.Data: @data, isa_variant
+using Moshi.Data: @data, isa_variant, variant_fieldtypes
 
 @data Option{T} begin
     Some(T)
@@ -29,5 +29,9 @@ end
     @testset "convert" begin
         isa_variant(foo(Option.Some(1)), Option.None{Int})
         isa_variant(foo(Option.Some(1)), Option.None{Float64})
+    end
+
+    @testset "reflection" begin
+        @test variant_fieldtypes(Option.Some(1)) == (Int,)
     end
 end # Option{T}

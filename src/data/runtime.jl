@@ -101,6 +101,24 @@ end
 """
 $INTERFACE
 
+Return the field names of the variant.
+"""
+@interface function variant_fieldnames(value)
+    return propertynames(value)
+end
+
+"""
+$INTERFACE
+
+Return the field types of the variant.
+"""
+@interface function variant_fieldtypes(value)
+    throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
 Return the data type name of the given variant.
 """
 @interface function data_type_name(x)::Symbol

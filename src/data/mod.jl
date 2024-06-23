@@ -2,7 +2,7 @@ module Data
 
 using Jieko: @interface, INTERFACE, INTERFACE_LIST, @export_all_interfaces
 using ExproniconLite: Maybe, JLFunction, JLIfElse, JLStruct, JLKwStruct, JLField, JLKwField, no_default,
-                      codegen_ast, expr_map, guess_type
+                      codegen_ast, expr_map, guess_type, xtuple
 
 
 """

@@ -130,10 +130,38 @@ end
     end
 end
 
-@pass function emit_variant_storage(info::EmitInfo)
+@pass function emit_reflect_variant_storage(info::EmitInfo)
     return quote
         $Base.@inline function $Data.variant_storage(value::Type)
             return $Base.getfield(value, :data)
+        end
+    end
+end
+
+@pass function emit_variant_fieldtypes(info::EmitInfo)
+    jl = JLIfElse()
+    for storage in info.storages
+        jl[:(data isa $(storage.name))] = quote
+            return $(xtuple(storage.annotations...))
+        end
+    end
+    jl.otherwise = quote
+        error("unreachable reached")
+    end
+
+    if isempty(info.params)
+        return quote
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head))
+                data = $Base.getfield(value, :data)
+                return $(codegen_ast(jl))
+            end
+        end
+    else
+        return quote
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head)) where {$(info.whereparams...)}
+                data = $Base.getfield(value, :data)
+                return $(codegen_ast(jl))
+            end
         end
     end
 end
