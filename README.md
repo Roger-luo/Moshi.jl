@@ -3,9 +3,12 @@
 Moshi is the pattern in Chinese （模式）. This package is the refactor of MLStyle with
 
 - more correct pattern language for pattern match with `@match`
-- type-stable algebra data type/tagged union with generics
-- traits, derive macro @derive from rust
+- type-stable algebra data type/tagged union with generics via `@data`
+- traits, derive macro `@derive` from rust
 
+> [!IMPORTANT]
+>
+> This project is in the early stage of development. The macro syntax has been iterated acorss several packages including Expronicon, MLStyle. The syntax are mostly stable. However, the API and features are subject to change.
 
 ## Installation
 
