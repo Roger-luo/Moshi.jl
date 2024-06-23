@@ -50,7 +50,16 @@ Print the variant to the given IO stream in a single line.
             show(io, value)
         end
     end
-    print(io, ")")
+    return print(io, ")")
+end
+
+"""
+$INTERFACE
+
+Check if the given object is a variant of a algebraic data type.
+"""
+@interface function is_data_type(x)::Bool
+    return false
 end
 
 """
@@ -83,6 +92,15 @@ end
 """
 $INTERFACE
 
+Return the storage object of the variant.
+"""
+@interface function variant_storage(value)
+    throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
 Return the data type name of the given variant.
 """
 @interface function data_type_name(x)::Symbol
@@ -107,7 +125,9 @@ a matching singleton variant with the correct type parameters.
     to this method so it can be overloaded if necessary. This method fallback to
     a generated method by `@data` by default.
 """
-Base.@assume_effects :foldable @inline function convert_singleton_bottom(::Type{T}, x) where T
+Base.@assume_effects :foldable @inline function convert_singleton_bottom(
+    ::Type{T}, x
+) where {T}
     return convert_singleton_bottom_generated(T, x)
 end
 

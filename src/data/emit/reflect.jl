@@ -1,3 +1,11 @@
+@pass function emit_is_data_type(info::EmitInfo)
+    return quote
+        $Base.@inline function $Data.is_data_type(value::Type)
+            return true
+        end
+    end
+end
+
 @pass function emit_variant_kind(info::EmitInfo)
     jl = JLIfElse()
     for storage in info.storages
@@ -103,7 +111,7 @@ end
 
     return if isempty(info.params)
         quote
-            $Base.@constprop :aggressive $Base.Base.@assume_effects :foldable function $Data.variant_type(
+            $Base.@constprop :aggressive $Base.@assume_effects :foldable function $Data.variant_type(
                 value::$(info.type_head)
             )
                 data = $Base.getfield(value, :data)
@@ -112,12 +120,20 @@ end
         end
     else
         quote
-            $Base.@constprop :aggressive $Base.Base.@assume_effects :foldable function $Data.variant_type(
+            $Base.@constprop :aggressive $Base.@assume_effects :foldable function $Data.variant_type(
                 value::$(info.type_head)
             ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
+        end
+    end
+end
+
+@pass function emit_variant_storage(info::EmitInfo)
+    return quote
+        $Base.@inline function $Data.variant_storage(value::Type)
+            return $Base.getfield(value, :data)
         end
     end
 end
