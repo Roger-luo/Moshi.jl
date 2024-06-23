@@ -1,5 +1,5 @@
 @pass 1 function emit_variant_storage(info::EmitInfo)
-    return expr_map(x->emit_each_variant_storage(info, x), info.storages)
+    return expr_map(x->emit_each_variant_storage(info, x), info.storages; skip_nothing=true)
 end
 
 function emit_each_variant_storage(info::EmitInfo, storage::StorageInfo)

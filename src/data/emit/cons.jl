@@ -1,46 +1,40 @@
 @pass function emit_variant_cons(info::EmitInfo)
-    return expr_map(x -> emit_each_variant_cons(info, x), info.storages)
+    return expr_map(x -> emit_each_variant_cons(info, x), info.storages; skip_nothing=true)
+end
+
+function emit_conversion(args, annotations)
+    return expr_map(args, annotations) do arg, type
+        :($arg = $Base.convert($type, $arg))
+    end
 end
 
 function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
-    jl = if storage.parent.kind == Singleton
-        JLFunction(;
-            name=storage.variant_head,
-            info.whereparams,
-            body=quote
-                $(Expr(:meta, :inline))
-                return $(info.type_head)($(storage.head)())
-            end,
-        )
+    args = if storage.parent.kind == Singleton
+        []
     elseif storage.parent.kind == Anonymous
-        args = [Symbol(i) for i in 1:length(storage.parent.fields)]
-        JLFunction(;
-            name=storage.variant_head,
-            args=[Symbol(i) for (i, field) in enumerate(storage.parent.fields)],
-            info.whereparams,
-            body=quote
-                $(Expr(:meta, :inline))
-                return $(info.type_head)($(storage.head)($(args...)))
-            end,
-        )
+        [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
-        args = [field.name for field in storage.parent.fields]
-        JLFunction(;
-            name=storage.variant_head,
-            args=[field.name for field in storage.parent.fields::Vector{NamedField}],
-            info.whereparams,
-            body=quote
-                $(Expr(:meta, :inline))
-                return $(info.type_head)($(storage.head)($(args...)))
-            end,
-        )
+        [field.name for field in storage.parent.fields::Vector{NamedField}]
     end
+
+    jl = JLFunction(;
+        name=storage.variant_head,
+        args,
+        info.whereparams,
+        body=quote
+            $(Expr(:meta, :inline))
+            $(emit_conversion(args, storage.annotations))
+            return $(info.type_head)($(storage.head)($(args...)))
+        end,
+    )
 
     return codegen_ast(jl)
 end
 
 @pass function emit_variant_kw_cons(info::EmitInfo)
-    return expr_map(x -> emit_each_variant_kw_cons(info, x), info.storages)
+    return expr_map(
+        x -> emit_each_variant_kw_cons(info, x), info.storages; skip_nothing=true
+    )
 end
 
 function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
@@ -59,6 +53,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
+            $(emit_conversion(args, storage.annotations))
             return $(info.type_head)($(storage.head)($(args...)))
         end,
     )
@@ -67,21 +62,25 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
 end
 
 @pass function emit_variant_cons_inferred(info::EmitInfo)
-    return expr_map(x -> emit_each_variant_cons_inferred(info, x), info.storages)
+    return expr_map(
+        x -> emit_each_variant_cons_inferred(info, x), info.storages; skip_nothing=true
+    )
 end
 
 function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
+    isempty(info.params) && return nothing # no type parameters
     storage.parent.kind == Singleton && return nothing
 
-    types = Set([field.type for field in storage.parent.fields])
-    is_inferrable = all(param in types for param in info.params)
-    is_inferrable || return nothing
-    
+    is_inferrable(info.params, storage) || return nothing
+
     if storage.parent.kind == Anonymous
-        args = [:($(Symbol(i))::$(type)) for (i, type) in enumerate(storage.types)]
+        args = [:($(Symbol(i))::$(type)) for (i, type) in enumerate(storage.annotations)]
         inputs = [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
-        args = [:($(field.name)::$(type)) for (field, type) in zip(storage.parent.fields, storage.types)]
+        args = [
+            :($(field.name)::$(type)) for
+            (field, type) in zip(storage.parent.fields, storage.annotations)
+        ]
         inputs = [field.name for field in storage.parent.fields]
     end
 
@@ -91,6 +90,7 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
+            $(emit_conversion(inputs, storage.annotations))
             return $(info.type_head)($(storage.head)($(inputs...)))
         end,
     )
@@ -98,11 +98,29 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
     return codegen_ast(jl)
 end
 
+function is_inferrable(params::Vector{Symbol}, storage::StorageInfo)
+    return all(is_inferrable(param, storage) for param in params)
+end
+
+function is_inferrable(param::Symbol, storage::StorageInfo)
+    return any(is_inferrable(param, each) for each in storage.annotations)
+end
+
+function is_inferrable(param::Symbol, type)
+    if type isa Symbol
+        return param == type
+    elseif Meta.isexpr(type, :curly)
+        return any(is_inferrable(param, each) for each in type.args[2:end])
+    else
+        return false
+    end
+end
+
 # special singleton constructor with adaptive type parameters
 
 @pass function emit_variant_cons_singleton_bottom(info::EmitInfo)
     isempty(info.params) && return nothing # no type parameters
-    return expr_map(info.storages) do storage::StorageInfo
+    return expr_map(info.storages; skip_nothing=true) do storage::StorageInfo
         storage.parent.kind == Singleton || return nothing
 
         bottoms = [:(Union{}) for _ in 1:length(info.params)]

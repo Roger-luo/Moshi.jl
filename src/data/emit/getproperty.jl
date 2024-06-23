@@ -18,7 +18,7 @@
         variant_fields = JLIfElse()
         for (i, field) in enumerate(storage.parent.fields)
             variant_fields[:(name === $(QuoteNode(field.name)))] = quote
-                return $Base.getfield(data, name)::$(storage.types[i])
+                return $Base.getfield(data, name)::$(storage.annotations[i])
             end
         end
         variant_fields.otherwise = quote
@@ -54,7 +54,7 @@ end
         variant_fields = JLIfElse()
         for (i, field) in enumerate(storage.parent.fields)
             variant_fields[:(index === $i)] = quote
-                return $Base.getfield(data, index)::$(storage.types[i])
+                return $Base.getfield(data, index)::$(storage.annotations[i])
             end
         end
         variant_fields.otherwise = quote
