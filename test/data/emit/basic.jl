@@ -20,6 +20,7 @@ end
     @test sprint(show, x) == "Message.Quit()"
     @test variant_type(x) == Message.Quit
     @test variant_fieldtypes(x) == ()
+    @test variant_fieldtypes(Message.Quit) == ()
 
     x = Message.Move(1, 2)
     @test x.x == 1
@@ -29,6 +30,7 @@ end
     @test sprint(show, x) == "Message.Move(x=1, y=2)"
     @test variant_type(x) == Message.Move
     @test variant_fieldtypes(x) == (Int, Int)
+    @test variant_fieldtypes(Message.Move) == (Int, Int)
 
     x = Message.Write("hi")
     @test x.:1 == "hi"
@@ -38,6 +40,7 @@ end
     @test sprint(show, x) == "Message.Write(\"hi\")"
     @test variant_type(x) == Message.Write
     @test variant_fieldtypes(x) == (String,)
+    @test variant_fieldtypes(Message.Write) == (String,)
 
     x = Message.ChangeColor(1, 2, 3)
     @test x.:1 == 1
@@ -47,4 +50,5 @@ end
     @test sprint(show, x) == "Message.ChangeColor(1, 2, 3)"
     @test variant_type(x) == Message.ChangeColor
     @test variant_fieldtypes(x) == (Int, Int, Int)
+    @test variant_fieldtypes(Message.ChangeColor) == (Int, Int, Int)
 end # Message

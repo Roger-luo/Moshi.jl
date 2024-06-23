@@ -65,6 +65,24 @@ end
 """
 $INTERFACE
 
+Return a tuple of variants of the given data type.
+"""
+@interface function variants(x::Type)::Tuple
+    throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
+Return a tuple of variants of the given data type.
+"""
+function variants(x)
+    return variants(typeof(x))
+end
+
+"""
+$INTERFACE
+
 Return the name of the variant.
 """
 @interface function variant_name(x)::Symbol
@@ -112,8 +130,12 @@ $INTERFACE
 
 Return the field types of the variant.
 """
+@interface function variant_fieldtypes(type::Type)::Tuple
+    throw(IllegalDispatch("incomplete type information for $type, missing type parameters?"))
+end
+
 @interface function variant_fieldtypes(value)
-    throw(IllegalDispatch())
+    throw(IllegalDispatch("got $(typeof(type)) for $type"))
 end
 
 """

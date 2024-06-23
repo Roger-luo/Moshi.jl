@@ -155,12 +155,32 @@ end
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
+
+            $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
         end
     else
         return quote
             $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head)) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
+            end
+
+            $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
+        end
+    end
+end
+
+function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageInfo)
+    if isempty(info.params)
+        return quote
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(::$Type{$(storage.variant_head)})
+                return $(xtuple(storage.annotations...))
+            end
+        end
+    else
+        return quote
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(::$Type{$(storage.variant_head)}) where {$(info.whereparams...)}
+                return $(xtuple(storage.annotations...))
             end
         end
     end

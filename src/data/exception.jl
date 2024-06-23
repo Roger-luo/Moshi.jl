@@ -2,8 +2,8 @@ struct Unreachable <: Exception end
 
 Base.showerror(io::IO, x::Unreachable) = print(io, "unreachable reached")
 
-struct IllegalDispatch <: Exception
-    msg::String
+Base.@kwdef struct IllegalDispatch <: Exception
+    msg::String = ""
 end
 
 function Base.showerror(io::IO, x::IllegalDispatch)

@@ -33,5 +33,6 @@ end
 
     @testset "reflection" begin
         @test variant_fieldtypes(Option.Some(1)) == (Int,)
+        @test variant_fieldtypes(Option.Some{Int}) == (Int,)
     end
 end # Option{T}
