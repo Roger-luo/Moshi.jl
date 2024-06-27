@@ -1,3 +1,5 @@
 using Test
-using Moshi.Data.Prelude
-using Moshi.Match: Pattern
+
+@testset "scan" begin
+    include("scan.jl")
+end

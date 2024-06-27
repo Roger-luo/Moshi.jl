@@ -89,3 +89,5 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
         filter::Union{Nothing,Pattern}
     end
 end
+
+@derive Pattern[Eq]
