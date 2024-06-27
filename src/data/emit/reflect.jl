@@ -1,5 +1,38 @@
+module Reflection
+
+using ..Data: @pass, Data, EmitInfo, StorageInfo, Singleton, Anonymous, Named
+using ExproniconLite: JLIfElse, xtuple, expr_map, codegen_ast
+
+@pass function emit_variants(info::EmitInfo)
+    if isempty(info.params)
+        return quote
+            $Base.@inline function $Data.variants(::$Type{Type})
+                return $(xtuple([storage.variant_head for storage in info.storages]...))
+            end
+        end
+    else
+        return quote
+            $Base.@inline function $Data.variants(::$Type{<:Type})
+                return $(xtuple([storage.parent.name for storage in info.storages]...))
+            end
+
+            $Base.@inline function $Data.variants(::$Type{$(info.type_head)}) where {$(info.whereparams...)}
+                return $(xtuple([storage.variant_head for storage in info.storages]...))
+            end
+        end
+    end # if
+end
+
 @pass function emit_is_data_type(info::EmitInfo)
     return quote
+        $Base.@inline function $Data.is_data_type(value::$Type{<:Type})
+            return true
+        end
+
+        $Base.@inline function $Data.is_data_type(value::$Type{<:Variant})
+            return true
+        end
+
         $Base.@inline function $Data.is_data_type(value::Type)
             return true
         end
@@ -18,11 +51,21 @@ end
         error("unreachable reached")
     end
 
+    on_type = expr_map(info.storages) do storage
+        quote
+            function $Data.variant_kind(::$Type{<:$(storage.parent.name)})
+                $(QuoteNode(storage.parent.kind))
+            end
+        end
+    end
+
     return quote
         function $Data.variant_kind(value::Type)
             data = $Base.getfield(value, :data)
             return $(codegen_ast(jl))
         end
+
+        $on_type
     end
 end
 
@@ -49,6 +92,14 @@ end
 @pass function emit_data_type_name(info::EmitInfo)
     return quote
         function $Data.data_type_name(value::Type)
+            return $(QuoteNode(info.def.head.name))
+        end
+
+        function $Data.data_type_name(value::$Type{<:Type})
+            return $(QuoteNode(info.def.head.name))
+        end
+
+        function $Data.data_type_name(value::$Type{<:Variant})
             return $(QuoteNode(info.def.head.name))
         end
     end
@@ -130,7 +181,7 @@ end
     end
 end
 
-@pass function emit_reflect_variant_storage(info::EmitInfo)
+@pass function emit_variant_storage(info::EmitInfo)
     return quote
         $Base.@inline function $Data.variant_storage(value::Type)
             return $Base.getfield(value, :data)
@@ -149,12 +200,20 @@ end
         error("unreachable reached")
     end
 
+    unknown_variant = quote
+        function $Data.variant_fieldtypes(::$Type{<:Type})
+            $Base.error("cannot obtain fieldnames on data type, unknown variant")
+        end
+    end
+
     if isempty(info.params)
         return quote
             $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head))
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
+
+            $unknown_variant
 
             $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
         end
@@ -165,10 +224,12 @@ end
                 return $(codegen_ast(jl))
             end
 
+            $unknown_variant
+
             $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
         end
     end
-end
+end # emit_variant_fieldtypes
 
 function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageInfo)
     if isempty(info.params)
@@ -185,3 +246,31 @@ function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageIn
         end
     end
 end
+
+@pass function emit_variant_fieldnames(info::EmitInfo)
+    main = expr_map(info.storages) do storage
+        fieldnames = if storage.parent.kind == Singleton
+            ()
+        elseif storage.parent.kind == Anonymous
+            Tuple(1:length(storage.parent.fields))
+        else
+            xtuple([QuoteNode(field.name) for field in storage.parent.fields]...)
+        end
+        
+        return quote
+            $Base.@inline function $Data.variant_fieldnames(::$Type{<:$(storage.parent.name)})
+                return $(fieldnames)
+            end
+        end
+    end
+
+    return quote
+        $main
+
+        $Base.@inline function $Data.variant_fieldnames(::$Type{<:Type})
+            $Base.error("cannot obtain fieldnames on data type, unknown variant")
+        end
+    end
+end # emit_variant_fieldnames
+
+end # module

@@ -21,8 +21,8 @@ end
 function pass_m(name, expr, priority::Int=5)
     quote
         $(expr)
-        push!(EMIT_PASS[$(priority)], $name)
-        unique!(EMIT_PASS[$(priority)])
+        push!($EMIT_PASS[$(priority)], $name)
+        unique!($EMIT_PASS[$(priority)])
     end
 end
 

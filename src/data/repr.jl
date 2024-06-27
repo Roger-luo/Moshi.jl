@@ -32,6 +32,11 @@ struct Variant
     fields::Maybe{Union{Vector{Field},Vector{NamedField}}}
     doc::Maybe{String}
     source::Maybe{LineNumberNode}
+
+    function Variant(kind, name, fields, doc, source)
+        name in (:Type, :Variant) && throw(ArgumentError("reserved variant name: $name"))
+        return new(kind, name, fields, doc, source)
+    end
 end
 
 struct TypeVarExpr
@@ -40,7 +45,7 @@ struct TypeVarExpr
     ub::Maybe{SymbolOrExpr}
 end
 
-TypeVarExpr(name::Symbol; lb=nothing,ub=nothing) = TypeVarExpr(name, lb, ub)
+TypeVarExpr(name::Symbol; lb=nothing, ub=nothing) = TypeVarExpr(name, lb, ub)
 
 function Base.show(io::IO, var::TypeVarExpr)
     if var.lb === nothing && var.ub === nothing
@@ -59,7 +64,7 @@ mutable struct TypeHead
     params::Vector{TypeVarExpr}
     supertype::Maybe{SymbolOrExpr}
 
-    function TypeHead(;name::Maybe{Symbol}=nothing, params=[], supertype=nothing)
+    function TypeHead(; name::Maybe{Symbol}=nothing, params=[], supertype=nothing)
         obj = new()
         isnothing(name) || (obj.name = name)
         obj.params = params
@@ -69,7 +74,9 @@ mutable struct TypeHead
 end
 
 function Base.:(==)(lhs::TypeHead, rhs::TypeHead)
-    lhs.name == rhs.name && lhs.params == rhs.params && lhs.supertype == rhs.supertype
+    return lhs.name == rhs.name &&
+               lhs.params == rhs.params &&
+               lhs.supertype == rhs.supertype
 end
 
 struct TypeDef

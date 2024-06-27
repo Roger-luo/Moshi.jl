@@ -1,12 +1,21 @@
 using Test
-using Moshi.Data: @data, isa_variant, variant_fieldtypes
+using Moshi.Data: @data, isa_variant, variant_fieldtypes, IllegalDispatch
 
 @data Option{T} begin
     Some(T)
     None
 end
 
+
 @testset "Option{T}" begin
+    @test variants(Option.Type) == (Option.Some, Option.None)
+    @test variants(Option.Type{Float64}) == (Option.Some{Float64}, Option.None{Float64})
+    @test variant_fieldnames(Option.Some) == (1, )
+    @test variant_fieldnames(Option.Some{Float64}) == (1, )
+    @test_throws IllegalDispatch variant_fieldtypes(Option.Some)
+    @test variant_fieldtypes(Option.Some{Float64}) == (Float64, )
+
+
     @testset "cons" begin
         x = Option.Some(1)
         @test isa_variant(x, Option.Some)
