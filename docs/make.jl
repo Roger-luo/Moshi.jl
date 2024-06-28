@@ -2,7 +2,7 @@ using Documenter
 using Moshi
 using DocThemeIndigo
 
-indigo = DocThemeIndigo.install(Configurations)
+indigo = DocThemeIndigo.install(Moshi)
 
 makedocs(;
     modules = [Moshi],
