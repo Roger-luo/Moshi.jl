@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = Moshi2
+CurrentModule = Moshi
 ```
 
-# Moshi2
+# Moshi
 
-Documentation for [Moshi2](https://github.com/Roger-luo/Moshi2.jl).
+Documentation for [Moshi](https://github.com/Roger-luo/Moshi.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [Moshi2]
+Modules = [Moshi]
 ```
