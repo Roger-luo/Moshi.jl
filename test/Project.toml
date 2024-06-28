@@ -1,3 +1,7 @@
 [deps]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ExproniconLite = "55351af7-c7e9-48d6-89ff-24e801d99491"
+
+[compat]
+Test = "1"
+ExproniconLite = "0.10.10"
