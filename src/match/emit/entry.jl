@@ -2,21 +2,21 @@ function emit(info::EmitInfo)
     isempty(info.cases) && return :($Base.throw($Match.SyntaxError("empty match body")))
 
     matches = expr_map(info.cases, info.exprs, info.lines) do case, expr, line
-        pinfo = PatternContext(info, case)
+        ctx = PatternContext(info, case)
         if isa_variant(case, Pattern.Err)
             return Expr(:block, line, :($Base.throw($Match.SyntaxError($(case.:1)))))
         end
 
-        cond = decons(pinfo, case)(info.value_holder)
+        cond = decons(ctx, case)(info.value_holder)
         maybe_if(
-            and_expr(cond, emit_check_duplicated_variables(pinfo)),
+            and_expr(cond, emit_check_duplicated_variables(ctx)),
             Expr(
                 :block,
                 line,
                 Expr(
                     :(=),
                     info.return_var,
-                    Expr(:let, Expr(:block, emit_bind_match_values(pinfo)...), expr),
+                    Expr(:let, Expr(:block, emit_bind_match_values(ctx)...), expr),
                 ),
                 :(@goto $(info.final_label)),
             ),

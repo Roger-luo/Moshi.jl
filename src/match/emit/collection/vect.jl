@@ -14,7 +14,7 @@ function decons(::Type{Pattern.Ref}, ctx::PatternContext, pat::Pattern.Type)
 end
 
 function decons(::Type{Pattern.Vector}, ctx::PatternContext, pat::Pattern.Type)
-    coll = CollectionDecons(info, pat, pat.xs) do _
+    coll = CollectionDecons(ctx, pat, pat.xs) do _
         :($Base.Vector)
     end
     set_view_type_check!(coll) do view, eltype
