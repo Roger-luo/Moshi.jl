@@ -12,3 +12,15 @@ Documentation for [Moshi](https://github.com/Roger-luo/Moshi.jl).
 ```@autodocs
 Modules = [Moshi]
 ```
+
+```@autodocs
+Modules = [Moshi.Data]
+```
+
+```@autodocs
+Modules = [Moshi.Derive]
+```
+
+```@autodocs
+Modules = [Moshi.Match]
+```
