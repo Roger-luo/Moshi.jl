@@ -26,9 +26,15 @@ function emit_check_duplicated_variables(ctx::PatternContext)
     stmts = []
     for (var, values) in ctx.scope
         length(values) > 1 || continue
-        # NOTE: let's just not support 1.8-
-        val_expr = xtuple(values...)
-        push!(stmts, :($Base.allequal($val_expr)))
+        compare_expr = []
+        for (i, each) in enumerate(values)
+            push!(compare_expr, each)
+
+            if i < length(values)
+                push!(compare_expr, :(==))
+            end
+        end
+        push!(stmts, Expr(:comparison, compare_expr...))
     end
     return foldl(and_expr, stmts; init=true)
 end
