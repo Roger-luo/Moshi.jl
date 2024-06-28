@@ -6,6 +6,7 @@ using Moshi.Data:
     variant_kind,
     variant_type,
     variant_storage,
+    variant_nfields,
     variant_fieldnames,
     variant_fieldtypes,
     data_type_name,
@@ -24,11 +25,6 @@ using Moshi.Data:
     Write(String)
     ChangeColor(Int, Int, Int)
 end
-
-x = Message.Quit()
-y = Message.Quit()
-
-variant_storage(x)
 
 @testset "Message" begin
     @test variants(Message.Type) == (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
@@ -105,5 +101,10 @@ variant_storage(x)
 
     @test_throws ErrorException variant_fieldtypes(Message.Type)
     @test_throws ErrorException variant_fieldnames(Message.Type)
+
+    @test variant_nfields(Message.Quit) == 0
+    @test variant_nfields(Message.Move) == 2
+    @test variant_nfields(Message.Write) == 1
+    @test variant_nfields(Message.ChangeColor) == 3
 end # Message
  

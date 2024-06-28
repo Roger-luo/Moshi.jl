@@ -119,6 +119,15 @@ end
 """
 $INTERFACE
 
+Return the number of fields of the variant.
+"""
+@interface function variant_nfields(value)
+    throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
 Return the field names of the variant.
 """
 @interface function variant_fieldnames(value)

@@ -273,4 +273,15 @@ end
     end
 end # emit_variant_fieldnames
 
+@pass function emit_variant_nfields(info::EmitInfo)
+    expr_map(info.storages) do storage
+        nfields = isnothing(storage.parent.fields) ? 0 : length(storage.parent.fields)
+        return quote
+            $Base.@inline function $Data.variant_nfields(::$Type{<:$(storage.parent.name)})
+                return $(QuoteNode(nfields))
+            end
+        end
+    end
+end
+
 end # module
