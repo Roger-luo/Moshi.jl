@@ -1,5 +1,7 @@
 # Moshi
 
+[![CI](https://github.com/Roger-luo/Moshi.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/Roger-luo/Moshi.jl/actions/workflows/CI.yml)
+
 Moshi is the pattern in Chinese （模式）. This package is the refactor of MLStyle with
 
 - more correct pattern language for pattern match with `@match`
