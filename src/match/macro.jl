@@ -3,6 +3,6 @@ macro match(expr, body)
 end
 
 function match_m(mod::Module, source, expr, body)
-    info = EmitInfo(mod, expr, body, source)
+    info = EmitInfo(mod, expr, body; source)
     return emit(info)
 end

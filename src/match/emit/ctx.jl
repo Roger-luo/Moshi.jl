@@ -39,6 +39,12 @@ function emit_bind_match_values(ctx::PatternContext)
     end
 end
 
-and_expr(lhs, rhs) = quote
-    $lhs && $rhs
+function and_expr(lhs, rhs)
+    if lhs == true
+        return rhs
+    elseif rhs == true
+        return lhs
+    else
+        return Expr(:block, :($lhs && $rhs))
+    end
 end

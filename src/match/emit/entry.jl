@@ -8,20 +8,19 @@ function emit(info::EmitInfo)
         end
 
         cond = decons(pinfo, case)(info.value_holder)
+        maybe_if(
+            and_expr(cond, emit_check_duplicated_variables(pinfo)),
             Expr(
-                :if,
-                :($cond && $(emit_check_duplicated_variables(pinfo))),
+                :block,
+                line,
                 Expr(
-                    :block,
-                    line,
-                    quote
-                        $(info.return_var) = let $(emit_bind_match_values(pinfo)...)
-                            $expr
-                        end
-                        @goto $(info.final_label)
-                    end,
+                    :(=),
+                    info.return_var,
+                    Expr(:let, Expr(:block, emit_bind_match_values(pinfo)...), expr),
                 ),
-            )
+                :(@goto $(info.final_label)),
+            ),
+        )
     end
 
     return Expr(
@@ -41,4 +40,11 @@ end
 
 function decons(::Type, ctx::PatternContext, pat::Pattern.Type)
     return error("invalid pattern: $pat")
+end
+
+function maybe_if(cond, body)
+    if cond == true
+        return body
+    end
+    return Expr(:if, cond, body)
 end
