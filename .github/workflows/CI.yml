@@ -55,6 +55,6 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using Moshi2
-            DocMeta.setdocmeta!(Moshi2, :DocTestSetup, :(using Moshi2); recursive=true)
-            doctest(Moshi2)'
+            using Moshi
+            DocMeta.setdocmeta!(Moshi, :DocTestSetup, :(using Moshi); recursive=true)
+            doctest(Moshi)'
