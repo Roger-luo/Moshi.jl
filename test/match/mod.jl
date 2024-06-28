@@ -7,3 +7,7 @@ end
 @testset "examples" begin
     include("examples/basic.jl")
 end
+
+@testset "exception" begin
+    include("exception.jl")
+end

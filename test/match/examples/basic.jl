@@ -72,3 +72,19 @@ end
 # @match [1, 2, "a"] begin
 #     [1, 1.0, y::String] || [1, 2, ::String] => y
 # end
+
+@test (2, 3) == @match (1.0, 2, 3) begin
+    (1, xs::Int...) => xs
+end
+
+@test_throws ErrorException @match (1.0, 2, 3) begin
+    (1, xs::Float64...) => xs
+end
+
+@test_throws ErrorException @match [1.0, 2, 3] begin
+    [1, xs::Int...] => xs
+end
+
+@test [2.0, 3.0] == @match [1.0, 2, 3] begin
+    [1, xs::Float64...] => xs
+end

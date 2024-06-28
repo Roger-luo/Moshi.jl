@@ -11,3 +11,7 @@ end
 @testset "emit" begin
     include("emit/mod.jl")
 end
+
+@testset "exception" begin
+    include("exception.jl")
+end
