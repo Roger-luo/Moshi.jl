@@ -4,41 +4,30 @@ on:
     types:
       - created
   workflow_dispatch:
+    inputs:
+      lookback:
+        default: "3"
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
 jobs:
   TagBot:
-    if: github.event_name == 'workflow_dispatch' || github.actor == '{{{TRIGGER}}}'
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
     steps:
       - uses: JuliaRegistries/TagBot@v1
         with:
-          token: {{{TOKEN}}}
-          {{#SSH}}
-          ssh: {{{SSH}}}
-          {{/SSH}}
-          {{#SSH_PASSWORD}}
-          ssh_password: {{{SSH_PASSWORD}}}
-          {{/SSH_PASSWORD}}
-          {{#CHANGELOG}}
-          changelog: {{{CHANGELOG}}}
-          {{/CHANGELOG}}
-          {{#CHANGELOG_IGNORE}}
-          changelog_ignore: {{{CHANGELOG_IGNORE}}}
-          {{/CHANGELOG_IGNORE}}
-          {{#GPG}}
-          gpg: {{{GPG}}}
-          {{/GPG}}
-          {{#GPG_PASSWORD}}
-          gpg_password: {{{GPG_PASSWORD}}}
-          {{/GPG_PASSWORD}}
-          {{#REGISTRY}}
-          registry: {{{REGISTRY}}}
-          {{/REGISTRY}}
-          {{#BRANCHES}}
-          branches: {{{BRANCHES}}}
-          {{/BRANCHES}}
-          {{#DISPATCH}}
-          dispatch: {{{DISPATCH}}}
-          {{/DISPATCH}}
-          {{#DISPATCH_DELAY}}
-          dispatch_delay: {{{DISPATCH_DELAY}}}
-          {{/DISPATCH_DELAY}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Edit the following line to reflect the actual name of the GitHub Secret containing your private key
+          ssh: ${{ secrets.DOCUMENTER_KEY }}
+          # ssh: ${{ secrets.NAME_OF_MY_SSH_PRIVATE_KEY_SECRET }}
