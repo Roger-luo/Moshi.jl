@@ -183,3 +183,19 @@ end
 function convert_singleton_bottom_generated(::Type, x)
     throw(IllegalDispatch())
 end
+
+"""
+$INTERFACE
+
+Known the variant type `tag`, return the field of the variant by field name or index.
+
+!!! note
+    This method is used by the pattern matching system to extract the field of the variant.
+    It is not intended to be used directly. Most of cases, you can use the `x.field` syntax
+    to extract the field of the variant. However, Julia compiler is not able to infer the
+    type of the variant usually, so if you care about performance, you may want to use this
+    method in combine with [`variant_storage`](@ref).
+"""
+function variant_getfield(value, tag::Type, field::Union{Int, Symbol})
+    throw(IllegalDispatch())    
+end

@@ -284,4 +284,63 @@ end # emit_variant_fieldnames
     end
 end
 
+@pass function emit_variant_getfield(info::EmitInfo)
+    err = quote
+        $Base.error("cannot obtain fieldnames on data type, variant type not applicable")
+    end
+    otherwise = quote
+        $Base.error("field not found")
+    end
+
+    named = expr_map(info.storages) do storage
+        body = if storage.parent.kind == Named
+            jl = JLIfElse()
+            for (idx, field) in enumerate(storage.parent.fields)
+                jl[:(field === $(QuoteNode(field.name)))] = quote
+                    return $Base.getfield(data, $(QuoteNode(field.name)))::$(storage.annotations[idx])
+                end
+            end
+            jl.otherwise = otherwise
+            codegen_ast(jl)
+        else
+            err
+        end
+
+        return quote
+            $Base.@inline function $Data.variant_getfield(value::$(info.type_head), tag::$Type{$(storage.variant_head)}, field::Symbol) where {$(info.whereparams...)}
+                data = $Base.getfield(value, :data)::$(storage.head)
+                $body
+            end
+        end
+    end
+
+    numbered = expr_map(info.storages) do storage
+        body = if storage.parent.kind == Named || storage.parent.kind == Anonymous
+            jl = JLIfElse()
+            for (idx, field) in enumerate(storage.parent.fields)
+                jl[:(field === $(QuoteNode(idx)))] = quote
+                    return $(Base.getfield)(data, $(QuoteNode(idx)))::$(storage.annotations[idx])
+                end
+            end
+            jl.otherwise = otherwise
+            codegen_ast(jl)
+        else
+            err
+        end
+
+        return quote
+            $Base.@inline function $Data.variant_getfield(value::$(info.type_head), tag::$Type{$(storage.variant_head)}, field::Int) where {$(info.whereparams...)}
+                data = $(Base.getfield)(value, :data)::$(storage.head)
+                $body
+            end
+        end
+    end
+
+    return quote
+        $named
+
+        $numbered
+    end
+end
+
 end # module

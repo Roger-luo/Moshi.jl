@@ -9,6 +9,7 @@ using Moshi.Data:
     variant_nfields,
     variant_fieldnames,
     variant_fieldtypes,
+    variant_getfield,
     data_type_name,
     isa_variant,
     Named,
@@ -45,6 +46,7 @@ end
         @test variant_fieldtypes(x) == ()
         @test variant_fieldtypes(Message.Quit) == ()
         @test variant_fieldnames(Message.Quit) == ()
+        @test_throws ErrorException variant_getfield(Message.Quit(), Message.Quit, 1)
     end # Quit
 
     @testset "Move" begin
@@ -61,6 +63,10 @@ end
         @test variant_fieldtypes(x) == (Int, Int)
         @test variant_fieldtypes(Message.Move) == (Int, Int)
         @test variant_fieldnames(Message.Move) == (:x, :y)
+        @test variant_getfield(x, Message.Move, 1) == 1
+        @test variant_getfield(x, Message.Move, 2) == 2
+        @test variant_getfield(x, Message.Move, :x) == 1
+        @test variant_getfield(x, Message.Move, :y) == 2
     end # Move
 
     @testset "Write" begin
@@ -77,6 +83,7 @@ end
         @test variant_fieldtypes(x) == (String,)
         @test variant_fieldtypes(Message.Write) == (String,)
         @test variant_fieldnames(Message.Write) == (1, )
+        @test variant_getfield(x, Message.Write, 1) == "hi"
     end # Write
 
     @testset "ChangeColor" begin
@@ -93,6 +100,9 @@ end
         @test variant_fieldtypes(x) == (Int, Int, Int)
         @test variant_fieldtypes(Message.ChangeColor) == (Int, Int, Int)
         @test variant_fieldnames(Message.ChangeColor) == (1, 2, 3)
+        @test variant_getfield(x, Message.ChangeColor, 1) == 1
+        @test variant_getfield(x, Message.ChangeColor, 2) == 2
+        @test variant_getfield(x, Message.ChangeColor, 3) == 3
     end
 
     @test data_type_name(Message.Type) === :Message
