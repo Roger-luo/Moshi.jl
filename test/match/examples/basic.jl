@@ -1,3 +1,5 @@
+module TestBasicExamples
+
 using Test
 using Moshi.Match: @match
 
@@ -88,3 +90,5 @@ end
 @test [2.0, 3.0] == @match [1.0, 2, 3] begin
     [1, xs::Float64...] => xs
 end
+
+end # module

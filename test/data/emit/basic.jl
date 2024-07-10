@@ -2,6 +2,7 @@ using Test
 using Moshi.Data:
     @data,
     is_data_type,
+    is_variant_type,
     variants,
     variant_kind,
     variant_type,
@@ -34,7 +35,7 @@ end
         x = Message.Quit()
         @test variants(x) == (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
         @test is_data_type(x)
-        @test is_data_type(Message.Quit)
+        @test is_variant_type(Message.Quit)
         @test isa_variant(Message.Quit(), Message.Quit)
         @test !isa_variant(Message.Quit(), Message.Move)
         @test variant_kind(x) == Singleton
@@ -54,7 +55,7 @@ end
         @test x.x == 1
         @test x.y == 2
         @test is_data_type(x)
-        @test is_data_type(Message.Move)
+        @test is_variant_type(Message.Move)
         @test variant_kind(x) == Named
         @test variant_kind(Message.Move) == Named
         @test propertynames(x) == (:x, :y)
@@ -73,7 +74,7 @@ end
         x = Message.Write("hi")
         @test x.:1 == "hi"
         @test is_data_type(x)
-        @test is_data_type(Message.Write)
+        @test is_variant_type(Message.Write)
         @test variant_kind(x) == Anonymous
         @test variant_kind(Message.Write) == Anonymous
         @test propertynames(x) == (1,)
@@ -92,7 +93,7 @@ end
         @test x.:2 == 2
         @test x.:3 == 3
         @test is_data_type(x)
-        @test is_data_type(Message.ChangeColor)
+        @test is_variant_type(Message.ChangeColor)
         @test variant_kind(x) == Anonymous
         @test variant_kind(Message.ChangeColor) == Anonymous
         @test sprint(show, x) == "Message.ChangeColor(1, 2, 3)"

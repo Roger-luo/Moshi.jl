@@ -1,6 +1,16 @@
+module TestScan
+
 using Test
 using Moshi.Data.Prelude
-using Moshi.Match: Pattern, expr2pattern
+using Moshi.Match: Pattern, Match
+
+struct Foo
+    x::Int
+    y::Int
+    z::Float64
+end
+
+expr2pattern(expr) = Match.expr2pattern(@__MODULE__, expr)
 
 @test expr2pattern(:(_::Int)) == Pattern.TypeAnnotate(Pattern.Wildcard(), :Int)
 @test sprint(show, expr2pattern(:(_::Int))) == "_::Int"
@@ -18,8 +28,8 @@ end))) == "(x::Int) && (if :(x > 2) end)"
     Pattern.Ref(:Int, [Pattern.Quote(1), Pattern.Variable(:x)])
 @test sprint(show, expr2pattern(:(Int[1, x]))) == "\$(Int)[1, x]"
 @test expr2pattern(:(Foo(x; y=1))) ==
-    Pattern.Call(:Foo, [Pattern.Variable(:x)], Dict(:y => Pattern.Quote(1)))
-@test sprint(show, expr2pattern(:(Foo(x; y=1)))) == "\$(Foo)(x; y=1)"
+    Pattern.Call(Foo, [Pattern.Variable(:x)], Dict(:y => Pattern.Quote(1)))
+@test sprint(show, expr2pattern(:(Foo(x; y=1)))) == "\$(Main.TestScan.Foo)(x; y=1)"
 @test expr2pattern(:((1, x, y))) ==
     Pattern.Tuple([Pattern.Quote(1), Pattern.Variable(:x), Pattern.Variable(:y)])
 @test sprint(show, expr2pattern(:((1, x, y)))) == "(1, x, y)"
@@ -136,3 +146,6 @@ end))) == "(x::Int) && (if :(x > 2) end)"
     x 6; 7 8;;;
     9 0; 2 3
 ]))) == "Float64[1 2;3 4;;;x 6;7 8;;;9 0;2 3]"
+
+
+end # module
