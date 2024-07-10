@@ -32,6 +32,11 @@ end
     [1, _::Float64, y::String] => y
 end
 
+@test :b == @match Int[1, 2] begin
+    Any[1, 2] => :a
+    Int[_, _] => :b
+end
+
 VAL = 123
 @test "a" == @match [1, VAL, "a"] begin
     [1, $VAL, y::String] => y
