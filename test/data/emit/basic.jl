@@ -29,11 +29,13 @@ using Moshi.Data:
 end
 
 @testset "Message" begin
-    @test variants(Message.Type) == (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
+    @test variants(Message.Type) ==
+        (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
 
     @testset "Quit" begin
         x = Message.Quit()
-        @test variants(x) == (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
+        @test variants(x) ==
+            (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
         @test is_data_type(x)
         @test is_variant_type(Message.Quit)
         @test isa_variant(Message.Quit(), Message.Quit)
@@ -83,7 +85,7 @@ end
         @test variant_type(x) == Message.Write
         @test variant_fieldtypes(x) == (String,)
         @test variant_fieldtypes(Message.Write) == (String,)
-        @test variant_fieldnames(Message.Write) == (1, )
+        @test variant_fieldnames(Message.Write) == (1,)
         @test variant_getfield(x, Message.Write, 1) == "hi"
     end # Write
 
@@ -118,4 +120,3 @@ end
     @test variant_nfields(Message.Write) == 1
     @test variant_nfields(Message.ChangeColor) == 3
 end # Message
- 

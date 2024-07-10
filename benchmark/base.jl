@@ -28,23 +28,27 @@ struct Object
     data::Union{A,B,C,D}
 end
 
-foo!(xs) = for i in eachindex(xs)
-    x = xs[i]
-    x = x.data
-    xs[i] = if x isa A
-        Object(B(x.common_field+1, x.a, x.b, x.b))
-    elseif x isa B
-        Object(C(x.common_field-1, x.b, isodd(x.a), x.b, x.d))
-    elseif x isa C
-        Object(D(x.common_field+1, isodd(x.common_field) ? "hi" : "bye"))
-    else
-        Object(A(x.common_field-1, x.b == "hi", x.common_field))
+function foo!(xs)
+    for i in eachindex(xs)
+        x = xs[i]
+        x = x.data
+        xs[i] = if x isa A
+            Object(B(x.common_field + 1, x.a, x.b, x.b))
+        elseif x isa B
+            Object(C(x.common_field - 1, x.b, isodd(x.a), x.b, x.d))
+        elseif x isa C
+            Object(D(x.common_field + 1, isodd(x.common_field) ? "hi" : "bye"))
+        else
+            Object(A(x.common_field - 1, x.b == "hi", x.common_field))
+        end
     end
 end
 
 using Random
 rng = Random.MersenneTwister(123)
-xs = Vector{Object}(map(x->rand((Object(A()), Object(B()), Object(C()), Object(D()))), 1:10000))
+xs = Vector{Object}(
+    map(x -> rand((Object(A()), Object(B()), Object(C()), Object(D()))), 1:10000)
+)
 using BenchmarkTools
 @benchmark foo!($xs)
 @code_warntype foo!(xs)

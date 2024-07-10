@@ -1,9 +1,19 @@
 module Data
 
 using Jieko: @interface, INTERFACE, INTERFACE_LIST, @export_all_interfaces
-using ExproniconLite: Maybe, JLFunction, JLIfElse, JLStruct, JLKwStruct, JLField, JLKwField, no_default,
-                      codegen_ast, expr_map, guess_type, xtuple
-
+using ExproniconLite:
+    Maybe,
+    JLFunction,
+    JLIfElse,
+    JLStruct,
+    JLKwStruct,
+    JLField,
+    JLKwField,
+    no_default,
+    codegen_ast,
+    expr_map,
+    guess_type,
+    xtuple
 
 """
     @data <head> <variants>
@@ -11,7 +21,7 @@ using ExproniconLite: Maybe, JLFunction, JLIfElse, JLStruct, JLKwStruct, JLField
 Create a new algebraic data type (also known as a sum type) with the given head and variants.
 """
 macro data(head, body)
-    def = TypeDef(__module__, head, body; source = __source__)
+    def = TypeDef(__module__, head, body; source=__source__)
     info = EmitInfo(def)
     return esc(emit(info))
 end

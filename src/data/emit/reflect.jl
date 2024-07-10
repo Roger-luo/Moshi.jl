@@ -325,7 +325,7 @@ end
                 field::Symbol,
             ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)::$(storage.head)
-                $body
+                return $body
             end
         end
     end
@@ -348,12 +348,10 @@ end
 
         return quote
             $Base.@inline function $Data.variant_getfield(
-                value::$(info.type_head),
-                tag::$Type{$(storage.parent.name)},
-                field::Int,
+                value::$(info.type_head), tag::$Type{$(storage.parent.name)}, field::Int
             ) where {$(info.whereparams...)}
                 data = $(Base.getfield)(value, :data)::$(storage.head)
-                $body
+                return $body
             end
         end
     end
@@ -376,7 +374,9 @@ end
                     tag::$Type{<:$(storage.parent.name)},
                     field::Union{Int,Symbol},
                 ) where {$(info.whereparams...)}
-                    $Base.error("type parameters of given variant type do not match input value")
+                    return $Base.error(
+                        "type parameters of given variant type do not match input value"
+                    )
                 end
             end
         end

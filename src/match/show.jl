@@ -73,12 +73,12 @@ function Data.show_variant(io::IO, pattern::Pattern.Type)
             show(io, each)
         end
         print(io, ")")
-    # elseif isa_variant(pattern, Pattern.NamedTuple)
-    #     print(io, "(")
-    #     for (idx, arg) in enumerate(pattern.xs)
-    #         idx > 1 && print(io, ", ")
-    #         print(io, pattern.names[idx], "=", arg)
-    #     end
+        # elseif isa_variant(pattern, Pattern.NamedTuple)
+        #     print(io, "(")
+        #     for (idx, arg) in enumerate(pattern.xs)
+        #         idx > 1 && print(io, ", ")
+        #         print(io, pattern.names[idx], "=", arg)
+        #     end
     elseif isa_variant(pattern, Pattern.Vector)
         print(io, "[")
         for (idx, each) in enumerate(pattern.xs)

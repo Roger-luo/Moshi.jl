@@ -69,14 +69,18 @@ end
 
     if isempty(info.params)
         return quote
-            $Base.@assume_effects :foldable function $Base.getproperty(value::Type, index::Int)
+            $Base.@assume_effects :foldable function $Base.getproperty(
+                value::Type, index::Int
+            )
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
         end # quote
     else
         return quote
-            $Base.@assume_effects :foldable function $Base.getproperty(value::$(info.type_head), index::Int) where {$(info.whereparams...)}
+            $Base.@assume_effects :foldable function $Base.getproperty(
+                value::$(info.type_head), index::Int
+            ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
@@ -107,9 +111,11 @@ end
     end
 
     return quote
-        $Base.@inline $Base.@assume_effects :foldable function $Base.propertynames(value::Type)
+        $Base.@inline $Base.@assume_effects :foldable function $Base.propertynames(
+            value::Type
+        )
             data = $Base.getfield(value, :data)
-            $(codegen_ast(jl))
+            return $(codegen_ast(jl))
         end
     end
 end

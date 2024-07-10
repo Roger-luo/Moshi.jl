@@ -1,7 +1,8 @@
 # concrete
 function TypeDef(mod::Module, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
     head = TypeHead(head)
-    Meta.isexpr(body, :block) || throw(ArgumentError("expect begin ... end block, got $body"))
+    Meta.isexpr(body, :block) ||
+        throw(ArgumentError("expect begin ... end block, got $body"))
     variants = Variant[]
     current_line = nothing
     for expr in body.args
@@ -54,25 +55,34 @@ end
 function Variant(expr::Expr; doc=nothing, source=nothing)
     if Meta.isexpr(expr, :call)
         expr.args[1] isa Symbol || throw(ArgumentError("invalid variant expression: $expr"))
-        length(expr.args) > 1 || throw(ArgumentError("missing fields in variant expression: $expr, do you mean to use $(expr.args[1])?"))
+        length(expr.args) > 1 || throw(
+            ArgumentError(
+                "missing fields in variant expression: $expr, do you mean to use $(expr.args[1])?",
+            ),
+        )
         return Variant(Anonymous, expr.args[1], Field.(expr.args[2:end]), doc, source)
     elseif Meta.isexpr(expr, :struct)
         jl = JLKwStruct(expr)
         jl.ismutable &&
             throw(ArgumentError("invalid variant expression: $expr, cannot be mutable"))
-        isempty(jl.constructors) ||
-            throw(ArgumentError("invalid variant expression: $expr, cannot have constructors"))
+        isempty(jl.constructors) || throw(
+            ArgumentError("invalid variant expression: $expr, cannot have constructors")
+        )
         isnothing(jl.supertype) ||
             throw(ArgumentError("invalid variant expression: $expr, cannot have supertype"))
         isempty(jl.typevars) ||
             throw(ArgumentError("invalid variant expression: $expr, cannot have typevars"))
         return Variant(Named, jl.name, NamedField.(jl.fields), doc, source)
-    elseif Meta.isexpr(expr, :macrocall) &&
-           (expr.args[1] === GlobalRef(Core, Symbol("@doc")) ||
-            expr.args[1] === Symbol("@doc")) # allow calling @doc inside the macro
+    elseif Meta.isexpr(expr, :macrocall) && (
+        expr.args[1] === GlobalRef(Core, Symbol("@doc")) || expr.args[1] === Symbol("@doc")
+    ) # allow calling @doc inside the macro
         return Variant(expr.args[4]; doc=expr.args[3], source=expr.args[2])
     elseif Meta.isexpr(expr, :curly)
-        throw(ArgumentError("invalid variant expression: $expr, variant cannot have type parameters"))
+        throw(
+            ArgumentError(
+                "invalid variant expression: $expr, variant cannot have type parameters"
+            ),
+        )
     else
         throw(ArgumentError("invalid variant expression: $expr"))
     end

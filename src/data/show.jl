@@ -5,10 +5,10 @@ function Base.show(io::IO, mime::MIME"text/plain", def::TypeDef)
     show(io, def.head)
     printstyled(io, " begin\n"; color=:red)
     for variant in def.variants
-        show(IOContext(io, :indent=>4), mime, variant)
+        show(IOContext(io, :indent => 4), mime, variant)
         print(io, "\n")
     end
-    printstyled(io, "end"; color=:red)
+    return printstyled(io, "end"; color=:red)
 end
 
 function Base.show(io::IO, head::TypeHead)
@@ -23,7 +23,7 @@ function Base.show(io::IO, head::TypeHead)
     end
     if head.supertype !== nothing
         print(io, " <: ")
-        printstyled(io, head.supertype, color=:cyan)
+        printstyled(io, head.supertype; color=:cyan)
     end
 end
 
@@ -54,22 +54,25 @@ function Base.show(io::IO, ::MIME"text/plain", x::Variant)
         end
         print(io, ")")
     else
-        tab(indent); printstyled(io, "struct "; color=:red)
+        tab(indent)
+        printstyled(io, "struct "; color=:red)
         print(io, x.name, "\n")
         for field in x.fields
-            tab(indent + 4); print(io, field, "\n")
+            tab(indent + 4)
+            print(io, field, "\n")
         end
-        tab(indent); printstyled(io, "end"; color=:red)
+        tab(indent)
+        printstyled(io, "end"; color=:red)
     end
 end
 
-Base.show(io::IO, x::Field) = printstyled(io, x.type, color=:cyan)
+Base.show(io::IO, x::Field) = printstyled(io, x.type; color=:cyan)
 
 function Base.show(io::IO, x::NamedField)
     print(io, x.name, "::")
-    printstyled(io, x.type, color=:cyan)
+    printstyled(io, x.type; color=:cyan)
     if x.default !== no_default
-        printstyled(io, " = ", color=:red)
+        printstyled(io, " = "; color=:red)
         print(io, x.default)
     end
 end

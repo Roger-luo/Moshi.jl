@@ -24,9 +24,7 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
-            call_ex = xcall(
-                Data, :variant_getfield, value, head, QuoteNode(key)
-            )
+            call_ex = xcall(Data, :variant_getfield, value, head, QuoteNode(key))
             decons(ctx, val)(call_ex)
         end
     else # if isconcretetype(head)

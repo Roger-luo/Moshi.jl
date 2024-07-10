@@ -19,8 +19,8 @@ end
         Foo(x, y) => (x, y)
     end
 
-    @test (1, ) == @match Foo(1, 2, 3) begin
-        Foo(x) => (x, )
+    @test (1,) == @match Foo(1, 2, 3) begin
+        Foo(x) => (x,)
     end
 end # testset
 
@@ -41,7 +41,7 @@ end
 
 function foo(value::Message.Type)
     @match value begin
-        Message.Move(;x, y) => (x, y)
+        Message.Move(; x, y) => (x, y)
         Message.Quit() => 0
         Message.Write(msg) => msg
         Message.ChangeColor(a) => a

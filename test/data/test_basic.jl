@@ -59,8 +59,6 @@ const Goo = Variant(2)
 
 end # Foo
 
-
-
 x = Foo.Goo(1, 1.0)
 @code_warntype x.f_1
 x.f_1

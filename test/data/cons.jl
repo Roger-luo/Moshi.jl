@@ -1,6 +1,7 @@
 using Test
 using ExproniconLite: @expr, no_default
-using Moshi.Data: Variant, Singleton, Named, Anonymous, Field, NamedField, TypeHead, TypeVarExpr, TypeDef
+using Moshi.Data:
+    Variant, Singleton, Named, Anonymous, Field, NamedField, TypeHead, TypeVarExpr, TypeDef
 
 @testset "basic TypeDef" begin
     ex = quote
@@ -18,12 +19,11 @@ using Moshi.Data: Variant, Singleton, Named, Anonymous, Field, NamedField, TypeH
         Baz
         """
         struct Baz
-        x::Float64
-        y::Float64 = 2.0
+            x::Float64
+            y::Float64 = 2.0
         end
     end
     def = TypeDef(Main, :Foo, ex)
-
 
     @test def.head == TypeHead(:Foo)
     @test length(def.variants) == 3
@@ -53,7 +53,6 @@ end # TypeDef
     end
     def = TypeDef(Main, :(Foo{T}), ex)
 
-
     @test def.head == TypeHead(:(Foo{T}))
     @test length(def.variants) == 3
     @test def.variants[1].source == ex.args[1]
@@ -64,11 +63,11 @@ end # TypeDef
     @test TypeHead(:Foo) == TypeHead(; name=:Foo)
     @test TypeHead(:(Foo{T})) == TypeHead(; name=:Foo, params=[TypeVarExpr(:T)])
     @test TypeHead(:(Foo{T} <: Super{T})) ==
-          TypeHead(; name=:Foo, params=[TypeVarExpr(:T)], supertype=:(Super{T}))
+        TypeHead(; name=:Foo, params=[TypeVarExpr(:T)], supertype=:(Super{T}))
     @test TypeHead(:(Foo{T<:Real} <: Super{T})) ==
-          TypeHead(; name=:Foo, params=[TypeVarExpr(:T; ub=:(Real))], supertype=:(Super{T}))
+        TypeHead(; name=:Foo, params=[TypeVarExpr(:T; ub=:(Real))], supertype=:(Super{T}))
     @test TypeHead(:(Foo{T>:Real} <: Super{T})) ==
-          TypeHead(; name=:Foo, params=[TypeVarExpr(:T; lb=:(Real))], supertype=:(Super{T}))
+        TypeHead(; name=:Foo, params=[TypeVarExpr(:T; lb=:(Real))], supertype=:(Super{T}))
 end
 
 @testset "Variant(singleton)" begin
@@ -107,7 +106,6 @@ end
     """
     @test x.source == ex.args[2].args[2]
 end # testset
-
 
 @testset "Variant(Named)" begin
     ex = @expr struct Foo

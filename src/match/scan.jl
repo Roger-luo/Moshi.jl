@@ -246,8 +246,10 @@ function call2pattern(mod::Module, expr)
     # verify
     nfields = length(args) + length(kwargs)
     if Data.is_variant_type(head) # check if our pattern is correct
-        Data.variant_nfields(head) >= nfields || return Pattern.Err("too many fields to match")
-        Data.variant_kind(head) == Data.Anonymous && length(kwargs) > 0 &&
+        Data.variant_nfields(head) >= nfields ||
+            return Pattern.Err("too many fields to match")
+        Data.variant_kind(head) == Data.Anonymous &&
+            length(kwargs) > 0 &&
             return Pattern.Err("cannot use named fields in anonymous variant")
     elseif Data.is_data_type(head)
         return Pattern.Err("cannot match the type of data type, specify a variant type")

@@ -36,7 +36,8 @@ VAL = 123
 end
 
 @test "a" == @match [1, 2, "a"] begin
-    [1, x, y::String] && if x == 2 end => y
+    [1, x, y::String] && if x == 2
+    end => y
 end
 
 @test "a" == @match [1, 2, "a"] begin
@@ -67,7 +68,8 @@ VAL = 123
 end
 
 @test "a" == @match (1, 2, "a") begin
-    (1, x, y::String) && if x == 2 end => y
+    (1, x, y::String) && if x == 2
+    end => y
 end
 
 # # TODO: error on unbalanced patterns about missing y

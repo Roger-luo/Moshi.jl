@@ -149,7 +149,9 @@ $INTERFACE
 Return the field types of the variant.
 """
 @interface function variant_fieldtypes(type::Type)::Tuple
-    throw(IllegalDispatch("incomplete type information for $type, missing type parameters?"))
+    throw(
+        IllegalDispatch("incomplete type information for $type, missing type parameters?")
+    )
 end
 
 @interface function variant_fieldtypes(value)
@@ -205,6 +207,6 @@ Known the variant type `tag`, return the field of the variant by field name or i
     type of the variant usually, so if you care about performance, you may want to use this
     method in combine with [`variant_storage`](@ref).
 """
-function variant_getfield(value, tag::Type, field::Union{Int, Symbol})
-    throw(IllegalDispatch())    
+function variant_getfield(value, tag::Type, field::Union{Int,Symbol})
+    throw(IllegalDispatch())
 end

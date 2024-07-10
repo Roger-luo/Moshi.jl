@@ -75,8 +75,8 @@ end
 
 function Base.:(==)(lhs::TypeHead, rhs::TypeHead)
     return lhs.name == rhs.name &&
-               lhs.params == rhs.params &&
-               lhs.supertype == rhs.supertype
+           lhs.params == rhs.params &&
+           lhs.supertype == rhs.supertype
 end
 
 struct TypeDef

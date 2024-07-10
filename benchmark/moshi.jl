@@ -26,17 +26,19 @@ using Moshi.Data: Data, @data, isa_variant
     end
 end
 
-foo!(xs) = for i in eachindex(xs)
-    x = xs[i]
-    data = getfield(x, :data)
-    xs[i] = if data isa AT.var"##Storage#A"
-        AT.B(data.common_field+1, data.a, data.b, data.b)
-    elseif data isa AT.var"##Storage#B"
-        AT.C(data.common_field-1, data.b, isodd(data.a), data.b, data.d)
-    elseif data isa AT.var"##Storage#C"
-        AT.D(data.common_field+1, isodd(data.common_field) ? "hi" : "bye")
-    else
-        AT.A(data.common_field-1, data.b == "hi", data.common_field)
+function foo!(xs)
+    for i in eachindex(xs)
+        x = xs[i]
+        data = getfield(x, :data)
+        xs[i] = if data isa AT.var"##Storage#A"
+            AT.B(data.common_field + 1, data.a, data.b, data.b)
+        elseif data isa AT.var"##Storage#B"
+            AT.C(data.common_field - 1, data.b, isodd(data.a), data.b, data.d)
+        elseif data isa AT.var"##Storage#C"
+            AT.D(data.common_field + 1, isodd(data.common_field) ? "hi" : "bye")
+        else
+            AT.A(data.common_field - 1, data.b == "hi", data.common_field)
+        end
     end
 end
 

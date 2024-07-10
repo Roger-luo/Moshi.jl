@@ -28,16 +28,16 @@ using MLStyle: @match
     end
 end
 
-foo!(xs) = for i in eachindex(xs)
-    @inbounds x = xs[i]
-    @inbounds xs[i] = @match x begin
-        AT.A(_...) => AT.D()
-        AT.B(_...) => AT.A()
-        AT.C(_...) => AT.B()
-        AT.D(_...) => AT.A()
-        _ => error("aaa")
+foo!(xs) =
+    for i in eachindex(xs)
+        @inbounds x = xs[i]
+        @inbounds xs[i] = @match x begin
+            AT.A(_...) => AT.D()
+            AT.B(_...) => AT.A()
+            AT.C(_...) => AT.B()
+            AT.D(_...) => AT.A()
+            _ => error("aaa")
+        end
     end
-end
-
 
 end # ExproniconBench

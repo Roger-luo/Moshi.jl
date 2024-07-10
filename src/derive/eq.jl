@@ -8,7 +8,9 @@ function derive_impl(::Val{:Eq}, mod::Module, type::Module)
     end
 
     return quote
-        Base.@constprop :aggressive function $Base.:(==)(lhs::EqT, rhs::EqT) where {EqT <: $type.Type}
+        Base.@constprop :aggressive function $Base.:(==)(
+            lhs::EqT, rhs::EqT
+        ) where {EqT<:$type.Type}
             $Data.variant_type(lhs) == $Data.variant_type(rhs) || return false
             vtype = $Data.variant_type(lhs)
             return $(codegen_ast(jl))
