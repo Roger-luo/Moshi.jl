@@ -65,6 +65,15 @@ end
 """
 $INTERFACE
 
+Check if the given object is a variant type.
+"""
+@interface function is_variant_type(x)::Bool
+    return false
+end
+
+"""
+$INTERFACE
+
 Return a tuple of variants of the given data type.
 """
 @interface function variants(x::Type)::Tuple

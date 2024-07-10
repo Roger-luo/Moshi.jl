@@ -31,7 +31,7 @@ end
             return true
         end
 
-        $Base.@inline function $Data.is_data_type(value::$Type{<:Variant})
+        $Base.@inline function $Data.is_variant_type(value::$Type{<:Variant})
             return true
         end
 
