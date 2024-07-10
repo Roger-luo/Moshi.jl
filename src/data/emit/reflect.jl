@@ -16,7 +16,9 @@ using ExproniconLite: JLIfElse, xtuple, expr_map, codegen_ast
                 return $(xtuple([storage.parent.name for storage in info.storages]...))
             end
 
-            $Base.@inline function $Data.variants(::$Type{$(info.type_head)}) where {$(info.whereparams...)}
+            $Base.@inline function $Data.variants(
+                ::$Type{$(info.type_head)}
+            ) where {$(info.whereparams...)}
                 return $(xtuple([storage.variant_head for storage in info.storages]...))
             end
         end
@@ -54,7 +56,7 @@ end
     on_type = expr_map(info.storages) do storage
         quote
             function $Data.variant_kind(::$Type{<:$(storage.parent.name)})
-                $(QuoteNode(storage.parent.kind))
+                return $(QuoteNode(storage.parent.kind))
             end
         end
     end
@@ -202,31 +204,35 @@ end
 
     unknown_variant = quote
         function $Data.variant_fieldtypes(::$Type{<:Type})
-            $Base.error("cannot obtain fieldnames on data type, unknown variant")
+            return $Base.error("cannot obtain fieldnames on data type, unknown variant")
         end
     end
 
     if isempty(info.params)
         return quote
-            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head))
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
+                value::$(info.type_head)
+            )
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
 
             $unknown_variant
 
-            $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
+            $(expr_map(x -> emit_variant_fieldtypes_each_storage(info, x), info.storages))
         end
     else
         return quote
-            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(value::$(info.type_head)) where {$(info.whereparams...)}
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
+                value::$(info.type_head)
+            ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
 
             $unknown_variant
 
-            $(expr_map(x->emit_variant_fieldtypes_each_storage(info, x), info.storages))
+            $(expr_map(x -> emit_variant_fieldtypes_each_storage(info, x), info.storages))
         end
     end
 end # emit_variant_fieldtypes
@@ -234,13 +240,17 @@ end # emit_variant_fieldtypes
 function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageInfo)
     if isempty(info.params)
         return quote
-            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(::$Type{$(storage.variant_head)})
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
+                ::$Type{$(storage.variant_head)}
+            )
                 return $(xtuple(storage.annotations...))
             end
         end
     else
         return quote
-            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(::$Type{$(storage.variant_head)}) where {$(info.whereparams...)}
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
+                ::$Type{$(storage.variant_head)}
+            ) where {$(info.whereparams...)}
                 return $(xtuple(storage.annotations...))
             end
         end
@@ -256,7 +266,7 @@ end
         else
             xtuple([QuoteNode(field.name) for field in storage.parent.fields]...)
         end
-        
+
         return quote
             $Base.@inline function $Data.variant_fieldnames(::$Type{<:$(storage.parent.name)})
                 return $(fieldnames)
@@ -268,7 +278,7 @@ end
         $main
 
         $Base.@inline function $Data.variant_fieldnames(::$Type{<:Type})
-            $Base.error("cannot obtain fieldnames on data type, unknown variant")
+            return $Base.error("cannot obtain fieldnames on data type, unknown variant")
         end
     end
 end # emit_variant_fieldnames
@@ -297,7 +307,9 @@ end
             jl = JLIfElse()
             for (idx, field) in enumerate(storage.parent.fields)
                 jl[:(field === $(QuoteNode(field.name)))] = quote
-                    return $Base.getfield(data, $(QuoteNode(field.name)))::$(storage.annotations[idx])
+                    return $Base.getfield(
+                        data, $(QuoteNode(field.name))
+                    )::$(storage.annotations[idx])
                 end
             end
             jl.otherwise = otherwise
@@ -307,7 +319,11 @@ end
         end
 
         return quote
-            $Base.@inline function $Data.variant_getfield(value::$(info.type_head), tag::$Type{$(storage.variant_head)}, field::Symbol) where {$(info.whereparams...)}
+            $Base.@inline function $Data.variant_getfield(
+                value::$(info.type_head),
+                tag::$Type{$(storage.parent.name)},
+                field::Symbol,
+            ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)::$(storage.head)
                 $body
             end
@@ -319,7 +335,9 @@ end
             jl = JLIfElse()
             for (idx, field) in enumerate(storage.parent.fields)
                 jl[:(field === $(QuoteNode(idx)))] = quote
-                    return $(Base.getfield)(data, $(QuoteNode(idx)))::$(storage.annotations[idx])
+                    return $(Base.getfield)(
+                        data, $(QuoteNode(idx))
+                    )::$(storage.annotations[idx])
                 end
             end
             jl.otherwise = otherwise
@@ -329,17 +347,47 @@ end
         end
 
         return quote
-            $Base.@inline function $Data.variant_getfield(value::$(info.type_head), tag::$Type{$(storage.variant_head)}, field::Int) where {$(info.whereparams...)}
+            $Base.@inline function $Data.variant_getfield(
+                value::$(info.type_head),
+                tag::$Type{$(storage.parent.name)},
+                field::Int,
+            ) where {$(info.whereparams...)}
                 data = $(Base.getfield)(value, :data)::$(storage.head)
                 $body
             end
         end
     end
 
+    generic = expr_map(info.storages) do storage
+        if isempty(info.params)
+            nothing
+        else
+            quote
+                $Base.@inline function $Data.variant_getfield(
+                    value::$(info.type_head),
+                    tag::$Type{$(storage.variant_head)},
+                    field::Union{Int,Symbol},
+                ) where {$(info.whereparams...)}
+                    return $Data.variant_getfield(value, $(storage.parent.name), field)
+                end
+
+                $Base.@inline function $Data.variant_getfield(
+                    value::$(info.type_head),
+                    tag::$Type{<:$(storage.parent.name)},
+                    field::Union{Int,Symbol},
+                ) where {$(info.whereparams...)}
+                    $Base.error("type parameters of given variant type do not match input value")
+                end
+            end
+        end
+    end # storage
+
     return quote
         $named
 
         $numbered
+
+        $generic
     end
 end
 

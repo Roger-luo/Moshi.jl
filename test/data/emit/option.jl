@@ -1,24 +1,33 @@
 using Test
-using Moshi.Data: @data, isa_variant, variant_fieldtypes, IllegalDispatch
+using Moshi.Data:
+    @data,
+    isa_variant,
+    variants,
+    variant_fieldtypes,
+    variant_getfield,
+    variant_fieldnames,
+    IllegalDispatch
 
 @data Option{T} begin
     Some(T)
     None
 end
 
-
 @testset "Option{T}" begin
     @test variants(Option.Type) == (Option.Some, Option.None)
     @test variants(Option.Type{Float64}) == (Option.Some{Float64}, Option.None{Float64})
-    @test variant_fieldnames(Option.Some) == (1, )
-    @test variant_fieldnames(Option.Some{Float64}) == (1, )
+    @test variant_fieldnames(Option.Some) == (1,)
+    @test variant_fieldnames(Option.Some{Float64}) == (1,)
     @test_throws IllegalDispatch variant_fieldtypes(Option.Some)
-    @test variant_fieldtypes(Option.Some{Float64}) == (Float64, )
-
+    @test variant_fieldtypes(Option.Some{Float64}) == (Float64,)
 
     @testset "cons" begin
         x = Option.Some(1)
         @test isa_variant(x, Option.Some)
+        @test variant_getfield(x, Option.Some, 1) == 1
+        @test variant_getfield(x, Option.Some{Int}, 1) == 1
+        @test_throws ErrorException variant_getfield(x, Option.Some{Float64}, 1)
+
         x = Option.Some{Float64}(1)
         @test isa_variant(x, Option.Some{Float64})
         x = Option.None()
