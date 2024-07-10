@@ -153,6 +153,7 @@ end))) == "(x::Int) && (if :(x > 2) end)"
     [Pattern.Vector([Pattern.Quote(1), Pattern.Quote(2), Pattern.Quote(3)])],
     nothing,
 )
+@test sprint(show, expr2pattern(:(x for x in [1, 2, 3]))) == "x for x in [1, 2, 3]"
 
 @test expr2pattern(:([x for x in [1, 2, 3]])) == Pattern.Comprehension(
     Pattern.Generator(
@@ -162,5 +163,6 @@ end))) == "(x::Int) && (if :(x > 2) end)"
         nothing,
     ),
 )
+@test sprint(show, expr2pattern(:([x for x in [1, 2, 3]]))) == "[x for x in [1, 2, 3]]"
 
 end # module
