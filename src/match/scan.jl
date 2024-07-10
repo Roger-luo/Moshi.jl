@@ -251,10 +251,8 @@ function call2pattern(mod::Module, expr)
             return Pattern.Err("cannot use named fields in anonymous variant")
     elseif Data.is_data_type(head)
         return Pattern.Err("cannot match the type of data type, specify a variant type")
-    elseif isconcretetype(head)
-        Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
     else
-        return Pattern.Err("invalid call pattern, expect @data type or concrete type")
+        Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
     end
     return Pattern.Call(head, args, kwargs)
 end
