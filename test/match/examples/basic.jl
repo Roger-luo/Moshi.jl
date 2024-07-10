@@ -93,4 +93,17 @@ end
     [1, xs::Float64...] => xs
 end
 
+struct Foo
+    x::Int
+    y::Int
+    z::Float64
+end
+
+const foo = Foo(1, 2, 3.0)
+
+@test @match foo begin
+    Foo(foo.x, foo.y, foo.z) => true
+    _ => false
+end
+
 end # module
