@@ -8,6 +8,7 @@ include("exception.jl")
 include("repr.jl")
 include("scan.jl")
 include("show.jl")
+include("verify/mod.jl")
 include("emit/mod.jl")
 include("macro.jl")
 

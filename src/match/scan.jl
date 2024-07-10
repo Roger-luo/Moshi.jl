@@ -58,8 +58,6 @@ function toplevel_expr2pattern(mod::Module, expr)
     return expr2pattern(mod, expr)
 end
 
-expr2pattern(expr) = expr2pattern(Main, expr)
-
 function expr2pattern(mod::Module, expr)
     expr === :_ && return Pattern.Wildcard()
     expr isa Symbol && return Pattern.Variable(expr)
@@ -242,6 +240,21 @@ function call2pattern(mod::Module, expr)
         end
     end
 
-    # NOTE: might need to eval this?
-    return Pattern.Call(expr.args[1], args, kwargs)
+    # NOTE: we have to eval this so we know what type this is
+    head = Base.eval(mod, expr.args[1])
+
+    # verify
+    nfields = length(args) + length(kwargs)
+    if Data.is_variant_type(head) # check if our pattern is correct
+        Data.variant_nfields(head) >= nfields || return Pattern.Err("too many fields to match")
+        Data.variant_kind(head) == Data.Anonymous && length(kwargs) > 0 &&
+            return Pattern.Err("cannot use named fields in anonymous variant")
+    elseif Data.is_data_type(head)
+        return Pattern.Err("cannot match the type of data type, specify a variant type")
+    elseif isconcretetype(head)
+        Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
+    else
+        return Pattern.Err("invalid call pattern, expect @data type or concrete type")
+    end
+    return Pattern.Call(head, args, kwargs)
 end

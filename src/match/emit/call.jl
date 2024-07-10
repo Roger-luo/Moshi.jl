@@ -15,14 +15,8 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
     # numbered fields, e.g getproperty(x, ::Int) is not defined for
     # Julia types in general.
     @gensym value
-    nfields = length(pat.args) + length(pat.kwargs)
-    head = Base.eval(ctx.info.mod, pat.head)
+    head = pat.head
     if Data.is_variant_type(head) # check if our pattern is correct
-        Data.variant_nfields(head) >= nfields || throw(SyntaxError("invalid pattern: $pat"))
-        Data.variant_kind(head) == Data.Anonymous &&
-            length(pat.kwargs) > 0 &&
-            throw(SyntaxError("invalid pattern: $pat"))
-
         type_assert = :($Data.isa_variant($value, $head))
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
             call_ex = xcall(Data, :variant_getfield, value, head, idx)
@@ -35,12 +29,7 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
             )
             decons(ctx, val)(call_ex)
         end
-    elseif Data.is_data_type(head)
-        throw(SyntaxError("invalid pattern: $pat"))
-    elseif isconcretetype(head)
-        Base.fieldcount(head) >= nfields ||
-            throw(SyntaxError("too many fields to match: $pat"))
-
+    else # if isconcretetype(head)
         type_assert = :($value isa $head)
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
             decons(ctx, x)(:($Core.getfield($value, $idx)))
@@ -49,8 +38,6 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
             key, val = kw
             decons(ctx, val)(:($Core.getfield($value, $key)))
         end
-    else
-        throw(SyntaxError("invalid pattern: $pat, expect @data type or concrete type"))
     end
 
     return function call(x)

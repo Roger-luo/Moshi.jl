@@ -1,10 +1,10 @@
 function emit(info::EmitInfo)
-    isempty(info.cases) && return :($Base.throw($Match.SyntaxError("empty match body")))
+    isempty(info.cases) && return x_syntax_error("empty match body", info.source)
 
     matches = expr_map(info.cases, info.exprs, info.lines) do case, expr, line
         ctx = PatternContext(info, case)
         if isa_variant(case, Pattern.Err)
-            return Expr(:block, line, :($Base.throw($Match.SyntaxError($(case.:1)))))
+            return x_syntax_error(case.:1, line)
         end
 
         cond = decons(ctx, case)(info.value_holder)
