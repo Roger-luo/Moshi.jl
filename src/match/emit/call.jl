@@ -17,7 +17,7 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
     @gensym value
     nfields = length(pat.args) + length(pat.kwargs)
     head = Base.eval(ctx.info.mod, pat.head)
-    if Data.is_data_type(head) # check if our pattern is correct
+    if Data.is_variant_type(head) # check if our pattern is correct
         Data.variant_nfields(head) >= nfields || throw(SyntaxError("invalid pattern: $pat"))
         Data.variant_kind(head) == Data.Anonymous &&
             length(pat.kwargs) > 0 &&
@@ -25,16 +25,18 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
 
         type_assert = :($Data.isa_variant($value, $head))
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
-            call_ex = xcall(Data, :variant_getfield, value, Val(head.tag), idx)
+            call_ex = xcall(Data, :variant_getfield, value, head, idx)
             decons(ctx, x)(call_ex)
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
             call_ex = xcall(
-                Data, :variant_getfield, value, Val(head.tag), QuoteNode(key)
+                Data, :variant_getfield, value, head, QuoteNode(key)
             )
             decons(ctx, val)(call_ex)
         end
+    elseif Data.is_data_type(head)
+        throw(SyntaxError("invalid pattern: $pat"))
     elseif isconcretetype(head)
         Base.fieldcount(head) >= nfields ||
             throw(SyntaxError("too many fields to match: $pat"))
@@ -54,7 +56,7 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
     return function call(x)
         return quote
             $value = $x
-            $type_assert && $args_conds && $kwargs_conds
+            $(and_expr(type_assert, args_conds, kwargs_conds))
         end
     end
 end

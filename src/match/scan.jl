@@ -221,7 +221,7 @@ end
 function call2pattern(mod::Module, expr)
     args = Pattern.Type[]
     kwargs = Dict{Symbol,Pattern.Type}()
-    if Meta.isexpr(expr.args[2], :parameters)
+    if length(expr.args) > 1 && Meta.isexpr(expr.args[2], :parameters)
         for each in expr.args[2].args
             if each isa Symbol
                 key, val = (each, each)
@@ -230,7 +230,6 @@ function call2pattern(mod::Module, expr)
             end
             kwargs[key] = expr2pattern(mod, val)
         end
-    else
     end
 
     for each in expr.args[2:end]

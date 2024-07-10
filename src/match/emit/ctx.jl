@@ -54,3 +54,5 @@ function and_expr(lhs, rhs)
         return Expr(:block, :($lhs && $rhs))
     end
 end
+
+and_expr(lhs, rhs, more...) = and_expr(and_expr(lhs, rhs), more...)
