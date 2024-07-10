@@ -147,4 +147,20 @@ end))) == "(x::Int) && (if :(x > 2) end)"
     9 0; 2 3
 ]))) == "Float64[1 2;3 4;;;x 6;7 8;;;9 0;2 3]"
 
+@test expr2pattern(:(x for x in [1, 2, 3])) == Pattern.Generator(
+    Pattern.Variable(:x),
+    [:x],
+    [Pattern.Vector([Pattern.Quote(1), Pattern.Quote(2), Pattern.Quote(3)])],
+    nothing,
+)
+
+@test expr2pattern(:([x for x in [1, 2, 3]])) == Pattern.Comprehension(
+    Pattern.Generator(
+        Pattern.Variable(:x),
+        [:x],
+        [Pattern.Vector([Pattern.Quote(1), Pattern.Quote(2), Pattern.Quote(3)])],
+        nothing,
+    ),
+)
+
 end # module

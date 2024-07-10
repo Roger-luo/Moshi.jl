@@ -3,6 +3,8 @@ module TestBasicExamples
 using Test
 using Moshi.Match: @match
 
+@test @match 1 _::Int => true
+
 @test 1 == @match 1 begin
     1 => 1
     _ => error("no match")
