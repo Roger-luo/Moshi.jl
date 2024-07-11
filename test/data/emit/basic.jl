@@ -1,4 +1,5 @@
 using Test
+using Moshi.Derive: @derive
 using Moshi.Data:
     @data,
     is_data_type,
@@ -27,6 +28,8 @@ using Moshi.Data:
     Write(String)
     ChangeColor(Int, Int, Int)
 end
+
+@derive Message[Show]
 
 @testset "Message" begin
     @test variants(Message.Type) ==

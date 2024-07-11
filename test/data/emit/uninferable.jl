@@ -1,5 +1,6 @@
 using Test
 using Moshi.Data: @data, variant_type
+using Moshi.Derive: @derive
 
 @data Message{T} begin
     Quit
@@ -11,6 +12,8 @@ using Moshi.Data: @data, variant_type
     Write(String)
     ChangeColor(Int, Int, Int)
 end
+
+@derive Message[Show]
 
 @testset "not inferrable" begin
     x = Message.Quit()

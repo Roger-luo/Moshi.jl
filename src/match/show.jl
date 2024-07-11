@@ -1,4 +1,4 @@
-function Data.show_variant(io::IO, pattern::Pattern.Type)
+function Base.show(io::IO, pattern::Pattern.Type)
     if isa_variant(pattern, Pattern.Err)
         printstyled(io, "err: ", abbr(pattern.:1); color=:red)
     elseif isa_variant(pattern, Pattern.Wildcard)
