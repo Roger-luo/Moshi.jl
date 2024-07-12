@@ -19,6 +19,14 @@ function derive_impl(::Val{:Eq}, mod::Module, type::Module)
 end
 
 function eq_derive_variant_field(variant_type)
+    if variant_type isa UnionAll
+        variant_type = variant_type.body
+    end
+    cache_indices = findall(Data.variant_fieldtypes(variant_type)) do type
+        type <: Hash.Cache
+    end
+    length(cache_indices) > 1 && error("Only one field of type Hash.Cache is allowed")
+
     body = expr_map(Data.variant_fieldnames(variant_type)) do field
         lhs_value = gensym(:lhs_value)
         rhs_value = gensym(:rhs_value)
@@ -29,8 +37,22 @@ function eq_derive_variant_field(variant_type)
         end # quote
     end
 
-    return quote
+    isempty(cache_indices) && return quote
         $body
         return true
     end
-end
+
+    hash_cache_idx = first(cache_indices)
+    @gensym lhs_hash rhs_hash
+    quote
+        $lhs_hash = $Data.variant_getfield(lhs, $variant_type, $hash_cache_idx)
+        $rhs_hash = $Data.variant_getfield(rhs, $variant_type, $hash_cache_idx)
+
+        if $lhs_hash.is_set && $rhs_hash.is_set
+            return $lhs_hash[] == $rhs_hash[]
+        else
+            $body
+            return true
+        end
+    end
+end # eq_derive_variant_field

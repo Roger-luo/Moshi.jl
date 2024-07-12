@@ -247,12 +247,24 @@ function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageIn
             end
         end
     else
+        # assign type params to Any
+        assign_any = expr_map(info.params) do param
+            :($param = Any)
+        end
+
         return quote
             $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
                 ::$Type{$(storage.variant_head)}
             ) where {$(info.whereparams...)}
                 return $(xtuple(storage.annotations...))
             end
+
+            $Base.@assume_effects :foldable function $Data.variant_fieldtypes(
+                ::$Type{$(storage.parent.name)}
+            )
+                $assign_any
+                return $(xtuple(storage.annotations...))
+            end # no-params
         end
     end
 end

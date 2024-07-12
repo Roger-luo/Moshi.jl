@@ -28,8 +28,8 @@ function derive_m(mod::Module, expr)
     end
 end
 
-include("eq.jl")
 include("hash.jl")
+include("eq.jl")
 include("show.jl")
 
 end # module Derive

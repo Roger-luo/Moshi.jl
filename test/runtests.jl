@@ -7,3 +7,7 @@ end
 @testset "match" begin
     include("match/mod.jl")
 end
+
+@testset "derive" begin
+    include("derive/mod.jl")
+end
