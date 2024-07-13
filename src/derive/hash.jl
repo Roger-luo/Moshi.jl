@@ -35,15 +35,19 @@ function derive_impl(::Val{:Hash}, mod::Module, type::Module)
             h0 = $Base.hash(h, $variant_type_hash)
         end
         fieldtypes = Data.variant_fieldtypes(variant_type)
+        last_hash = 0
         for (idx, (name, type)) in
             enumerate(zip(Data.variant_fieldnames(variant_type), fieldtypes))
             type === Hash.Cache && continue
             val = xcall(Data, :variant_getfield, :x, variant_type, QuoteNode(name))
+            push!(body.args, LineNumberNode(@__LINE__()+1, @__FILE__)) # so we have error message addressed here
             push!(
                 body.args, :($(Symbol(:h, idx)) = $Base.hash($val, $(Symbol(:h, idx - 1))))
             )
+            last_hash += 1
         end
-        push!(body.args, Symbol(:h, length(fieldtypes))) # fix block return value to last value
+        push!(body.args, LineNumberNode(@__LINE__()+1, @__FILE__)) # so we have error message addressed here
+        push!(body.args, Symbol(:h, last_hash)) # fix block return value to last value
 
         cache_idx = Hash.find_cache(fieldtypes)
         jl[:($Data.isa_variant(x, $variant_type))] = if isnothing(cache_idx)

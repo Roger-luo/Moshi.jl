@@ -14,7 +14,9 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
     elseif storage.parent.kind == Anonymous
         [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
-        [field.name for field in storage.parent.fields::Vector{NamedField}]
+        map(storage.parent.fields) do field::NamedField
+            field.name
+        end
     end
 
     jl = JLFunction(;
