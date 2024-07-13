@@ -58,13 +58,13 @@ function toplevel_expr2pattern(mod::Module, expr)
     return expr2pattern(mod, expr)
 end
 
-const SCAN_PASS = Dict{Symbol,Function}()
+const SCAN_PASS = Dict{Module, Dict{Symbol, Function}}()
 
 macro scan(head, fn)
-    return esc(scan_m(head, fn))
+    return esc(scan_m(__module__, head, fn))
 end
 
-function scan_m(head, fn)
+function scan_m(mod::Module, head, fn)
     jlfn = JLFunction(fn)
     length(jlfn.args) == 2 || throw(
         ArgumentError(
@@ -81,7 +81,16 @@ function scan_m(head, fn)
     registration = expr_map(heads) do head
         head isa QuoteNode || throw(ArgumentError("head must be a quote node"))
         name = isnothing(jlfn.name) ? gensym(:scan) : jlfn.name
-        :($SCAN_PASS[$head] = $name)
+        @gensym moddict
+        quote
+            let dict = $Base.get!($Base.Dict{$Module, $Base.Dict{Symbol, Function}}, $SCAN_PASS, $mod)
+                if $Base.haskey(dict, $head)
+                    throw(ArgumentError("scan function for $head already exists"))
+                else
+                    dict[$head] = $name
+                end
+            end
+        end
     end
 
     return quote
@@ -95,8 +104,8 @@ function expr2pattern(mod::Module, expr)
     expr isa Symbol && return Pattern.Variable(expr)
     expr isa Expr || return Pattern.Quote(expr)
 
-    for (head, fn) in SCAN_PASS
-        head === expr.head && return fn(mod, expr)
+    for (_, dict) in SCAN_PASS, (head, fn) in dict
+        head === expr.head && return fn(mod, expr)::Pattern.Type
     end
     return Pattern.Err("unsupported pattern expression: $(expr)")
 end
