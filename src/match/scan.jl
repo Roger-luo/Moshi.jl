@@ -58,56 +58,67 @@ function toplevel_expr2pattern(mod::Module, expr)
     return expr2pattern(mod, expr)
 end
 
+const SCAN_PASS = Dict{Symbol,Function}()
+
+macro scan(head, fn)
+    return esc(scan_m(head, fn))
+end
+
+function scan_m(head, fn)
+    jlfn = JLFunction(fn)
+    length(jlfn.args) == 2 || throw(
+        ArgumentError(
+            "scan function must have 2 arguments with signature (::Module, ::Any)"
+        ),
+    )
+
+    if Meta.isexpr(head, :tuple)
+        heads = [each for each in head.args]
+    else
+        heads = [head]
+    end
+
+    registration = expr_map(heads) do head
+        head isa QuoteNode || throw(ArgumentError("head must be a quote node"))
+        name = isnothing(jlfn.name) ? gensym(:scan) : jlfn.name
+        :($SCAN_PASS[$head] = $name)
+    end
+
+    return quote
+        $fn
+        $registration
+    end
+end
+
 function expr2pattern(mod::Module, expr)
     expr === :_ && return Pattern.Wildcard()
     expr isa Symbol && return Pattern.Variable(expr)
     expr isa Expr || return Pattern.Quote(expr)
 
-    head = expr.head
-    head === :$ && return quote2pattern(mod, expr)
-    head === :(&&) && return and2pattern(mod, expr)
-    head === :(||) && return or2pattern(mod, expr)
-    head === :if && return if2pattern(mod, expr)
-    head === :ref && return ref2pattern(mod, expr)
-    head === :call && return call2pattern(mod, expr)
-    head === :. && return dot2pattern(mod, expr)
-    head === :(::) && return type2pattern(mod, expr)
-    head === :(=) && return kw2pattern(mod, expr)
-    head === :tuple && return tuple2pattern(mod, expr)
-    head === :vect && return vect2pattern(mod, expr)
-    head === :vcat && return vcat2pattern(mod, expr)
-    head === :hcat && return hcat2pattern(mod, expr)
-    head === :ncat && return ncat2pattern(mod, expr)
-    head === :typed_vcat && return typed_vcat2pattern(mod, expr)
-    head === :typed_hcat && return typed_hcat2pattern(mod, expr)
-    head === :typed_ncat && return typed_ncat2pattern(mod, expr)
-    head === :row && return row2pattern(mod, expr)
-    head === :nrow && return nrow2pattern(mod, expr)
-    head === :... && return splat2pattern(mod, expr)
-    head === :comprehension && return comprehension2pattern(mod, expr)
-    head === :generator && return generator2pattern(mod, expr)
-
+    for (head, fn) in SCAN_PASS
+        head === expr.head && return fn(mod, expr)
+    end
     return Pattern.Err("unsupported pattern expression: $(expr)")
 end
 
-function quote2pattern(mod::Module, expr)
+@scan :$ function quote2pattern(mod::Module, expr)
     return Pattern.Quote(expr.args[1])
 end
 
-function and2pattern(mod::Module, expr)
+@scan :(&&) function and2pattern(mod::Module, expr)
     return Pattern.And(expr2pattern(mod, expr.args[1]), expr2pattern(mod, expr.args[2]))
 end
 
-function or2pattern(mod::Module, expr)
+@scan :(||) function or2pattern(mod::Module, expr)
     return Pattern.Or(expr2pattern(mod, expr.args[1]), expr2pattern(mod, expr.args[2]))
 end
 
-function if2pattern(mod::Module, expr)
+@scan :if function if2pattern(mod::Module, expr)
     cond = expr.args[1] # just ignore body
     return Pattern.Guard(cond)
 end
 
-function generator2pattern(mod::Module, expr)
+@scan :generator function generator2pattern(mod::Module, expr)
     body = expr2pattern(mod, expr.args[1])
     if Meta.isexpr(expr.args[2], :filter) # contains if
         filter = expr2pattern(mod, expr.args[2].args[1])
@@ -126,31 +137,31 @@ function generator2pattern(mod::Module, expr)
     return Pattern.Generator(body, vars, iterators, filter)
 end
 
-function ref2pattern(mod::Module, expr)
+@scan :ref function ref2pattern(mod::Module, expr)
     return Pattern.Ref(expr.args[1], expr2pattern.(Ref(mod), expr.args[2:end]))
 end
 
-function comprehension2pattern(mod::Module, expr)
+@scan :comprehension function comprehension2pattern(mod::Module, expr)
     return Pattern.Comprehension(generator2pattern(mod, expr.args[1]))
 end
 
-function splat2pattern(mod::Module, expr)
+@scan :... function splat2pattern(mod::Module, expr)
     return Pattern.Splat(expr2pattern(mod, expr.args[1]))
 end
 
-function ncat2pattern(mod::Module, expr)
+@scan :ncat function ncat2pattern(mod::Module, expr)
     return Pattern.NCat(expr.args[1], expr2pattern.(Ref(mod), expr.args[2:end]))
 end
 
-function hcat2pattern(mod::Module, expr)
+@scan :hcat function hcat2pattern(mod::Module, expr)
     return Pattern.HCat(expr2pattern.(Ref(mod), expr.args))
 end
 
-function vcat2pattern(mod::Module, expr)
+@scan :vcat function vcat2pattern(mod::Module, expr)
     return Pattern.VCat(expr2pattern.(Ref(mod), expr.args))
 end
 
-function typed_ncat2pattern(mod::Module, expr)
+@scan :typed_ncat function typed_ncat2pattern(mod::Module, expr)
     return Pattern.TypedNCat(
         expr.args[1], # type
         expr.args[2], # n
@@ -158,41 +169,41 @@ function typed_ncat2pattern(mod::Module, expr)
     )
 end
 
-function typed_hcat2pattern(mod::Module, expr)
+@scan :typed_hcat function typed_hcat2pattern(mod::Module, expr)
     return Pattern.TypedHCat(
         expr.args[1], # type
         expr2pattern.(Ref(mod), expr.args[2:end]),
     )
 end
 
-function typed_vcat2pattern(mod::Module, expr)
+@scan :typed_vcat function typed_vcat2pattern(mod::Module, expr)
     return Pattern.TypedVCat(
         expr.args[1], # type
         expr2pattern.(Ref(mod), expr.args[2:end]),
     )
 end
 
-function row2pattern(mod::Module, expr)
+@scan :row function row2pattern(mod::Module, expr)
     return Pattern.Row(expr2pattern.(Ref(mod), expr.args))
 end
 
-function nrow2pattern(mod::Module, expr)
+@scan :nrow function nrow2pattern(mod::Module, expr)
     return Pattern.NRow(expr.args[1], expr2pattern.(Ref(mod), expr.args[2:end]))
 end
 
-function vect2pattern(mod::Module, expr)
+@scan :vect function vect2pattern(mod::Module, expr)
     return Pattern.Vector(expr2pattern.(Ref(mod), expr.args))
 end
 
-function tuple2pattern(mod::Module, expr)
+@scan :tuple function tuple2pattern(mod::Module, expr)
     return Pattern.Tuple(expr2pattern.(Ref(mod), expr.args))
 end
 
-function kw2pattern(mod::Module, expr)
+@scan :(=),:kw function eq2pattern(mod::Module, expr)
     return Pattern.Kw(expr.args[1], expr2pattern(mod, expr.args[2]))
 end
 
-function type2pattern(mod::Module, expr)
+@scan :(::) function type2pattern(mod::Module, expr)
     if length(expr.args) == 1
         value = Pattern.Wildcard()
         type = expr.args[1]
@@ -208,7 +219,7 @@ function type2pattern(mod::Module, expr)
     return Pattern.TypeAnnotate(value, type)
 end
 
-function dot2pattern(mod::Module, expr)
+@scan :. function dot2pattern(mod::Module, expr)
     # NOTE: let's assume all dot expression
     # refers to some existing module/struct object
     # so they gets eval-ed later in the generated
@@ -216,7 +227,7 @@ function dot2pattern(mod::Module, expr)
     return Pattern.Quote(expr)
 end
 
-function call2pattern(mod::Module, expr)
+@scan :call function call2pattern(mod::Module, expr)
     args = Pattern.Type[]
     kwargs = Dict{Symbol,Pattern.Type}()
 
