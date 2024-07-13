@@ -80,14 +80,13 @@ function scan_m(mod::Module, head, fn)
 
     registration = expr_map(heads) do head
         head isa QuoteNode || throw(ArgumentError("head must be a quote node"))
-        name = isnothing(jlfn.name) ? gensym(:scan) : jlfn.name
-        @gensym moddict
+        isnothing(jlfn.name) && throw(ArgumentError("scan function must have a name"))
         quote
             let dict = $Base.get!($Base.Dict{$Module, $Base.Dict{Symbol, Function}}, $SCAN_PASS, $mod)
                 if $Base.haskey(dict, $head)
                     throw(ArgumentError("scan function for $head already exists"))
                 else
-                    dict[$head] = $name
+                    dict[$head] = $(jlfn.name)
                 end
             end
         end
