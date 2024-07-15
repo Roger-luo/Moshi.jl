@@ -1,4 +1,9 @@
 function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
+    return decons_call(pat.head, ctx, pat)
+end
+
+# NOTE: allow call pattern to be customized
+function decons_call(::Type, ctx::PatternContext, pat::Pattern.Type)
     # NOTE: when we see a call, it can only be a constructor
     # because our syntactical pattern match is performed on data only
     # args => get field by index, then compare
@@ -14,8 +19,8 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
     # do not share a common interface with our ADT for getting
     # numbered fields, e.g getproperty(x, ::Int) is not defined for
     # Julia types in general.
+
     @gensym value
-    head = pat.head
     if Data.is_variant_type(head) # check if our pattern is correct
         type_assert = :($Data.isa_variant($value, $head))
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
@@ -42,6 +47,16 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
         return quote
             $value = $x
             $(and_expr(type_assert, args_conds, kwargs_conds))
+        end
+    end
+end
+
+function decons_call(::Type{Regex}, ctx::PatternContext, pat::Pattern.Type)
+    Data.isa_variant(pat.args[1], Pattern.Quote) || error("Regex head must be a string")
+    re = Regex(pat.args[1].:1)
+    return function regex(x)
+        return quote
+            $Base.occursin($re, $x)
         end
     end
 end
