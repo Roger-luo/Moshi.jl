@@ -3,7 +3,7 @@ function decons(::Type{Pattern.Call}, ctx::PatternContext, pat::Pattern.Type)
 end
 
 # NOTE: allow call pattern to be customized
-function decons_call(::Type, ctx::PatternContext, pat::Pattern.Type)
+function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
     # NOTE: when we see a call, it can only be a constructor
     # because our syntactical pattern match is performed on data only
     # args => get field by index, then compare
