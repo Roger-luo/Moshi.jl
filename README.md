@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Roger-luo/Moshi.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/Roger-luo/Moshi.jl/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/Roger-luo/Moshi.jl/graph/badge.svg?token=fyZMjy2Oy9)](https://codecov.io/gh/Roger-luo/Moshi.jl)
+[![][docs-img]][docs-url]
 
 Moshi is the pattern in Chinese （模式）. This package is the refactor of MLStyle with
 
@@ -34,3 +35,7 @@ pkg> add Moshi
 ## License
 
 MIT License
+
+
+[docs-img]: https://img.shields.io/badge/docs-blue.svg
+[docs-url]: https://rogerluo.dev/Moshi.jl/
