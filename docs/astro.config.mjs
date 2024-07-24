@@ -3,7 +3,7 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://rogerluo.dev/Moshi.jl',
+	site: 'https://moshi.rogerluo.dev',
 	integrations: [
 		starlight({
 			title: 'Moshi',
