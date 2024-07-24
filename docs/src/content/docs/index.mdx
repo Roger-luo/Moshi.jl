@@ -1,0 +1,55 @@
+---
+title: Welcome to Moshi
+description: Pattern match with & without generic algebraic data types in Julia!
+template: splash
+hero:
+  tagline: Pattern match with & without generic algebraic data types in Julia!
+  image:
+    file: ../../assets/hero-example.png
+  actions:
+    - text: Getting Started
+      link: /start/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View GitHub
+      link: https://github.com/Roger-luo/Moshi.jl
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Next steps
+
+<Card title="Algebraic Data Type">
+	Define your own algebraic data types with `@data` macro.
+
+	```julia
+	@data Message begin
+		Quit
+		struct Move
+			x::Int
+			y::Int
+		end
+
+		Write(String)
+		ChangeColor(Int, Int, Int)
+	end
+	```
+</Card>
+<Card title="Derive Macro">
+	Derive other methods from your type definitions (normal Julia `struct` or `@data`) with `@derive` macro.
+
+	```julia
+	@derive Message[Show, Hash]
+	```
+</Card>
+<Card title="Pattern Matching">
+	```julia
+	@match value begin
+        Message.Move(; x, y) => (x, y)
+        Message.Quit() => 0
+        Message.Write(msg) => msg
+        Message.ChangeColor(a) => a
+    end
+	```
+</Card>
