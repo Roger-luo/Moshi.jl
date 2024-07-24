@@ -1,0 +1,133 @@
+---
+title: Syntax & Examples
+description: Syntax for defining algebraic data types in Moshi.jl
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Importing
+
+The algebraic data type can be defined using `@data` macro. It can be imported from the `Moshi.Data` module:
+
+```julia
+using Moshi.Data: @data
+```
+
+The `Moshi.Data` module also defines a set of reflection functions to work with the algebraic data types. You can check [Reflection](reflection) for more information. All the name can be imported together using:
+
+```julia
+using Moshi.Data.Prelude
+```
+
+## Quick Example
+
+Here is a quick example of defining a simple algebraic data type:
+
+```julia
+@data Message begin
+    Quit
+    struct Move
+        x::Int
+        y::Int
+    end
+
+    Write(String)
+    ChangeColor(Int, Int, Int)
+end
+```
+
+This defines a new algebraic data type `Message` with 4 variants: `Quit`, `Move`, `Write`, and `ChangeColor`. The `Move` variant has two fields `x` and `y` of type `Int`. The `Write` variant has a single field of type `String`. The `ChangeColor` variant has three fields of type `Int`.
+
+You can create an instance of the `Message` type as follows:
+
+```julia
+Message.Quit()
+Message.Move(10, 20)
+Message.Write("Hello, World!")
+Message.ChangeColor(255, 0, 0)
+```
+
+## Formal Syntax
+
+The syntax is as follows:
+
+```julia
+<data> := @data <ident> [ <supertype> ] begin
+    <variant>+
+end
+<variant> := <singleton> | <anonymous> | <named>
+<singleton> := <ident>
+<anonymous> := <ident> ( <type>+ )
+<named> := struct <ident>
+    <field>+
+end
+<field> := <ident>::<type> [= <expr>]
+```
+
+`<data>` is the top-level syntax for defining an algebraic data type. It starts with the `@data` macro followed by the name of the data type. Optionally, it can have a supertype. The supertype can be any type that the data type extends. The `begin` keyword is used to start the body of the data type. The body consists of one or more variants.
+
+A `<variant>` can be one of three types: `<singleton>`, `<anonymous>`, or `<named>`. A `<singleton>` variant is a variant with no fields. An `<anonymous>` variant is a variant with anonymous fields. A `<named>` variant is a variant with named fields.
+
+### Singleton Variant
+
+The singleton variant is like an `Base.@enum` variant. It can be defined directly as:
+
+```julia
+<ident>
+```
+
+Unlike `Base.@enum` and rust `enum`, the singleton variant instance must be constructed explicitly with an empty constructor:
+
+```julia
+<ident>()
+```
+
+### Anonymous Variant
+
+The anonymous variant is useful when you want to define a variant with anonymous fields. It can be defined as:
+
+```julia
+<ident> ( <type>+ )
+```
+
+for example, the `Write` and `ChangeColor` variants in the above example are anonymous variants.
+
+### Named Variant
+
+The named variant is just like normal Julia struct definition, except that it is defined inside the data type. It can be defined as:
+
+```julia
+struct <ident>
+    <field>+
+end
+```
+
+for example, the `Move` variant in the above example is a named variant.
+
+<Aside type="tip">
+In the case of named fields, it supports `Base.@kwdef` syntax for default values.
+</Aside>
+
+## Generics/Type Parameters
+
+The `@data` macro also supports defining algebraic data types with type parameters. For example:
+
+```julia
+@data Option{T} begin
+    Some(T)
+    None
+end
+```
+
+This defines a new algebraic data type `Option` with two variants: `Some` and `None`. The `Some` variant has a single field of type `T`. The `None` variant has no fields.
+
+The type parameters should be declared in the type definition
+
+```julia
+@data <ident>{<type>+} [ <supertype> ] begin
+    <variant>+
+end
+```
+
+the syntax is the same as a normal `struct` type parameter declaration. Inside the `begin ... end` body,
+the type parameters can be used as normal types.
