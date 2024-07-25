@@ -1,0 +1,170 @@
+---
+title: Algebraic Data Type - Intro
+description: A guide to algebraic data types in Moshi.jl
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Algebraic data types (ADTs) are a way to define dynamic data structures in a statically typed language. They are a powerful tool for creating complex data structures with a fixed set of possible values. In Julia, such use case often arise when you have a set of different `struct` types stored in an array or a dictionary.
+
+For example, consider a simple data structure to represent a message:
+
+```julia
+abstract type Message end
+
+struct Quit <: Message
+end
+
+struct Move <: Message
+    x::Int
+    y::Int
+end
+
+struct Write <: Message
+    message::String
+end
+
+struct ChangeColor <: Message
+    r::Float64
+    g::Float64
+    b::Float64
+end
+```
+
+You are receiving and sending a sequence of such messages. You can store them in an array of `Message` type:
+
+```julia
+messages = [Quit(), Move(10, 20), Write("Hello, World!"), ChangeColor(255, 0, 0)]
+```
+
+However, this approach is not type-stable. The compiler cannot infer the type of the elements in the array. Because the type information of a `Message` is essentially only exist at runtime. This is where algebraic data types come in.
+
+`Moshi.Data` offers you the infrastructure defining algebraic data types in a more concise and type-stable way. The above example can be rewritten as:
+
+```julia
+using Moshi.Data: @data
+
+@data Message begin
+    Quit
+    struct Move
+        x::Int
+        y::Int
+    end
+
+    Write(String)
+    ChangeColor(Float64, Float64, Float64)
+end
+```
+
+This defines a new algebraic data type `Message` with 4 variants: `Quit`, `Move`, `Write`, and `ChangeColor`. The `Move` variant has two fields `x` and `y` of type `Int`. The `Write` variant has a single field of type `String`. The `ChangeColor` variant has three fields of type `Float64`. This is like a Julia `Union` type, but with more syntax sugar.
+
+<Aside type="note">
+
+`@data` can be seen as a more powerful version of `@enum` macro. In rust language, this is actually
+called `enum` type.
+
+</Aside>
+
+## Algebraic Data Type + Pattern Matching = ❤️
+
+The idea of algebraic data type actually came from representing expressions. This includes Syntax Trees,
+Symbolic Expressions. It was first introduced in the
+[Hope programming language](https://en.wikipedia.org/wiki/Hope_(programming_language)) in the 1970s. 
+
+For example, we can define a simple symbolic expression as follows:
+
+```julia
+using Moshi.Data: @data
+
+@data Expr begin
+    Number(Int)
+    Add(Expr, Expr)
+    Mul(Expr, Expr)
+    Neg(Expr)
+end
+```
+
+This allows one to represent expressions like `1 + 2 * 3` as `Add(Number(1), Mul(Number(2), Number(3)))`.
+More generally, algebraic data types give you a way to represent complex tree-like (or DAG-like if self referencing)
+data structure.
+
+To dispatch on such representations, it is common that one want to dispatch on the patterns of an expression
+instead of just dispatching on the type. This is why we want to pattern matching! Consider how we trivially
+simplify the above expression:
+
+1. when we see the pattern `Add(Number(0), x)` or `Add(x, Number(0))`, we replace with `x`
+2. when we see the pattern `Mul(Number(1), x)` or `Mul(x, Number(1))`, we replace with `x`
+3. when we see `Add(x, x)` we replace with `Mul(Number(2), x)`
+
+These replacements can be done using `if else` statements, consider the following (pseudocode)
+
+```julia
+function simplify(expr)
+    if isa_variant(expr, Expr.Add)
+        if isa_variant(expr.lhs, Expr.Number) && iszero(expr.lhs.value)
+            return expr.rhs
+        end
+
+        if isa_variant(expr.rhs, Expr.Number) && iszero(expr.rhs.value)
+            return expr.lhs
+        end
+
+        if expr.lhs == expr.rhs
+            return Expr.Mul(Expr.Number(2), expr.lhs)
+        end
+    elseif isa_variant(expr, Expr.Mul)
+        # OK you get it, I'm not gonna finish this
+    end
+end
+```
+
+This gets very verbose quickly, however, if we think about how these patterns are specified -- they
+are specified exactly the same way how you would construct an instance of the pattern! Why not using
+this as a syntax sugar? So we can instead write the following:
+
+```julia
+@match expr begin
+   Expr.Add(Expr.Number(0), x) || Expr.Add(x, Expr.Number(0)) => x
+   Expr.Mul(Expr.Number(1), x) || Expr.Mul(x, Expr.Number(1)) => x
+   Expr.Add(x, x) => Expr.Mul(Expr.Number(2), x)
+end
+```
+
+And now you can see that pattern matching is exactly why we love Julia! Julia's multiple dispatch
+is a kind of pattern matching on types. Moshi brings you one step further -- pattern matching values,
+types and many more! Combined with pattern matching, Moshi gives you the best experience working with ADTs.
+See next introduction section [Pattern Matching - What is it?](match) to learn more about Moshi's pattern
+matching.
+
+<Aside type="tip">
+
+Syntax-wise, Moshi's `@data` is almost the same as rust `enum`. However, the declared name `Expr` is actually
+only a module. To specify the static type of `Expr`, one needs to write `Expr.Type` instead.
+See [Syntax & Examples](../data/syntax) and [Understanding `@data`](../data/understand) for more examples and
+explainations.
+
+</Aside>
+
+## Generic ADT (GADT) for General Purpose Programming
+
+The ADTs are powerful tools for composite data structure. Moshi also supports generic ADTs where you can
+specify a type parameter. This allows us implementing the well-known [`Option` type from rust](https://doc.rust-lang.org/std/option/).
+
+```julia
+@data Option{T} begin
+    Some(T)
+    None
+end
+```
+
+And similarly implementing result types
+
+```julia
+@data Result{T} begin
+    Ok(T)
+    Err(ErrorException)
+end
+```
+
+The GADT in Moshi is similar to ADT except there is a type parameter. In the static type of each instance,
+the type parameter can be specified as, e.g `Option.Type{Float64}` or just `Option.Type`.

@@ -17,8 +17,8 @@ export default defineConfig({
 					items: [
 						{ slug: "start/getting-started" },
 						{ slug: "start/algebra-data-type" },
-						{ slug: "start/derive" },
 						{ slug: "start/match" },
+						{ slug: "start/derive" },
 					],
 				},
 				{
@@ -36,6 +36,7 @@ export default defineConfig({
 						{ slug: 'match/syntax' },
 						{ slug: 'match/builtin' },
 						{ slug: 'match/extend' },
+						{ slug: 'match/behind' },
 					],
 				},
 				{

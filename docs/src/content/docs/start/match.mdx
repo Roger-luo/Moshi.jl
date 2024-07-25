@@ -1,0 +1,87 @@
+---
+title: Pattern Matching - What is it?
+description: A basic introduction to pattern matching in Moshi.jl
+---
+
+import { Card } from '@astrojs/starlight/components';
+
+Pattern matching is a mechanism found in many programming languages that allows checking a given sequence of tokens for the presence of the constituents of some pattern. This feature is often used for simplifying the code and making it more readable, especially when working with data structures like lists, tuples, or more complex nested data.
+
+We have discussed a practical use case of pattern matching in [previous section](algebra-data-type).
+
+## Benefits of Pattern Matching
+
+- Readability: Makes the code more readable and easier to understand, especially when dealing with complex data structures.
+- Safety: Provides compile-time checks (in statically-typed languages) ensuring all possible patterns are covered.
+- Conciseness: Reduces boilerplate code by directly expressing the structure of data being matched and manipulated.
+
+## The Syntax of Patterns
+
+There are many ways of implementing pattern matching and different flavors of the syntax. In Moshi, our design principle is quite simple:
+
+<Card title="design principle">
+Patterns are (mostly) the inverse operation of their construction syntax
+</Card>
+
+For example, one construct a Julia `struct` as
+
+```julia
+struct Foo
+    x
+    y
+end
+
+Foo(x, y) # takes value from x, y and create an instance of Foo
+```
+
+then the same syntax would be the inverse operation of this constructor
+
+```julia
+@match Foo(1, 2) begin
+    # take an instance of Foo and assign values to x, y
+    Foo(x, y) => (x, y) # (1, 2)
+end
+```
+
+and when constructing the instance, we can assert only using the `Int` value
+
+```julia
+Foo(x::Int, y) # construct Foo only when x is an `Int`
+```
+
+Then the same syntax as pattern means the inverse
+
+```julia
+@match Foo(1, 2) begin
+    # only match the instance when first value is `Int` then assign it to x, y
+    Foo(x::Int, y) => (x, y)
+end
+```
+
+Moshi offers a lot of builtin patterns. To learn more about builtin patterns
+please read [Builtin Patterns](../match/builtin).
+
+## Extensible Pattern Matching
+
+A big difference between [MLStyle](https://github.com/thautwarm/MLStyle.jl) and other
+pattern matching approaches in Julia ecosystem is the extensibility. MLStyle is highly
+extensible to support your custom patterns dispatched on your own types. This makes it
+possible to support many special patterns such as expression patterns and regex pattern.
+
+Moshi takes extensibility seriously and goes one step further - we allow you customize
+pattern not only based on underlying type (by overloading `decons_call`). We also allow
+you registering your own syntax and decide what it gets lowered to.
+
+See [extending pattern match](../match/extend) to understand how to extend pattern matching
+for your own data structure.
+
+## Zero Dependency Guarantee
+
+One nice feature MLStyle offers is `@match` generates dependency-free code only. Only `Base` is
+required to execute the generated code. Thus, it is always equivalent to writing plain `if else`
+statements. If you want, you can get rid of `MLStyle` as a dependency.
+
+In the era with package images, this is not necessary most of the time. Zero dependency in generated
+code is still a nice feature to have for debugging, and easy maintaince (you don't have to read internals of `@match` to understand what's going on).
+
+Moshi inherits this design decision, and guarantees the generated code from `@match` is dependency-free.
