@@ -1,9 +1,17 @@
 function derive_impl(::Val{:Eq}, mod::Module, type::Module)
     jl = JLIfElse()
     for variant_type in Data.variants(type.Type)
-        jl[:(vtype <: $variant_type)] = eq_derive_variant_field(variant_type)
+        jl[:(vtype <: $variant_type)] = eq_derive_variant_field(:($Base.:(==)), variant_type)
     end
     jl.otherwise = quote
+        return false
+    end
+
+    jl_isequal = JLIfElse()
+    for variant_type in Data.variants(type.Type)
+        jl_isequal[:(vtype <: $variant_type)] = eq_derive_variant_field(:($Base.isequal), variant_type)
+    end
+    jl_isequal.otherwise = quote
         return false
     end
 
@@ -15,10 +23,18 @@ function derive_impl(::Val{:Eq}, mod::Module, type::Module)
             vtype = $Data.variant_type(lhs)
             return $(codegen_ast(jl))
         end
+
+        Base.@constprop :aggressive function $Base.isequal(
+            lhs::EqT, rhs::EqT
+        ) where {EqT<:$type.Type}
+            $Data.variant_type(lhs) == $Data.variant_type(rhs) || return false
+            vtype = $Data.variant_type(lhs)
+            return $(codegen_ast(jl_isequal))
+        end
     end
 end
 
-function eq_derive_variant_field(variant_type)
+function eq_derive_variant_field(func, variant_type)
     if variant_type isa UnionAll
         variant_type = variant_type.body
     end
@@ -33,7 +49,7 @@ function eq_derive_variant_field(variant_type)
         return quote
             $lhs_value = $Base.getproperty(lhs, $(QuoteNode(field)))
             $rhs_value = $Base.getproperty(rhs, $(QuoteNode(field)))
-            $lhs_value == $rhs_value || return false
+            $func($lhs_value, $rhs_value) || return false
         end # quote
     end
 

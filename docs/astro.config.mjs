@@ -25,7 +25,6 @@ export default defineConfig({
 					label: 'Algebraic Data Type',
 					items: [
 						{ slug: 'data/syntax' },
-						{ slug: 'data/pattern' },
 						{ slug: 'data/reflection' },
 						{ slug: 'data/understand' },
 					],

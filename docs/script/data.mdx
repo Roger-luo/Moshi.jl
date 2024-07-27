@@ -1,0 +1,144 @@
+import {Card} from '@astrojs/starlight/components';
+
+<Card title="variant_storage">
+
+```julia
+public Moshi.Data.variant_storage(value)
+```
+
+Return the storage object of the variant.
+
+
+</Card>
+<Card title="is_variant_type">
+
+```julia
+public Moshi.Data.is_variant_type(x) -> Bool
+```
+
+Check if the given object is a variant type.
+
+
+</Card>
+<Card title="variants">
+
+```julia
+public Moshi.Data.variants(x::Type) -> Tuple
+```
+
+Return a tuple of variants of the given data type.
+
+```
+public Moshi.Data.variants(x::Type) -> Tuple
+```
+
+Return a tuple of variants of the given data type.
+
+
+</Card>
+<Card title="variant_type">
+
+```julia
+public Moshi.Data.variant_type(x)
+```
+
+Return the variant type of the given variant.
+
+
+</Card>
+<Card title="variant_fieldtypes">
+
+```julia
+public Moshi.Data.variant_fieldtypes(value)
+```
+
+Return the field types of the variant.
+
+
+</Card>
+<Card title="variant_name">
+
+```julia
+public Moshi.Data.variant_name(x) -> Symbol
+```
+
+Return the name of the variant.
+
+
+</Card>
+<Card title="variant_fieldnames">
+
+```julia
+public Moshi.Data.variant_fieldnames(value)
+```
+
+Return the field names of the variant.
+
+
+</Card>
+<Card title="show_variant">
+
+```julia
+public Moshi.Data.show_variant(io::IO, x)
+```
+
+Print the variant to the given IO stream in multiple lines.
+
+```
+public Moshi.Data.show_variant(io::IO, x)
+```
+
+Print the variant to the given IO stream in a single line.
+
+
+</Card>
+<Card title="data_type_name">
+
+```julia
+public Moshi.Data.data_type_name(x) -> Symbol
+```
+
+Return the data type name of the given variant.
+
+
+</Card>
+<Card title="variant_kind">
+
+```julia
+public Moshi.Data.variant_kind(x) -> VariantKind
+```
+
+Return the kind of the variant, can be `Singleton`, `Anonymous`, or `Named`.
+
+
+</Card>
+<Card title="is_data_type">
+
+```julia
+public Moshi.Data.is_data_type(x) -> Bool
+```
+
+Check if the given object is a variant of a algebraic data type.
+
+
+</Card>
+<Card title="variant_nfields">
+
+```julia
+public Moshi.Data.variant_nfields(value)
+```
+
+Return the number of fields of the variant.
+
+
+</Card>
+<Card title="isa_variant">
+
+```julia
+public Moshi.Data.isa_variant(x, variant::Type) -> Bool
+```
+
+Check if the given variant is an instance of the given variant type.
+
+
+</Card>
