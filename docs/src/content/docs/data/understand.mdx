@@ -1,0 +1,247 @@
+---
+title: Understanding What Happens
+description: Explaining the generated code of algebraic data types
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `@data MyADT begin ... end` code mainly generates the following code:
+
+- namespace: a module named `MyADT`
+- type: a Julia struct contains the corresponding storage `MyADT.Type`
+- storage: different kind of storage for each variant
+- interface: generate the ADT interfaces
+- reflection: generate the reflection functions
+
+Now we will look into the generated code of the following
+
+```julia
+@data Message begin
+    Quit
+    struct Move
+        x::Int
+        y::Int
+    end
+
+    Write(String)
+    ChangeColor(Int, Int, Int)
+end
+```
+
+## Namespace
+
+The namespace is created as a `baremodule`, so that it eliminates all unnecessary symbols in the namespace.
+There are a lot of good reasons to create a namespace by default. I will not discuss them here.
+
+In previous approaches, the implementation of namespace was problematic. In `Expronicon`, we support namespace
+by overloading `Base.getproperty(::Type{Message}, variant_name::Symbol)`. Thus one will be able to use `Message` as a
+type while being able to use the syntax `Message.Quit`, `Message.Move` to access the variant constructor or variant
+instance.
+
+From first look, one may think `Base.getproperty(::Type{Message}, variant_name::Symbol)` is not type pirating,
+because the type `Message` belongs to our namespace not `Base`. However, this is in fact type pirating or at least
+not friendly to Julia compiler because `getproperty` is used in `Core.Compiler` and the compiler will need to
+invalidate all `getproperty(::Type, ::Symbol)` to be able to use the overloading.
+
+This is only true for `getproperty`, thus in `SumType`, one use an alternative syntax `Message'.Quit`. However,
+because `Message` is not a real namespace recognized by Julia compiler, this is still problematic, e.g one cannot
+import variant names from the `Message` namespace like what you can do in rust:
+
+```rust
+use Message::{Quit, Write};
+```
+
+Thus in Moshi, we choose to sacrefis the elegance of syntax a little to be more compatible with Julia semantics
+by actually generating a module and require users to always write an extra `.Type` to access the type of the ADT.
+
+## Storage
+
+The storage of variants are just generated as a normal Julia `struct`:
+
+```julia
+# inside module Message
+struct var"##Storage#Quit" end
+struct var"##Storage#Move"
+    x::Int
+    y::Int
+end
+struct var"##Storage#Write"
+    var"1"::String
+end
+struct var"##Storage#ChangeColor"
+    var"1"::Int
+    var"2"::Int
+    var"3"::Int
+end
+```
+
+<Aside type="note">
+The reason why we are mangling the storage name instead of just use `Quit` etc. is because
+we need these name separately as constructors later.
+</Aside>
+
+In the previous approach in `Expronicon`, `Unityper` and early version of `SumType`, we use
+`unsafe_convert` to force manage a piece of memory and calculate the alignment manually. This
+works OK for concrete ADTs but we lost the possibility for Julia compiler to perform optimizations like
+Union splitting because Julia compiler won't be able to know it is actually an ADT.
+
+In the GitHub discussion, [@vjnash](https://github.com/vtjnash) mentioned the Julia compiler is doing
+the rust-enum-like memory layout for `Union`s. Thus we can just use it, and generate our ADT as:
+
+```julia
+# inside module Message
+struct Type
+    data::Union{var"##Storage#Quit", var"##Storage#Move", var"##Storage#Write", var"##Storage#ChangeColor"}
+end
+```
+
+## Constructors
+
+Now this comes together and we want to be able to write `Message.Move(1, 2)` to construct
+an instance of `Message` as the variant `Move`. One may intermediately define a function returns
+an instance of `Type` as following:
+
+```julia
+# inside module Message
+function Move(x::Int, y::Int)
+    return Type(var"##Storage#Move"(x, y))
+end
+```
+
+However, this will create an instance of `Function` (type `typeof(Move)`) instead of variant.
+Defining custom printing and reflections for it will cause type piracy.
+Moreover, we want to be able to use `Move` as a type to overload reflections later. Thus, we
+would like to define `Move` as an actual type:
+
+```julia
+# inside module Message
+struct Move end
+```
+
+However, this will create an implicit constructor `Move()`. We do not want this constructor, because we
+will define the following function and return an instance of `Type` instead of `Move`. In fact, we will never
+use the instance of `Move` (This is evil in normal code, don't do this!). I learned from `Unityper` that one
+can remove the default constructor by writing some random code inside the struct body:
+
+```julia
+# inside module Message
+struct Move
+    1 + 1
+end
+
+Move() # will error!
+```
+
+Now we can define the constructors of our variants!
+
+<Aside type="note">
+For singleton like `Message.Quit`, I have been thinking back and forth about whether
+supporting the syntax sugar `Message.Quit` to access the instance of this variant.
+After going back and forth for a while, it turns out not supporting `Message.Quit` as
+the instance of `Message.Quit` is way simpler for both human brains and program implementation.
+
+The problem become more obvious when we support generic ADT, it is not possible to make
+the syntax `Message.Quit{Float64}` to be a constant binding of a variant instance. On the
+other hand, in pattern matching support such syntax will require special handling.
+</Aside>
+
+We will define an example constructor for `Move` all other variants share similar definitions. Because
+`Move` is a named variant, it has two kinds of constructor, the normal one:
+
+```julia
+function Move(x, y)
+    return Type(var"##Storage#Move"(x, y))
+end
+```
+
+and the keyword argument one (similar to `Base.@kwdef`)
+
+```julia
+function Move(;x, y)
+    return Type(var"##Storage#Move"(x, y))
+end
+```
+
+For anonymous and singleton variants, there is only the normal constructor.
+
+## Supporting Accessing Fields with Type Stability
+
+Now we want to support the dot syntax of accessing fields of a variant. This is a little bit tricky
+because we need to define a `getproperty` that is type-stable. This is done by putting extra type annotations
+when overloading `getproperty` (like previous implementations in `Expronicon` and `SumType`):
+
+```julia
+function Base.getproperty(value::Type, name::Symbol)
+    data = Base.getfield(value, :data)
+    return if data isa var"##Storage#Quit"
+        error("singleton variant has no fields")
+    elseif data isa var"##Storage#Move"
+        if name === :x
+            return Base.getfield(data, name)::Int64
+        elseif name === :y
+            return Base.getfield(data, name)::Int64
+        else
+            error("unknown field name: $(name)")
+        end
+    elseif data isa var"##Storage#Write"
+        error("anonymous variant has no named fields")
+    elseif data isa var"##Storage#ChangeColor"
+        error("anonymous variant has no named fields")
+    else
+        error("unreachable reached")
+    end # if
+end # function
+```
+
+However, this is not ideal when we know the variant type, for example,
+in a pattern matching statement, one knows the variant type after checking
+using `isa_variant` reflection. Thus we provide a special function that dispatch
+on the variant type we defined previously.
+
+```julia
+# inside Message module
+function Data.variant_getfield(value::Message.Type, tag::Base.Type{ChangeColor}, field::Int)
+    # ...
+end
+```
+
+this allows Julia to perform constant propagation & folding when the variant type is known.
+
+## Reflections
+
+The rest is generating reflections accordingly. Please see the [Reflections](reflection) section.
+
+## Supporting Type Parameters
+
+Because now we are just using a Julia `Union` as the internal storage, supporting type parameters
+becomes quite simple. Most of the code generation remains the same, except handling conversion between
+singleton types. Considering the following case:
+
+```julia
+@data Option{T} begin
+    Some(T)
+    None
+end
+```
+
+The statement `Option.None()` should be a valid statement and be used for any `Option.Type{T}`, because this
+singleton instance does not depend on the type parameter `T`. This can be done by supporting a dummy type parameter.
+However, it is possible one define an ADT with type bounds, e.g considering the following imaginary case:
+
+```julia
+@data Option{T <: Real} begin
+    Some(T)
+    None
+end
+```
+
+Luckily, Julia type system only allows type parameters to have an upper bound
+(which probably makes sense in reality). Thus we can always put the bottom element of
+the type lattice as the dummy type parameter, which is `Union{}`. Now, when we have
+
+```julia
+Option.None() = Option.None{Union{}}()
+```
+
+and we can support overloading `Base.convert` function to convert `Option.None{Union{}}()` to
+`Option.None{Float64}()` when needed. The rest will be handled by Julia type system automatically.

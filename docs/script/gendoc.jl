@@ -1,34 +1,18 @@
+using JSON
 using Jieko
 using Markdown
-using MarkdownAST
-using AbstractTrees
 using Moshi.Data
 
-function getdocs()
-    stub = getproperty(Data, Jieko.INTERFACE_STUB)
-    docs = Dict{Symbol, Markdown.MD}()
+function extract_docs(mod::Module)
+    stub = getproperty(mod, Jieko.INTERFACE_STUB)
+    docs = Dict{String, String}()
     for (name, interface) in stub
-        md = Docs.doc(Docs.Binding(Data, name))
+        md = Docs.doc(Docs.Binding(mod, name))
         md.content[1].content[1].content[1].language = "julia"
-        docs[name] = md
+        docs[string(name)] = string(md)
     end
     return docs
-end # getdocs
+end
 
-docs = getdocs()
-docs[:data_type_name].content[1].content[1].content[1]
-
-file = joinpath(@__DIR__, "data.mdx")
-
-open(file, "w") do io
-    for (name, md) in docs
-        println(name)
-        print(io, """
-        <Card title="$(name)">
-
-        $md
-
-        </Card>
-        """)
-    end
-end # open
+docs = extract_docs(Data)
+JSON.print(docs)

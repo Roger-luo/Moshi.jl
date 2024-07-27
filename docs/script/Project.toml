@@ -1,5 +1,6 @@
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Jieko = "ae98c720-c025-4a4a-838c-29b094483192"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 MarkdownAST = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
