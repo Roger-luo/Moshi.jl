@@ -20,6 +20,13 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: "1.10"
+          arch: ubuntu-latest
+      - uses: julia-actions/cache@v1
+      - name: Install Julia dependencies
+        run: julia --project=docs/script -e 'using Pkg; Pkg.instantiate()'
       - name: Install, build, and upload your site
         uses: withastro/action@v2
         with:
