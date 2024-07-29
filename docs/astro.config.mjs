@@ -33,7 +33,6 @@ export default defineConfig({
 					label: 'Pattern Matching',
 					items: [
 						{ slug: 'match/syntax' },
-						{ slug: 'match/builtin' },
 						{ slug: 'match/extend' },
 						{ slug: 'match/behind' },
 					],

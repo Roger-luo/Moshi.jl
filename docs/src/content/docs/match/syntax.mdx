@@ -1,0 +1,280 @@
+---
+title: Syntax & Examples
+description: A guide to the syntax of pattern matching in Moshi.jl
+---
+
+import { Aside, Card } from '@astrojs/starlight/components';
+
+The syntax of pattern matching in Moshi.jl is highly based on MLStyle.jl,
+which is the predecessor of Moshi.jl.
+
+<Card title="design principle">
+Patterns are (mostly) the inverse operation of their construction syntax
+</Card>
+
+All the pattern matching statements in Moshi.jl are wrapped in `@match` macro.
+
+```julia
+@match x begin
+    # patterns
+end
+```
+
+## Builtin Patterns
+
+While patterns in Moshi are highly extensible, we also provide a set of builtin patterns. In this section,
+we will go through these builtin patterns.
+
+### Wildcard Pattern
+
+The wildcard pattern matches any value. It is denoted by `_`.
+
+```julia
+julia> @match 1 begin
+    _ => "any value"
+end
+"any value"
+```
+
+### Variable Pattern
+
+The variable pattern matches any value and binds it to a variable. It is denoted by a variable name.
+
+```julia
+julia> @match 1 begin
+    x => x
+end
+1
+```
+
+### Type Annotation Pattern
+
+The type annotation pattern matches a value of a specific type. It is denoted by `::Type`.
+
+```julia
+julia> @match 1 begin
+    x::Int => x
+end
+1
+
+julia> @match 1.2 begin
+           x::Int => x
+       end
+ERROR: matching non-exhaustic
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] top-level scope
+   @ REPL[18]:2
+```
+
+### Quote Patterns
+
+The quote pattern is a pattern that matches a quoted value. It is the simplest pattern in Moshi.
+Literal values are automatically quoted in Moshi.
+
+```julia
+julia> @match 1 begin
+    1 => "one"
+end
+"one"
+```
+
+For none literal values, you can use the quote syntax in Julia like all other Julia program:
+
+```julia
+julia> @match 2 begin
+    $(1 + 1) => "two"
+end
+"two"
+```
+
+The quote pattern is the most fundamental pattern in Moshi. We will see it more often in the following sections.
+
+### Call Pattern
+
+The call pattern is the deconstruction pattern for constructors. It is defined as the same syntax
+as a constructor call in Julia. For example
+
+```julia
+julia> struct Point
+    x::Int
+    y::Int
+end
+
+julia> @match Point(1, 2) begin
+    Point(x, y) => (x, y)
+end
+(1, 2)
+```
+
+The call pattern also works on ADTs. It follows the same syntax as the constructor call of a variant:
+
+```julia
+julia> @data Tree begin
+    Leaf(Int)
+    Node(Tree, Tree)
+end
+
+julia> @match Tree.Node(Tree.Leaf(1), Tree.Leaf(2)) begin
+    Tree.Node(Tree.Leaf(x), Tree.Leaf(y)) => (x, y)
+end
+(1, 2)
+```
+
+<Aside type="tip">
+The call pattern is the first composite pattern we introduce in this guide. You can combine other patterns
+as the call pattern arguments. For example, you can match the data only when x is an integer by
+
+```julia
+julia> @match Point(1, 2) begin
+    Point(x::Int, y) => (x, y)
+end
+(1, 2)
+```
+</Aside>
+
+<Aside type="note">
+The call pattern is one of the extensible pattern in `Moshi`. You can define how to deconstruct
+a type by overloading the `decons_call` method. See [Extending Patterns](extend) for more details.
+</Aside>
+
+
+### Tuple Pattern
+
+The tuple pattern is a pattern that matches a tuple. It is defined as the same syntax as a tuple in Julia.
+The elements of the tuple are patterns.
+
+```julia
+julia> @match (Tree.Leaf(1), 2) begin
+    (Tree.Leaf(x), y) => (x, y)
+end
+(1, 2)
+```
+
+### Vector Pattern
+
+The vector pattern is a pattern that matches a vector. It is defined as the same syntax as a vector in Julia.
+The elements of the vector are patterns.
+
+```julia
+julia> @match [Tree.Leaf(1), 2] begin
+    [Tree.Leaf(x), y] => (x, y)
+end
+(1, 2)
+```
+
+The vector pattern can be typed just like how you construct a vector in Julia:
+
+```julia
+julia> @match Int[1, 2] begin
+           Any[1, 2] => :a
+           Int[_, _] => :b
+       end
+:b
+```
+
+this will match the vector only when the vector is of type `Vector{Int}`.
+
+### Splatting Pattern
+
+The splatting pattern is a pattern that matches a collection and binds the rest of the collection to a variable.
+The actual binding value depends on the context of splatting. For example, in a tuple pattern, the splatting pattern
+binds the rest of the tuple as a `Tuple` value:
+
+```julia
+julia> @match (1, 2, 3) begin
+    (x, y, z...) => z
+end
+(3,)
+```
+
+In a vector pattern, the splatting pattern binds the rest of the vector as a view type `SubArray` of
+the input value:
+
+```julia
+julia> @match [1, 2, 3] begin
+    [x, y, z...] => z
+end
+[3]
+```
+
+### Or Pattern
+
+The or pattern is a pattern that matches either of the two patterns. It is defined as the `||` operator in Julia.
+
+```julia
+julia> @match [1, 2, "a"] begin
+           [1, 1.0, y::String] || [1, 2, y::String] => y
+       end
+"a"
+```
+
+### And Pattern
+
+Similar to the or pattern, the and pattern is a pattern that matches both of the two patterns. It is defined as the `&&` operator in Julia.
+
+```julia
+julia> @match [1, 2, 3] begin
+           [x, 2, 3] && [x::Int, 2, 3] => x
+       end
+1
+```
+
+### Guard Pattern
+
+The guard pattern is a pattern that matches a value when the guard expression is true. It is defined as the `if` keyword in Julia.
+
+```julia
+julia> @match 5 begin
+           x && if x > 0 end => x + 1
+       end
+6
+
+julia> @match -1 begin
+           x && if x > 0 end => x + 1
+       end
+ERROR: matching non-exhaustic
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] top-level scope
+   @ REPL[36]:2
+```
+
+## The Pattern Language
+
+The pattern matching in `Moshi` is backed by a pattern language describing the structure of the data. In this section
+we will discuss the formal definitions of the pattern language. The pattern language is defined as the following BNF:
+
+```bnf
+<pattern> ::= <error>
+        | <wildcard>
+        | <variable>
+        | <type-annotation>
+        | <quote>
+        | <call>
+        | <tuple>
+        | <vector>
+        | <ref>
+        | <and>
+        | <or>
+        | <guard>
+
+<error> ::= "error" "(" <string> ")"
+<wildcard> ::= "_"
+<variable> ::= <identifier>
+<type-annotation> ::= <pattern> "::" <type>
+<quote> ::= "$" <julia expr> | "$(" <julia expr> ")"
+<call> ::= <quote> "(" <pattern> ("," <pattern>)* ")"
+
+<tuple> ::= "(" <element> ("," <element>)* ")"
+<vector> ::= "[" <element> ("," <element>)* "]"
+<element> ::= <pattern> | <splatting>
+<splatting> ::= <pattern> "..."
+<ref> ::= <quote> <vector>
+
+<and> ::= <pattern> "&&" <pattern>
+<or> ::= <pattern> "||" <pattern>
+<guard> ::= "if" <julia expr> "end"
+```
