@@ -26,7 +26,7 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.3"
 
 [[deps.ExproniconLite]]
-path = "../../../Expronicon/build/ExproniconLite"
+git-tree-sha1 = "1095361e35ea8ad9c660560df4c03c06d5244956"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
 version = "0.10.11"
 
