@@ -1,5 +1,3 @@
-module TestDataTypes
-
 using Test
 using Moshi.Data: @data
 using Moshi.Match: @match
@@ -54,5 +52,3 @@ end
     @test foo(Message.Write("aaa")) == "aaa"
     @test foo(Message.ChangeColor(1, 2, 3)) == 1
 end # testset
-
-end # module

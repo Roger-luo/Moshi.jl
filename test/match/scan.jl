@@ -1,16 +1,14 @@
-module TestScan
-
 using Test
 using Moshi.Data.Prelude
 using Moshi.Match: Pattern, Match
+
+expr2pattern(expr) = Match.expr2pattern(@__MODULE__, expr)
 
 struct Foo
     x::Int
     y::Int
     z::Float64
 end
-
-expr2pattern(expr) = Match.expr2pattern(@__MODULE__, expr)
 
 @test expr2pattern(:(_::Int)) == Pattern.TypeAnnotate(Pattern.Wildcard(), :Int)
 @test sprint(show, expr2pattern(:(_::Int))) == "_::Int"
@@ -165,4 +163,33 @@ end))) == "(x::Int) && (if :(x > 2) end)"
 )
 @test sprint(show, expr2pattern(:([x for x in [1, 2, 3]]))) == "[x for x in [1, 2, 3]]"
 
-end # module
+@test expr2pattern(:(:(foo($(x::Int) + 1)))) == Pattern.Expression(:call, [
+    Pattern.Quote(QuoteNode(:foo)),
+    Pattern.Expression(:call, [
+        Pattern.Quote(QuoteNode(:+)),
+        Pattern.TypeAnnotate(Pattern.Variable(:x), :Int),
+        Pattern.Quote(1),
+    ])
+])
+
+@test sprint(show, expr2pattern(:(:(foo($(x::Int) + 1))))) == ":(foo(\$(x::Int) + 1))"
+
+
+@test expr2pattern(:(quote
+    struct $name{$tvar}
+        $f1 :: $t1
+        $f2 :: $t2
+    end
+end)) == Pattern.Expression(:block, [
+    Pattern.Wildcard(),
+    Pattern.Expression(:struct, [
+        Pattern.Quote(false),
+        expr2pattern(:(:(($(name)){$(tvar)}))),
+        Pattern.Expression(:block, [
+            Pattern.Wildcard(),
+            expr2pattern(:(:($(f1)::$(t1)))),
+            Pattern.Wildcard(),
+            expr2pattern(:(:($(f2)::$(t2)))),
+        ])
+    ])
+])

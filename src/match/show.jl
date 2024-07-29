@@ -136,6 +136,8 @@ function Base.show(io::IO, pattern::Pattern.Type)
         print(io, "[")
         show(io, pattern.body)
         print(io, "]")
+    elseif isa_variant(pattern, Pattern.Expression)
+        show_expr(io, pattern)
     else
         error("unhandled pattern: $pattern")
     end
@@ -165,4 +167,34 @@ function show_xcat(io::IO, pattern::Pattern.Type, sep::String)
         show(io, each)
     end
     return print(io, "]")
+end
+
+# NOTE: this is for pretty printing
+# a pattern inside an expression
+struct QuotedPattern
+    pat::Pattern.Type
+end
+
+function Base.show(io::IO, qp::QuotedPattern)
+    print(io, "\$(")
+    show(io, qp.pat)
+    print(io, ")")
+end
+
+function show_expr(io::IO, pattern::Pattern.Type)
+    function unquote(pat::Pattern.Type)
+        if isa_variant(pat, Pattern.Quote)
+            if pat.:1 isa QuoteNode
+                x = pat.:1
+                x.value isa Symbol && return x.value
+            else
+                return pat.:1
+            end
+        end
+
+        isa_variant(pat, Pattern.Expression) || return QuotedPattern(pat)
+        return Expr(pat.head, map(unquote, pat.args)...)
+    end
+    ex = unquote(pattern)
+    show(io, ex)
 end

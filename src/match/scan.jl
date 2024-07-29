@@ -84,7 +84,7 @@ function scan_m(mod::Module, head, fn)
         quote
             let dict = $Base.get!($Base.Dict{$Module, $Base.Dict{Symbol, Function}}, $SCAN_PASS, $mod)
                 if $Base.haskey(dict, $head)
-                    throw(ArgumentError("scan function for $head already exists"))
+                    throw(ArgumentError("scan function for $($head) already exists"))
                 else
                     dict[$head] = $(jlfn.name)
                 end
@@ -271,4 +271,42 @@ end
         Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
     end
     return Pattern.Call(head, args, kwargs)
+end
+
+@scan :quote function jlexpr2pattern(mod::Module, expr)
+    return interpolation2pattern(mod, expr.args[1])
+end
+
+function interpolation2pattern(mod::Module, expr)
+    expr isa LineNumberNode && return Pattern.Wildcard()
+    expr isa Expr || return Pattern.Quote(simplified_quote_node(expr))
+    args = map(expr.args) do each
+        if Meta.isexpr(each, :$)
+            expr2pattern(mod, each.args[1])
+        else
+            interpolation2pattern(mod, each)
+        end
+    end
+    return Pattern.Expression(expr.head, args)
+end
+
+function simplified_quote_node(expr)
+    # integer literals
+    if expr isa Union{Int,Int8,Int16,Int32,Int64,UInt,UInt8,UInt16,UInt32,UInt64}
+        return expr
+    # floating point literals
+    elseif expr isa Union{Float32,Float64}
+        return expr
+    # string literals
+    elseif expr isa String
+        return expr
+    # char literals
+    elseif expr isa Char
+        return expr
+    # boolean literals
+    elseif expr isa Bool
+        return expr
+    else
+        return QuoteNode(expr)
+    end
 end

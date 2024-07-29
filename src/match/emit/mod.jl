@@ -7,6 +7,7 @@ include("quote.jl")
 include("logic.jl")
 include("guard.jl")
 include("call.jl")
+include("expr.jl")
 
 include("collection/splat.jl")
 include("collection/decons.jl")

@@ -88,6 +88,11 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
         iterators::Vector{Pattern}
         filter::Union{Nothing,Pattern}
     end
+
+    struct Expression
+        head::Symbol
+        args::Vector{Pattern}
+    end
 end
 
 @derive Pattern[Eq]

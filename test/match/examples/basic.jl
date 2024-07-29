@@ -1,5 +1,3 @@
-module TestBasicExamples
-
 using Test
 using Moshi.Match: @match
 
@@ -112,5 +110,3 @@ const foo = Foo(1, 2, 3.0)
     Foo(foo.x, foo.y, foo.z) => true
     _ => false
 end
-
-end # module
