@@ -58,7 +58,7 @@ function toplevel_expr2pattern(mod::Module, expr)
     return expr2pattern(mod, expr)
 end
 
-const SCAN_PASS = Dict{Module, Dict{Symbol, Function}}()
+const SCAN_PASS = Dict{Module,Dict{Symbol,Function}}()
 
 macro scan(head, fn)
     return esc(scan_m(__module__, head, fn))
@@ -82,7 +82,9 @@ function scan_m(mod::Module, head, fn)
         head isa QuoteNode || throw(ArgumentError("head must be a quote node"))
         isnothing(jlfn.name) && throw(ArgumentError("scan function must have a name"))
         quote
-            let dict = $Base.get!($Base.Dict{$Module, $Base.Dict{Symbol, Function}}, $SCAN_PASS, $mod)
+            let dict = $Base.get!(
+                    $Base.Dict{$Module,$Base.Dict{Symbol,Function}}, $SCAN_PASS, $mod
+                )
                 if $Base.haskey(dict, $head)
                     throw(ArgumentError("scan function for $($head) already exists"))
                 else
@@ -207,7 +209,7 @@ end
     return Pattern.Tuple(expr2pattern.(Ref(mod), expr.args))
 end
 
-@scan :(=),:kw function eq2pattern(mod::Module, expr)
+@scan :(=), :kw function eq2pattern(mod::Module, expr)
     return Pattern.Kw(expr.args[1], expr2pattern(mod, expr.args[2]))
 end
 
@@ -278,8 +280,9 @@ end
 end
 
 function interpolation2pattern(mod::Module, expr)
-    expr isa LineNumberNode && return Pattern.Wildcard()
     expr isa Expr || return Pattern.Quote(simplified_quote_node(expr))
+    Meta.isexpr(expr, :block) && return expression_block_pattern(mod, expr)
+
     args = map(expr.args) do each
         if Meta.isexpr(each, :$)
             expr2pattern(mod, each.args[1])
@@ -294,19 +297,74 @@ function simplified_quote_node(expr)
     # integer literals
     if expr isa Union{Int,Int8,Int16,Int32,Int64,UInt,UInt8,UInt16,UInt32,UInt64}
         return expr
-    # floating point literals
+        # floating point literals
     elseif expr isa Union{Float32,Float64}
         return expr
-    # string literals
+        # string literals
     elseif expr isa String
         return expr
-    # char literals
+        # char literals
     elseif expr isa Char
         return expr
-    # boolean literals
+        # boolean literals
     elseif expr isa Bool
         return expr
     else
         return QuoteNode(expr)
+    end
+end
+
+function expression_block_pattern(mod::Module, expr::Expr)
+    if length(expr.args) == 1
+        return Pattern.Expression(:block, [interpolation2pattern(mod, expr.args[1])])
+    end
+
+    args = Pattern.Type[]
+    idx = 1
+    while idx <= length(expr.args)
+        curr = expr.args[idx]
+        next = idx < length(expr.args) ? expr.args[idx + 1] : nothing
+        # check if the next pattern to match contains line number
+        if curr isa LineNumberNode && Meta.isexpr(next, :$)
+            next_pat = expr2pattern(mod, next.args[1])
+            if contains_line_number_pattern(next_pat)
+                # line -> ignore, curr
+                # line_pat -> next
+                # line -> ignore, next + 1
+                # code
+                push!(args, next_pat)
+                idx += 3
+            else
+                push!(args, Pattern.Wildcard())
+                push!(args, next_pat)
+                idx += 2
+            end
+            continue
+        elseif curr isa LineNumberNode
+            push!(args, Pattern.Wildcard())
+        elseif Meta.isexpr(curr, :$)
+            push!(args, expr2pattern(mod, curr.args[1]))
+        else
+            push!(args, interpolation2pattern(mod, curr))
+        end
+        idx += 1
+    end
+    return Pattern.Expression(:block, args)
+end
+
+function contains_line_number_pattern(pat::Pattern.Type)
+    if isa_variant(pat, Pattern.TypeAnnotate)
+        if pat.type === :LineNumberNode || pat.type == LineNumberNode
+            return true
+        end
+        return contains_line_number_pattern(pat.body)
+    elseif isa_variant(pat, Pattern.Call) && (pat.head == :LineNumberNode || pat.head == LineNumberNode)
+        return true
+    else
+        for (name, type) in zip(Data.variant_fieldnames(pat), Data.variant_fieldtypes(pat))
+            type == Pattern.Type || continue # skip other fields
+            contains_line_number_pattern(getproperty(pat, name)) && return true
+        end
+        return false
     end
 end

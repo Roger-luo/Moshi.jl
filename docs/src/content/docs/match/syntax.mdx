@@ -242,6 +242,100 @@ Stacktrace:
    @ REPL[36]:2
 ```
 
+### Expression Pattern
+
+You can match Julia expressions in the same way as how you would create them. Consider the following example:
+
+```julia
+julia> @match :(x::Int) begin
+           :($x::Int) => x
+       end
+:x
+```
+
+When matching expression blocks, the `LineNumberNode` is treated as a wildcard `_` as syntax sugar.
+For example:
+
+```julia
+julia> expr = quote
+           struct S{T}
+               a :: Int
+               b :: T
+           end
+       end
+quote
+    #= REPL[85]:2 =#
+    struct S{T}
+        #= REPL[85]:3 =#
+        a::Int
+        #= REPL[85]:4 =#
+        b::T
+    end
+end
+
+julia> @match expr begin
+           quote
+               struct $name{$tvar}
+                   $f1 :: $t1
+                   $f2 :: $t2
+               end
+           end => (name, tvar, f1, t1, f2, t2)
+       end
+(:S, :T, :a, :Int, :b, :T)
+```
+
+However, in some cases, one may want to match the `LineNumberNode`. In such cases, we can try to match
+a pattern containing a sub-pattern of the type annotation pattern `<pattern>::LineNumberNode` or the call pattern
+`LineNumberNode(line, file)`:
+
+```julia
+julia> @match expr begin
+    quote
+        $(line::LineNumberNode)
+        struct $name{$tvar}
+            $f1::$t1
+            $f2::$t2
+        end
+    end => (line, name, tvar, f1, t1, f2, t2)
+end
+
+(:(#= REPL[128]:2 =#), :S, :T, :a, :Int, :b, :T)
+
+julia> @match expr begin
+            quote
+                $(LineNumberNode(line, file))
+                struct $name{$tvar}
+                    $f1::$t1
+                    $f2::$t2
+                end
+            end => line
+        end
+2
+```
+
+thse patterns are also composible, for example you can compose with a guard:
+
+```julia
+julia> @match expr begin
+            quote
+                $(LineNumberNode(line, file) && if line > 3 end)
+                struct $name{$tvar}
+                    $f1::$t1
+                    $f2::$t2
+                end
+            end => line
+        end
+
+ERROR: matching non-exhaustic
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] top-level scope
+   @ REPL[131]:2
+```
+
+this pattern above now matches only if the line number is greater than 3.
+
 ## The Pattern Language
 
 The pattern matching in `Moshi` is backed by a pattern language describing the structure of the data. In this section
@@ -260,6 +354,7 @@ we will discuss the formal definitions of the pattern language. The pattern lang
         | <and>
         | <or>
         | <guard>
+        | <expression>
 
 <error> ::= "error" "(" <string> ")"
 <wildcard> ::= "_"
@@ -277,4 +372,6 @@ we will discuss the formal definitions of the pattern language. The pattern lang
 <and> ::= <pattern> "&&" <pattern>
 <or> ::= <pattern> "||" <pattern>
 <guard> ::= "if" <julia expr> "end"
+
+<expression> ::= <julia expr> | "$(" <pattern> ")"
 ```

@@ -163,33 +163,80 @@ end))) == "(x::Int) && (if :(x > 2) end)"
 )
 @test sprint(show, expr2pattern(:([x for x in [1, 2, 3]]))) == "[x for x in [1, 2, 3]]"
 
-@test expr2pattern(:(:(foo($(x::Int) + 1)))) == Pattern.Expression(:call, [
-    Pattern.Quote(QuoteNode(:foo)),
-    Pattern.Expression(:call, [
-        Pattern.Quote(QuoteNode(:+)),
-        Pattern.TypeAnnotate(Pattern.Variable(:x), :Int),
-        Pattern.Quote(1),
-    ])
-])
+@test expr2pattern(:(:(foo($(x::Int) + 1)))) == Pattern.Expression(
+    :call,
+    [
+        Pattern.Quote(QuoteNode(:foo)),
+        Pattern.Expression(
+            :call,
+            [
+                Pattern.Quote(QuoteNode(:+)),
+                Pattern.TypeAnnotate(Pattern.Variable(:x), :Int),
+                Pattern.Quote(1),
+            ],
+        ),
+    ],
+)
 
 @test sprint(show, expr2pattern(:(:(foo($(x::Int) + 1))))) == ":(foo(\$(x::Int) + 1))"
 
-
-@test expr2pattern(:(quote
-    struct $name{$tvar}
-        $f1 :: $t1
-        $f2 :: $t2
+@test expr2pattern(:(
+    quote
+        struct $name{$tvar}
+            $f1::$t1
+            $f2::$t2
+        end
     end
-end)) == Pattern.Expression(:block, [
-    Pattern.Wildcard(),
-    Pattern.Expression(:struct, [
-        Pattern.Quote(false),
-        expr2pattern(:(:(($(name)){$(tvar)}))),
-        Pattern.Expression(:block, [
-            Pattern.Wildcard(),
-            expr2pattern(:(:($(f1)::$(t1)))),
-            Pattern.Wildcard(),
-            expr2pattern(:(:($(f2)::$(t2)))),
-        ])
-    ])
-])
+)) == Pattern.Expression(
+    :block,
+    [
+        Pattern.Wildcard(),
+        Pattern.Expression(
+            :struct,
+            [
+                Pattern.Quote(false),
+                expr2pattern(:(:(($(name)){$(tvar)}))),
+                Pattern.Expression(
+                    :block,
+                    [
+                        Pattern.Wildcard(),
+                        expr2pattern(:(:($(f1)::$(t1)))),
+                        Pattern.Wildcard(),
+                        expr2pattern(:(:($(f2)::$(t2)))),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)
+
+@test expr2pattern(:(
+    quote
+        struct $name{$tvar}
+            $(line::LineNumberNode)
+            $f1::$t1
+            $f2::$t2
+        end
+    end
+)) == Pattern.Expression(
+    :block,
+    [
+        Pattern.Wildcard(),
+        Pattern.Expression(
+            :struct,
+            [
+                Pattern.Quote(false),
+                expr2pattern(:(:(($(name)){$(tvar)}))),
+                Pattern.Expression(
+                    :block,
+                    [
+                        expr2pattern(:(line::LineNumberNode)),
+                        expr2pattern(:(:($(f1)::$(t1)))),
+                        Pattern.Wildcard(),
+                        expr2pattern(:(:($(f2)::$(t2)))),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)

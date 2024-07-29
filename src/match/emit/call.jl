@@ -52,11 +52,25 @@ function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
 end
 
 function decons_call(::Type{Regex}, ctx::PatternContext, pat::Pattern.Type)
+    length(pat.args) == 1 || error("expect Regex(<string>) got $pat")
     Data.isa_variant(pat.args[1], Pattern.Quote) || error("Regex head must be a string")
     re = Regex(pat.args[1].:1)
     return function regex(x)
         return quote
             $Base.occursin($re, $x)
         end
+    end
+end
+
+function decons_call(::Type{LineNumberNode}, ctx::PatternContext, pat::Pattern.Type)
+    length(pat.args) == 2 || error(
+        "expect LineNumberNode(<line::Int>, <file::Union{Nothing, Symbol, String}>) got $pat",
+    )
+    return function line_number_node(value)
+        return and_expr(
+            :($value isa $Base.LineNumberNode),
+            decons(ctx, pat.args[1])(:($value.line)),
+            decons(ctx, pat.args[2])(:($value.file)),
+        )
     end
 end
