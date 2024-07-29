@@ -1,9 +1,8 @@
-module ExproniconBench
+using Test
+using Moshi.Data: Data, @data, isa_variant
+using Moshi.Match: @match
 
-using Expronicon.ADT: @adt
-using MLStyle: @match
-
-@adt AT begin
+@data AT begin
     struct A
         common_field::Int = 0
         a::Bool = true
@@ -29,12 +28,11 @@ using MLStyle: @match
 end
 
 function foo!(xs)
-    for i in eachindex(xs)
-        @inbounds x = xs[i]
-        @inbounds xs[i] = @match x begin
+    @inbounds for i in eachindex(xs)
+        xs[i] = @match xs[i] begin
             AT.A(cf, a, b) => AT.B(cf + 1, a, b, b)
             AT.B(cf, a, b, d) => AT.C(cf - 1, b, isodd(a), b, d)
-            AT.C(cf, b, d, e, k) => AT.D(cf + 1, isodd(cf) ? "hi" : "bye")
+            AT.C(cf) => AT.D(cf + 1, isodd(cf) ? "hi" : "bye")
             AT.D(cf, b) => AT.A(cf - 1, b == "hi", cf)
         end
     end
@@ -44,7 +42,7 @@ using Random
 rng = Random.MersenneTwister(123)
 xs = rand(rng, (AT.A(), AT.B(), AT.C(), AT.D()), 10000)
 
+@code_warntype foo!(xs)
+
 using BenchmarkTools
 display(@benchmark foo!($xs))
-
-end # ExproniconBench

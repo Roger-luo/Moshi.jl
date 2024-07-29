@@ -50,5 +50,5 @@ xs = Vector{Object}(
     map(x -> rand((Object(A()), Object(B()), Object(C()), Object(D()))), 1:10000)
 )
 using BenchmarkTools
-@benchmark foo!($xs)
-@code_warntype foo!(xs)
+display(@benchmark foo!($xs))
+# @code_warntype foo!(xs)
