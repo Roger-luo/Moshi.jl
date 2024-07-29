@@ -20,10 +20,10 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
         with:
           version: "1.10"
-          arch: ubuntu-latest
       - uses: julia-actions/cache@v1
       - name: Install Julia dependencies
         run: julia --project=docs/script -e 'using Pkg; Pkg.instantiate()'
