@@ -28,7 +28,7 @@ function emit(info::EmitInfo)
         :($(info.value_holder) = $(info.value)),
         matches,
         last(info.lines),
-        :($Base.error("matching non-exhaustic")),
+        :($Base.error("matching non-exhaustive")),
         :($Base.@label $(info.final_label)),
         info.return_var,
     )
