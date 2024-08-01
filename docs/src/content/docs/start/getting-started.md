@@ -60,8 +60,8 @@ end
 ## Further Reading
 
 - Examples and detailed syntax for `@data`: [ADT Syntax](../../data/syntax)
-- Builtin patterns for `@match`: [Builtin Patterns](../../match/builtin)
-- The `@derive` macro: [Syntax and Examples](../../derive/syntax)
+- Builtin patterns for `@match`: [Builtin Patterns](../../match/syntax/#builtin-patterns)
+- The `@derive` macro: [Syntax and Examples](../../start/derive/)
 
 To understand how Moshi works, you can check the following sections:
 
