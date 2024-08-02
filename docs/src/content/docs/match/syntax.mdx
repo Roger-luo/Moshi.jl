@@ -60,7 +60,7 @@ end
 julia> @match 1.2 begin
            x::Int => x
        end
-ERROR: matching non-exhaustic
+ERROR: matching non-exhaustive
 Stacktrace:
  [1] error(s::String)
    @ Base ./error.jl:35
@@ -234,7 +234,7 @@ julia> @match 5 begin
 julia> @match -1 begin
            x && if x > 0 end => x + 1
        end
-ERROR: matching non-exhaustic
+ERROR: matching non-exhaustive
 Stacktrace:
  [1] error(s::String)
    @ Base ./error.jl:35
@@ -326,7 +326,7 @@ julia> @match expr begin
             end => line
         end
 
-ERROR: matching non-exhaustic
+ERROR: matching non-exhaustive
 Stacktrace:
  [1] error(s::String)
    @ Base ./error.jl:35
