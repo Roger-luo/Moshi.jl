@@ -32,6 +32,44 @@ Moshi is a &nbsp;
 pkg> add Moshi
 ```
 
+## Quick Example
+
+Here is a quick example of defining a simple algebraic data type:
+
+```julia
+using Moshi.Data: @data
+
+@data Message begin
+    Quit
+    struct Move
+        x::Int
+        y::Int
+    end
+
+    Write(String)
+    ChangeColor(Int, Int, Int)
+end
+```
+
+For pattern matching, if you already used `MLStyle`, the syntax is very similar:
+
+```julia
+using Moshi.Match: @match
+
+@match [1.0, 2, 3] begin
+    [1, xs::Float64...] => xs
+end
+
+@match (1, 2.0, "a") begin
+    (1, x::Int, y::String) => x
+    (1, x::Real, y::String) => y
+end
+```
+
+## Benchmark
+
+![benchmark](docs/public/benchmark.svg)
+
 ## License
 
 MIT License
