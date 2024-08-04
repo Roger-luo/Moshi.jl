@@ -23,13 +23,20 @@ function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
     @gensym value
     if Data.is_variant_type(head) # check if our pattern is correct
         type_assert = :($Data.isa_variant($value, $head))
+        data = gensym(:data)
+        storage_type = Data.variant_storage_type(head)
+        type_assert = quote
+            $data = $Base.getfield($value, :data)
+            $data isa $storage_type
+        end
+
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
-            call_ex = xcall(Data, :variant_getfield, value, head, idx)
+            call_ex = xcall(Base, :getfield, data, idx)
             decons(ctx, x)(call_ex)
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
-            call_ex = xcall(Data, :variant_getfield, value, head, QuoteNode(key))
+            call_ex = xcall(Base, :getfield, data, QuoteNode(key))
             decons(ctx, val)(call_ex)
         end
     else # if isconcretetype(head)
