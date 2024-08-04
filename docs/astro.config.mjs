@@ -27,6 +27,7 @@ export default defineConfig({
 						{ slug: 'data/syntax' },
 						{ slug: 'data/reflection' },
 						{ slug: 'data/understand' },
+						{ slug: 'data/benchmark' },
 					],
 				},
 				{
