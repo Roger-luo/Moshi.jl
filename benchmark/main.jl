@@ -94,6 +94,7 @@ end
 Label(fig[:, 0], "relative to baseline", rotation = pi/2)
 
 elements = [PolyElement(polycolor = colors[1]), PolyElement(polycolor = colors[2])]
-Legend(fig[1, 2], elements, ["allocation", "speedup"], "Benchmark")
+Legend(fig[1, 2], elements, ["allocation", "slowdown"], "Benchmark")
 
+save("benchmark.svg", fig)
 save("benchmark.png", fig)
