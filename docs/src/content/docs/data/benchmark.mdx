@@ -16,8 +16,16 @@ matching speed.
 import { Image } from 'astro:assets';
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
+<Tabs>
+<TabItem label="1.10">
+
 <Image src="/Moshi.jl/benchmark.svg" width="800" height="1000" alt="Benchmark" />
 
+</TabItem>
+<TabItem label="1.11">
+<Image src="/Moshi.jl/v1.11/benchmark.svg" width="800" height="1000" alt="Benchmark" />
+</TabItem>
+</Tabs>
 ## Setup
 
 The benchmark was run on a machine with the following configuration:
