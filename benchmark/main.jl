@@ -1,4 +1,3 @@
-using DataFrames
 using CairoMakie
 using BenchmarkTools
 
