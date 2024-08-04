@@ -1,7 +1,7 @@
 module Reflection
 
 using ..Data: @pass, Data, EmitInfo, StorageInfo, Singleton, Anonymous, Named
-using ExproniconLite: JLIfElse, xtuple, expr_map, codegen_ast
+using ExproniconLite: JLIfElse, xcall, xtuple, expr_map, codegen_ast
 
 @pass function emit_variants(info::EmitInfo)
     if isempty(info.params)
@@ -400,6 +400,54 @@ end
         $numbered
 
         $generic
+    end
+end
+
+@pass function emit_storage_types(info::EmitInfo)
+    elems = map(info.storages) do storage
+        xcall(Base, :Pair, storage.parent.name, storage.head)
+    end
+    body = :($Base.ImmutableDict($(elems...)))
+    if isempty(info.params)
+        return quote
+            $Data.storage_types(::$Type{Type}) = $body
+        end
+    else
+        elems_no_param = map(info.storages) do storage
+            xcall(Base, :Pair, storage.parent.name, storage.name)
+        end
+        return quote
+            function $Data.storage_types(::$Type{<:Type})
+                return $(Base.ImmutableDict)($(elems_no_param...))
+            end
+
+            function $Data.storage_types(
+                ::$Type{$(info.type_head)}
+            ) where {$(info.whereparams...)}
+                return $body
+            end
+        end
+    end
+end
+
+@pass function emit_data_type(info::EmitInfo)
+    return expr_map(info.storages) do storage
+        main = quote
+            function $Data.data_type(::$Type{$(storage.variant_head)}) where {$(info.whereparams...)}
+                return $(info.type_head)
+            end
+        end
+        if isempty(info.params)
+            return main
+        else
+            return quote
+                $main
+
+                function $Data.data_type(::$Type{<:$(storage.parent.name)})
+                    return Type
+                end
+            end
+        end
     end
 end
 

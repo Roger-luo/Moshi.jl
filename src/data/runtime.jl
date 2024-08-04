@@ -65,6 +65,15 @@ end
 """
 $INTERFACE
 
+Return the data type of the given variant type.
+"""
+@interface function data_type(variant::Type)::Type
+    return throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
 Check if the given object is a variant type.
 """
 @interface function is_variant_type(x)::Bool
@@ -207,6 +216,30 @@ Known the variant type `tag`, return the field of the variant by field name or i
     type of the variant usually, so if you care about performance, you may want to use this
     method in combine with [`variant_storage`](@ref).
 """
-function variant_getfield(value, tag::Type, field::Union{Int,Symbol})
+@interface function variant_getfield(value, tag::Type, field::Union{Int,Symbol})
     throw(IllegalDispatch())
+end
+
+"""
+$INTERFACE
+
+Return the storage types of the data type.
+
+!!! note
+    This method is used by the pattern matching system to extract the field of the variant.
+"""
+@interface function storage_types(value::Type)::Base.ImmutableDict{DataType, DataType}
+    throw(IllegalDispatch())
+end
+
+# HINT
+storage_types(mod::Module) = error("got module $mod, do you mean $mod.Type?")
+
+"""
+$INTERFACE
+
+Return the storage type of the variant.
+"""
+@interface function variant_storage_type(tag::Type)::Type
+    return storage_types(data_type(tag))[tag]
 end

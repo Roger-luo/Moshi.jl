@@ -2,12 +2,6 @@
     return expr_map(x -> emit_each_variant_cons(info, x), info.storages; skip_nothing=true)
 end
 
-function emit_conversion(args, annotations)
-    return expr_map(args, annotations) do arg, type
-        :($arg = $Base.convert($type, $arg))
-    end
-end
-
 function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
     args = if storage.parent.kind == Singleton
         []
@@ -19,18 +13,14 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
         end
     end
 
-    jl = JLFunction(;
-        name=storage.variant_head,
-        args,
-        info.whereparams,
-        body=quote
+    return quote
+        $Base.@constprop :aggressive function $(storage.variant_head)(
+            $(args...)
+        ) where {$(info.whereparams...)}
             $(Expr(:meta, :inline))
-            $(emit_conversion(args, storage.annotations))
             return $(info.type_head)($(storage.head)($(args...)))
-        end,
-    )
-
-    return codegen_ast(jl)
+        end
+    end
 end
 
 @pass function emit_variant_kw_cons(info::EmitInfo)
@@ -55,7 +45,6 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
-            $(emit_conversion(args, storage.annotations))
             return $(info.type_head)($(storage.head)($(args...)))
         end,
     )
@@ -92,7 +81,6 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
-            $(emit_conversion(inputs, storage.annotations))
             return $(info.type_head)($(storage.head)($(inputs...)))
         end,
     )
