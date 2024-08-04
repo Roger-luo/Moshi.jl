@@ -1,4 +1,6 @@
-using Test
+module MoshiMatchBench
+
+using Random
 using Moshi.Data: Data, @data, isa_variant
 using Moshi.Match: @match
 
@@ -27,7 +29,11 @@ using Moshi.Match: @match
     end
 end
 
-function foo!(xs)
+function generate(len::Int)
+    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
+end
+
+function main!(xs)
     @inbounds for i in eachindex(xs)
         xs[i] = @match xs[i] begin
             AT.A(cf, a, b) => AT.B(cf + 1, a, b, b)
@@ -38,11 +44,4 @@ function foo!(xs)
     end
 end
 
-using Random
-rng = Random.MersenneTwister(123)
-xs = rand(rng, (AT.A(), AT.B(), AT.C(), AT.D()), 10000)
-
-@code_warntype foo!(xs)
-
-using BenchmarkTools
-display(@benchmark foo!($xs))
+end # module

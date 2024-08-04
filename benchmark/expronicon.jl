@@ -1,5 +1,6 @@
 module ExproniconBench
 
+using Random
 using Expronicon.ADT: @adt
 using MLStyle: @match
 
@@ -28,7 +29,11 @@ using MLStyle: @match
     end
 end
 
-function foo!(xs)
+function generate(len::Int)
+    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
+end
+
+function main!(xs)
     for i in eachindex(xs)
         @inbounds x = xs[i]
         @inbounds xs[i] = @match x begin
@@ -39,12 +44,5 @@ function foo!(xs)
         end
     end
 end
-
-using Random
-rng = Random.MersenneTwister(123)
-xs = rand(rng, (AT.A(), AT.B(), AT.C(), AT.D()), 10000)
-
-using BenchmarkTools
-display(@benchmark foo!($xs))
 
 end # ExproniconBench

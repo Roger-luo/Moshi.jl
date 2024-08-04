@@ -9,7 +9,20 @@ using SumTypes, BenchmarkTools
     D(common_field::Int, b::Any)
 end
 
-foo!(xs) =
+function generate(len::Int)
+    return rand(
+        Random.MersenneTwister(123),
+        (
+            A(1, true, 10),
+            B(1, 1, 1.0, 1 + 1im),
+            C(1, 2.0, false, 3.0, Complex{Real}(1 + 2im)),
+            D(1, "hi"),
+        ),
+        len,
+    )
+end
+
+function main!(xs)
     for i in eachindex(xs)
         xs[i] = @cases xs[i] begin
             A(cf, a, b) => B(cf + 1, a, b, b)
@@ -18,19 +31,6 @@ foo!(xs) =
             D(cf, b) => A(cf - 1, b == "hi", cf)
         end
     end
+end # main!
 
-rng = Random.MersenneTwister(123)
-xs = rand(
-    rng,
-    (
-        A(1, true, 10),
-        B(1, 1, 1.0, 1 + 1im),
-        C(1, 2.0, false, 3.0, Complex{Real}(1 + 2im)),
-        D(1, "hi"),
-    ),
-    10000,
-)
-
-display(@benchmark foo!($xs);)
-
-end
+end # module

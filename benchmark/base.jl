@@ -1,5 +1,6 @@
-using Test
-using Moshi.Data: Data, @data, isa_variant
+module BaseBench
+
+using Random
 
 Base.@kwdef struct A
     common_field::Int = 0
@@ -28,27 +29,33 @@ struct Object
     data::Union{A,B,C,D}
 end
 
-function foo!(xs)
+function generate(len::Int)
+    rng = Random.MersenneTwister(123)
+    return rand(rng, (Object(A()), Object(B()), Object(C()), Object(D())), len)
+end
+
+function main!(xs)
     for i in eachindex(xs)
         x = xs[i]
-        x = x.data
-        xs[i] = if x isa A
-            Object(B(x.common_field + 1, x.a, x.b, x.b))
-        elseif x isa B
-            Object(C(x.common_field - 1, x.b, isodd(x.a), x.b, x.d))
-        elseif x isa C
-            Object(D(x.common_field + 1, isodd(x.common_field) ? "hi" : "bye"))
-        else
-            Object(A(x.common_field - 1, x.b == "hi", x.common_field))
+        data = getfield(x, :data)
+        if data isa A
+            xs[i] = Object(B(data.common_field + 1, data.a, data.b, data.b))
+            @goto final
         end
+
+        if data isa B
+            xs[i] = Object(C(data.common_field - 1, data.b, isodd(data.a), data.b, data.d))
+            @goto final
+        end
+
+        if data isa C
+            xs[i] = Object(D(data.common_field + 1, isodd(data.common_field) ? "hi" : "bye"))
+            @goto final
+        end
+        
+        xs[i] = Object(A(data.common_field - 1, data.b == "hi", data.common_field))
+        @label final
     end
 end
 
-using Random
-rng = Random.MersenneTwister(123)
-xs = Vector{Object}(
-    map(x -> rand((Object(A()), Object(B()), Object(C()), Object(D()))), 1:10000)
-)
-using BenchmarkTools
-display(@benchmark foo!($xs))
-# @code_warntype foo!(xs)
+end # module
