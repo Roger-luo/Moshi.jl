@@ -15,7 +15,6 @@ include("expronicon.jl")
 include("moshi.jl")
 include("moshi_match.jl")
 include("moshi_hacky.jl")
-include("moshi_debug.jl")
 include("sumtypes.jl")
 
 data = Dict(
