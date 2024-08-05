@@ -21,6 +21,7 @@ include("moshi.jl")
 include("moshi_match.jl")
 include("moshi_hacky.jl")
 include("sumtypes.jl")
+include("unityper.jl")
 
 data = Dict(
     "baseline" => explore_size(BaseBench),
@@ -30,6 +31,7 @@ data = Dict(
     "Moshi (match)" => explore_size(MoshiMatchBench),
     "Moshi (hacky)" => explore_size(MoshiHackyBench),
     "SumType" => explore_size(SumTypeTest),
+    "Unityper" => explore_size(UnityperBench),
 )
 
 alloc = Dict{String,Vector{Float64}}()
@@ -76,15 +78,15 @@ for (idx, size) in enumerate([10, 100, 1000, 10000])
         dodge=tbl.grp,
         color=colors[tbl.grp],
         axis= idx == 4 ? (
-            yticks=0:10,
             xticks=(1:length(speed), packages),
             xticklabelrotation = pi/4,
             title="# of elements: $(size)",
             xlabel="packages",
+            yscale = log10,
         ) : (
-            yticks=0:10,
             xticksvisible=false,
             xticklabelsvisible=false,
+            yscale = log10,
             title="# of elements: $(size)",
         ),
     )
@@ -94,6 +96,6 @@ Label(fig[:, 0], "relative to baseline", rotation = pi/2)
 
 elements = [PolyElement(polycolor = colors[1]), PolyElement(polycolor = colors[2])]
 Legend(fig[1, 2], elements, ["allocation", "slowdown"], "Benchmark")
-
+fig
 save("benchmark.svg", fig)
 save("benchmark.png", fig)
