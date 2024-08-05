@@ -20,7 +20,7 @@ using Moshi.Data: Data, @data, isa_variant
         b::Float64 = 2.0
         d::Bool = false
         e::Float64 = 3.0
-        k::Complex{Float64} = 1 + 2im # not isbits
+        k::Complex{Real} = 1 + 2im # not isbits
     end
     struct D
         common_field::Int = 0
