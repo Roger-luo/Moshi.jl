@@ -3,25 +3,25 @@ module DynamicSumTypesBench
 using Random
 using DynamicSumTypes
 
-Base.@kwdef struct A
+@kwdef struct A
     common_field::Int = 0
     a::Bool = true
     b::Int = 10
 end
-Base.@kwdef struct B
+@kwdef struct B
     common_field::Int = 0
     a::Int = 1
     b::Float64 = 1.0
     d::Complex = 1 + 1.0im # not isbits
 end
-Base.@kwdef struct C
+@kwdef struct C
     common_field::Int = 0
     b::Float64 = 2.0
     d::Bool = false
     e::Float64 = 3.0
     k::Complex{Real} = 1 + 2im # not isbits
 end
-Base.@kwdef struct D
+@kwdef struct D
     common_field::Int = 0
     b::Any = "hi" # not isbits
 end
@@ -29,7 +29,6 @@ end
 @sumtype AT(A,B,C,D)
 
 function generate(len::Int)
-    rng = MersenneTwister(123)
     return rand(
         MersenneTwister(123),
         (AT(A()), AT(B()), AT(C()), AT(D())),
