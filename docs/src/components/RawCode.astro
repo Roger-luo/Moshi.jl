@@ -1,0 +1,23 @@
+---
+import * as fs from "fs";
+import type {
+	BuiltinLanguage,
+	LanguageRegistration,
+	SpecialLanguage,
+} from 'shiki';
+import { Code } from 'astro:components';
+
+function readCode(path: string, encoding: BufferEncoding): string {
+  return fs.readFileSync(path, "utf8");
+}
+
+interface Props {
+    path: string;
+    lang?: BuiltinLanguage | SpecialLanguage | LanguageRegistration;
+}
+
+const { path, lang } = Astro.props;
+const code = readCode(path, "utf8");
+---
+
+<Code code=`${code}` lang={lang}/>

@@ -15,7 +15,7 @@ function explore_size(mod::Module)
 end
 
 include("base.jl")
-include("dsymtypes.jl")
+include("dsumtypes.jl")
 include("expronicon.jl")
 include("moshi.jl")
 include("moshi_match.jl")

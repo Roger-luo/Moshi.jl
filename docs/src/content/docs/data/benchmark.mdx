@@ -3,18 +3,20 @@ title: Benchmarks
 description: A comparision of performance of ADTs between Moshi and other packages
 ---
 
+import { Image } from 'astro:assets';
+import RawCode from '@components/RawCode.astro';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 We benchmark the performance of Moshi against other packages for the a typical use case
 from the README of `Unityper`. This benchmark has been the baseline benchmark for all
 the packages that we have compared against.
+
 
 ## Results
 
 We see that Moshi is the fastest among all the packages that is almost equivalent to
 the baseline implementation (~1x comparing to baseline speed) in both allocation size and
 matching speed.
-
-import { Image } from 'astro:assets';
-import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Tabs>
 <TabItem label="1.10">
@@ -55,302 +57,36 @@ a module. The detailed implementations are as follows:
 <Tabs>
 <TabItem label="match">
 This is with the normal `@match` macro.
-
-```julia
-using Random
-using Moshi.Data: Data, @data, isa_variant
-using Moshi.Match: @match
-
-@data AT begin
-    struct A
-        common_field::Int = 0
-        a::Bool = true
-        b::Int = 10
-    end
-    struct B
-        common_field::Int = 0
-        a::Int = 1
-        b::Float64 = 1.0
-        d::Complex = 1 + 1.0im # not isbits
-    end
-    struct C
-        common_field::Int = 0
-        b::Float64 = 2.0
-        d::Bool = false
-        e::Float64 = 3.0
-        k::Complex{Real} = 1 + 2im # not isbits
-    end
-    struct D
-        common_field::Int = 0
-        b::Any = "hi" # not isbits
-    end
-end
-
-function generate(len::Int)
-    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
-end
-
-function main!(xs)
-    @inbounds for i in eachindex(xs)
-        xs[i] = @match xs[i] begin
-            AT.A(cf, a, b) => AT.B(cf + 1, a, b, b)
-            AT.B(cf, a, b, d) => AT.C(cf - 1, b, isodd(a), b, d)
-            AT.C(cf) => AT.D(cf + 1, isodd(cf) ? "hi" : "bye")
-            AT.D(cf, b) => AT.A(cf - 1, b == "hi", cf)
-        end
-    end
-end
-```
+<RawCode path="../benchmark/moshi_match.jl" lang="julia"/>
 </TabItem>
 <TabItem label="reflection">
 This is using Moshi's reflections.
 
-```julia
-using Random
-using Moshi.Data: Data, @data, isa_variant
+<RawCode path="../benchmark/moshi.jl" lang="julia"/>
 
-@data AT begin
-    struct A
-        common_field::Int = 0
-        a::Bool = true
-        b::Int = 10
-    end
-    struct B
-        common_field::Int = 0
-        a::Int = 1
-        b::Float64 = 1.0
-        d::Complex = 1 + 1.0im # not isbits
-    end
-    struct C
-        common_field::Int = 0
-        b::Float64 = 2.0
-        d::Bool = false
-        e::Float64 = 3.0
-        k::Complex{Float64} = 1 + 2im # not isbits
-    end
-    struct D
-        common_field::Int = 0
-        b::Any = "hi" # not isbits
-    end
-end
-
-function generate(len::Int)
-    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
-end
-
-function main!(xs)
-    for i in eachindex(xs)
-        x = xs[i]
-        xs[i] = if isa_variant(x, AT.A)
-            AT.B(x.common_field + 1, x.a, x.b, x.b)
-        elseif isa_variant(x, AT.B)
-            AT.C(x.common_field - 1, x.b, isodd(x.a), x.b, x.d)
-        elseif isa_variant(x, AT.C)
-            AT.D(x.common_field + 1, isodd(x.common_field) ? "hi" : "bye")
-        else
-            AT.A(x.common_field - 1, x.b == "hi", x.common_field)
-        end
-    end
-end
-```
 </TabItem>
 <TabItem label="hacky">
 This is using Moshi's `variant_getfield` reflection, which is equivalent to the pattern matching.
 
-```julia
-using Random
-using Moshi.Data: Data, @data, isa_variant, variant_getfield
-using Moshi.Match: @match
+<RawCode path="../benchmark/moshi_hacky.jl" lang="julia"/>
 
-@data AT begin
-    struct A
-        common_field::Int = 0
-        a::Bool = true
-        b::Int = 10
-    end
-    struct B
-        common_field::Int = 0
-        a::Int = 1
-        b::Float64 = 1.0
-        d::Complex = 1 + 1.0im # not isbits
-    end
-    struct C
-        common_field::Int = 0
-        b::Float64 = 2.0
-        d::Bool = false
-        e::Float64 = 3.0
-        k::Complex{Real} = 1 + 2im # not isbits
-    end
-    struct D
-        common_field::Int = 0
-        b::Any = "hi" # not isbits
-    end
-end
-
-function generate(len::Int)
-    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
-end
-
-function main!(xs)
-    @inbounds for i in eachindex(xs)
-        x = xs[i]
-        xs[i] = if isa_variant(x, AT.A)
-            cf = Data.variant_getfield(x, AT.A, :common_field)
-            a = Data.variant_getfield(x, AT.A, :a)
-            b = Data.variant_getfield(x, AT.A, :b)
-            AT.B(cf + 1, a, b, b)
-        elseif isa_variant(x, AT.B)
-            cf = Data.variant_getfield(x, AT.B, :common_field)
-            a = Data.variant_getfield(x, AT.B, :a)
-            b = Data.variant_getfield(x, AT.B, :b)
-            d = Data.variant_getfield(x, AT.B, :d)
-            AT.C(cf - 1, b, isodd(a), b, d)
-        elseif isa_variant(x, AT.C)
-            cf = Data.variant_getfield(x, AT.C, :common_field)
-            AT.D(cf + 1, isodd(cf) ? "hi" : "bye")
-        else
-            cf = Data.variant_getfield(x, AT.D, :common_field)
-            b = Data.variant_getfield(x, AT.D, :b)
-            AT.A(cf - 1, b == "hi", cf)
-        end
-    end
-end
-```
 </TabItem>
 <TabItem label="Expronicon">
-```julia
-using Random
-using Expronicon.ADT: @adt
-using MLStyle: @match
 
-@adt AT begin
-    struct A
-        common_field::Int = 0
-        a::Bool = true
-        b::Int = 10
-    end
-    struct B
-        common_field::Int = 0
-        a::Int = 1
-        b::Float64 = 1.0
-        d::Complex = 1 + 1.0im # not isbits
-    end
-    struct C
-        common_field::Int = 0
-        b::Float64 = 2.0
-        d::Bool = false
-        e::Float64 = 3.0
-        k::Complex{Real} = 1 + 2im # not isbits
-    end
-    struct D
-        common_field::Int = 0
-        b::Any = "hi" # not isbits
-    end
-end
+<RawCode path="../benchmark/expronicon.jl" lang="julia"/>
 
-function generate(len::Int)
-    return rand(Random.MersenneTwister(123), (AT.A(), AT.B(), AT.C(), AT.D()), len)
-end
-
-function main!(xs)
-    for i in eachindex(xs)
-        @inbounds x = xs[i]
-        @inbounds xs[i] = @match x begin
-            AT.A(cf, a, b) => AT.B(cf + 1, a, b, b)
-            AT.B(cf, a, b, d) => AT.C(cf - 1, b, isodd(a), b, d)
-            AT.C(cf, b, d, e, k) => AT.D(cf + 1, isodd(cf) ? "hi" : "bye")
-            AT.D(cf, b) => AT.A(cf - 1, b == "hi", cf)
-        end
-    end
-end
-```
 </TabItem>
 <TabItem label="SumTypes">
-```julia
-using Random
-using SumTypes, BenchmarkTools
-@sum_type AT begin
-    A(common_field::Int, a::Bool, b::Int)
-    B(common_field::Int, a::Int, b::Float64, d::Complex)
-    C(common_field::Int, b::Float64, d::Bool, e::Float64, k::Complex{Real})
-    D(common_field::Int, b::Any)
-end
 
-function generate(len::Int)
-    return rand(
-        Random.MersenneTwister(123),
-        (
-            A(1, true, 10),
-            B(1, 1, 1.0, 1 + 1im),
-            C(1, 2.0, false, 3.0, Complex{Real}(1 + 2im)),
-            D(1, "hi"),
-        ),
-        len,
-    )
-end
+<RawCode path="../benchmark/sumtypes.jl" lang="julia"/>
 
-function main!(xs)
-    for i in eachindex(xs)
-        xs[i] = @cases xs[i] begin
-            A(cf, a, b) => B(cf + 1, a, b, b)
-            B(cf, a, b, d) => C(cf - 1, b, isodd(a), b, d)
-            C(cf, b, d, e, k) => D(cf + 1, isodd(cf) ? "hi" : "bye")
-            D(cf, b) => A(cf - 1, b == "hi", cf)
-        end
-    end
-end # main!
-```
 </TabItem>
 
 <TabItem label="DynamicSumTypes">
-```julia
-using Random
-using DynamicSumTypes
+<RawCode path="../benchmark/dsumtypes.jl" lang="julia"/>
+</TabItem>
 
-@kwdef struct A
-    common_field::Int = 1
-    a::Bool = true
-    b::Int = 10
-end
-@kwdef struct B
-    common_field::Int = 1
-    c::Int = 1
-    d::Float64 = 1.0
-    e::Complex = 1.0 + 1.0im
-end
-@kwdef struct C
-    common_field::Int = 1
-    f::Float64 = 2.0
-    g::Bool = false
-    h::Float64 = 3.0
-    i::Complex{Float64} = 1.0 + 2.0im
-end
-@kwdef struct D
-    common_field::Int = 1
-    l::Any = "hi"
-end
-
-@sumtype AT(A,B,C,D)
-
-function generate(len::Int)
-    rng = MersenneTwister(123)
-    return rand(
-        MersenneTwister(123),
-        (AT(A()), AT(B()), AT(C()), AT(D())),
-        len,
-    )
-end
-
-function main!(xs)
-    for i in eachindex(xs)
-        @inbounds xs[i] = main_each(variant(xs[i]))
-    end
-end
-
-main_each(x::A) = AT(B(x.common_field+1, x.a, x.b, x.b))
-main_each(x::B) = AT(C(x.common_field-1, x.d, isodd(x.c), x.d, x.e))
-main_each(x::C) = AT(D(x.common_field+1, isodd(x.common_field) ? "hi" : "bye"))
-main_each(x::D) = AT(A(x.common_field-1, x.l=="hi", x.common_field))
-```
+<TabItem label="Unityper">
+<RawCode path="../benchmark/unityper.jl" lang="julia"/>
 </TabItem>
 </Tabs>
