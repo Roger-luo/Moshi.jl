@@ -13,10 +13,10 @@ function generate(len::Int)
     return rand(
         Random.MersenneTwister(123),
         (
-            A(1, true, 10),
-            B(1, 1, 1.0, 1 + 1im),
-            C(1, 2.0, false, 3.0, Complex{Real}(1 + 2im)),
-            D(1, "hi"),
+            A(0, true, 10),
+            B(0, 1, 1.0, 1 + 1im),
+            C(0, 2.0, false, 3.0, Complex{Real}(1 + 2im)),
+            D(0, "hi"),
         ),
         len,
     )
