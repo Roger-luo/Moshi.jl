@@ -6,6 +6,7 @@ import { marked } from 'marked';
 const { module } = Astro.props;
 const moduleLast = module.split('.').pop();
 const scan_script = `julia --project=script -e '
+using REPL
 using JSON
 using Jieko
 using Markdown
