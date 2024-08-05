@@ -7,7 +7,7 @@ import { Card } from '@astrojs/starlight/components';
 
 Pattern matching is a mechanism found in many programming languages that allows checking a given sequence of tokens for the presence of the constituents of some pattern. This feature is often used for simplifying the code and making it more readable, especially when working with data structures like lists, tuples, or more complex nested data.
 
-We have discussed a practical use case of pattern matching in [previous section](algebra-data-type).
+We have discussed a practical use case of pattern matching in [previous section](/Moshi.jl/start/algebra-data-type).
 
 ## Benefits of Pattern Matching
 
@@ -59,7 +59,7 @@ end
 ```
 
 Moshi offers a lot of builtin patterns. To learn more about builtin patterns
-please read [Builtin Patterns](../match/builtin).
+please read [Builtin Patterns](Moshi.jl/match/syntax/#builtin-patterns).
 
 ## Extensible Pattern Matching
 
@@ -72,7 +72,7 @@ Moshi takes extensibility seriously and goes one step further - we allow you cus
 pattern not only based on underlying type (by overloading `decons_call`). We also allow
 you registering your own syntax and decide what it gets lowered to.
 
-See [extending pattern match](../match/extend) to understand how to extend pattern matching
+See [extending pattern match](Moshi.jl/match/extend) to understand how to extend pattern matching
 for your own data structure.
 
 ## Zero Dependency Guarantee
