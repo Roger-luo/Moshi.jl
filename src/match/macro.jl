@@ -1,4 +1,9 @@
-macro match(expr, body)
+"""
+    $DEF
+
+Pattern matching macro.
+"""
+@pub macro match(expr, body)
     return esc(match_m(__module__, __source__, expr, body))
 end
 

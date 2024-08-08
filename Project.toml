@@ -9,5 +9,5 @@ Jieko = "ae98c720-c025-4a4a-838c-29b094483192"
 
 [compat]
 ExproniconLite = "0.10.10"
-Jieko = "0.1"
+Jieko = "0.2"
 julia = "1.10"

@@ -1,18 +1,18 @@
 """
-$INTERFACE
+$DEF
 
 Print the variant to the given IO stream in multiple lines.
 """
-@interface function show_variant(io::IO, mime::MIME"text/plain", x)
+@pub function show_variant(io::IO, mime::MIME"text/plain", x)
     return show_variant(io::IO, x)
 end
 
 """
-$INTERFACE
+$DEF
 
 Print the variant to the given IO stream in a single line.
 """
-@interface function show_variant(io::IO, x)
+@pub function show_variant(io::IO, x)
     print(io, data_type_name(x))
     print(io, ".")
     print(io, variant_name(x))
@@ -54,43 +54,43 @@ Print the variant to the given IO stream in a single line.
 end
 
 """
-$INTERFACE
+$DEF
 
 Check if the given object is a variant of a algebraic data type.
 """
-@interface function is_data_type(x)::Bool
+@pub function is_data_type(x)::Bool
     return false
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the data type of the given variant type.
 """
-@interface function data_type(variant::Type)::Type
+@pub function data_type(variant::Type)::Type
     return throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Check if the given object is a variant type.
 """
-@interface function is_variant_type(x)::Bool
+@pub function is_variant_type(x)::Bool
     return false
 end
 
 """
-$INTERFACE
+$DEF
 
 Return a tuple of variants of the given data type.
 """
-@interface function variants(x::Type)::Tuple
+@pub function variants(x::Type)::Tuple
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return a tuple of variants of the given data type.
 """
@@ -99,89 +99,89 @@ function variants(x)
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the name of the variant.
 """
-@interface function variant_name(x)::Symbol
+@pub function variant_name(x)::Symbol
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the kind of the variant, can be `Singleton`, `Anonymous`, or `Named`.
 """
-@interface function variant_kind(x)::VariantKind
+@pub function variant_kind(x)::VariantKind
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the variant type of the given variant.
 """
-@interface function variant_type(x)
+@pub function variant_type(x)
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the storage object of the variant.
 """
-@interface function variant_storage(value)
+@pub function variant_storage(value)
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the number of fields of the variant.
 """
-@interface function variant_nfields(value)
+@pub function variant_nfields(value)
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the field names of the variant.
 """
-@interface function variant_fieldnames(value)
+@pub function variant_fieldnames(value)
     return propertynames(value)
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the field types of the variant.
 """
-@interface function variant_fieldtypes(type::Type)::Tuple
+@pub function variant_fieldtypes(type::Type)::Tuple
     throw(
         IllegalDispatch("incomplete type information for $type, missing type parameters?")
     )
 end
 
-@interface function variant_fieldtypes(value)
+@pub function variant_fieldtypes(value)
     throw(IllegalDispatch("got $(typeof(type)) for $type"))
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the data type name of the given variant.
 """
-@interface function data_type_name(x)::Symbol
+@pub function data_type_name(x)::Symbol
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Check if the given variant is an instance of the given variant type.
 """
-@interface function isa_variant(x, variant::Type)::Bool
+@pub function isa_variant(x, variant::Type)::Bool
     throw(IllegalDispatch("got $(typeof(x)) for $variant"))
 end
 
@@ -205,7 +205,7 @@ function convert_singleton_bottom_generated(::Type, x)
 end
 
 """
-$INTERFACE
+$DEF
 
 Known the variant type `tag`, return the field of the variant by field name or index.
 
@@ -216,19 +216,19 @@ Known the variant type `tag`, return the field of the variant by field name or i
     type of the variant usually, so if you care about performance, you may want to use this
     method in combine with [`variant_storage`](@ref).
 """
-@interface function variant_getfield(value, tag::Type, field::Union{Int,Symbol})
+@pub function variant_getfield(value, tag::Type, field::Union{Int,Symbol})
     throw(IllegalDispatch())
 end
 
 """
-$INTERFACE
+$DEF
 
 Return the storage types of the data type.
 
 !!! note
     This method is used by the pattern matching system to extract the field of the variant.
 """
-@interface function storage_types(value::Type)::Base.ImmutableDict{DataType, DataType}
+@pub function storage_types(value::Type)::Base.ImmutableDict{DataType, DataType}
     throw(IllegalDispatch())
 end
 
@@ -236,10 +236,10 @@ end
 storage_types(mod::Module) = error("got module $mod, do you mean $mod.Type?")
 
 """
-$INTERFACE
+$DEF
 
 Return the storage type of the variant.
 """
-@interface function variant_storage_type(tag::Type)::Type
+@pub function variant_storage_type(tag::Type)::Type
     return storage_types(data_type(tag))[tag]
 end

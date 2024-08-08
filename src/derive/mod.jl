@@ -1,10 +1,15 @@
+
+"""
+$DEFLIST
+"""
 module Derive
 
+using Jieko: @pub, DEF, DEFLIST
 using ExproniconLite: expr_map, JLIfElse, codegen_ast, xcall, xtuple
 using ..Data: Data
 
 """
-    @derive <type>[<traits>...]
+    $DEF
 
 Automatically derive traits for a concrete type. The following traits are supported:
 
@@ -12,7 +17,7 @@ Automatically derive traits for a concrete type. The following traits are suppor
 - `Hash`
 - `Tree`
 """
-macro derive(expr)
+@pub macro derive(expr)
     return esc(derive_m(__module__, expr))
 end
 

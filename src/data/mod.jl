@@ -1,6 +1,9 @@
+"""
+$DEFLIST
+"""
 module Data
 
-using Jieko: @interface, INTERFACE, INTERFACE_LIST, @export_all_interfaces
+using Jieko: @pub, DEF, DEFLIST, @prelude_module
 using ExproniconLite:
     Maybe,
     JLFunction,
@@ -20,7 +23,7 @@ using ExproniconLite:
 
 Create a new algebraic data type (also known as a sum type) with the given head and variants.
 """
-macro data(head, body)
+@pub macro data(head, body)
     def = TypeDef(__module__, head, body; source=__source__)
     info = EmitInfo(def)
     return esc(emit(info))
@@ -34,8 +37,6 @@ include("scan.jl")
 include("emit/mod.jl")
 include("runtime.jl")
 
-@export_all_interfaces begin
-    @data
-end
+@prelude_module
 
 end # Data
