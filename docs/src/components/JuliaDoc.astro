@@ -1,7 +1,7 @@
 ---
 
 import {execSync} from 'child_process';
-import { marked } from 'marked';
+import { Markdown } from '@astropub/md'
 
 const { module } = Astro.props;
 const moduleLast = module.split('.').pop();
@@ -13,9 +13,10 @@ using Markdown
 using ${module}: ${moduleLast}
 
 function extract_docs(mod::Module)
-    stub = getproperty(mod, Jieko.INTERFACE_STUB)
+	stub = Jieko.stub(mod)
     docs = Dict{String, String}()
-    for (name, interface) in stub
+    for (sig, interface) in stub.interface
+		mod, name = interface.mod, interface.name
         md = Docs.doc(Docs.Binding(mod, name))
         md.content[1].content[1].content[1].language = "julia"
         docs[string(name)] = string(md)
@@ -29,17 +30,25 @@ const rawJSON = execSync(scan_script).toString();
 const docs : Record<string, string> = JSON.parse(rawJSON);
 const docBody = [];
 for (const [key, value] of Object.entries(docs)) {
-    docBody.push({module: moduleLast, name: key, body: marked.parse(value)});
+    docBody.push({module: moduleLast, name: key, body: value});
 }
+---
+<div>
+	{
+	  docBody.map(item => (
+	  <article class="card sl-flex">
+		<p class="title sl-flex">
+			<span>{item.name}<span/>
+		</p>
+		<div class="body">
+			<Markdown of={item.body}/>
+		</div>
+	  </article>
+	))
+}
+</div>
 
-const generated = docBody.map(({name, body}) => {
-    return `<article class="card sl-flex">
-        <p class="title sl-flex">
-            <span>${name}<span/>
-        </p>
-        <div class="body">${body}</div>
-    </article>
-    <style>
+<style>
 	.card {
 		--sl-card-border: var(--sl-color-purple);
 		--sl-card-bg: var(--sl-color-purple-low);
@@ -84,8 +93,3 @@ const generated = docBody.map(({name, body}) => {
 		font-size: clamp(var(--sl-text-sm), calc(0.5rem + 1vw), var(--sl-text-body));
 	}
 </style>
-    `
-}).join('\n');
----
-
-<div set:html={generated}/>

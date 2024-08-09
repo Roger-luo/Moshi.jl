@@ -94,7 +94,7 @@ $DEF
 
 Return a tuple of variants of the given data type.
 """
-function variants(x)
+@pub function variants(x)
     return variants(typeof(x))
 end
 
