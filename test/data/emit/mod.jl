@@ -10,3 +10,10 @@ end
     include("option.jl")
     include("uninferable.jl")
 end
+
+module TestCons
+using Test
+@testset "cons" begin
+    include("cons.jl")
+end
+end # module

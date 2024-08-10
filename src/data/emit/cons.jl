@@ -39,7 +39,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
             if field.default === no_default
                 field.name
             else
-                Expr(:kw, field.name, Base.eval(info.def.mod, field.default))
+                Expr(:kw, field.name, eval_global_ref(info.def.mod, field.default))
             end for field in storage.parent.fields
         ],
         info.whereparams,
@@ -50,6 +50,16 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
     )
 
     return codegen_ast(jl)
+end
+
+function eval_global_ref(mod::Module, expr)
+    if expr isa Symbol && isdefined(mod, expr)
+        return getfield(mod, expr)
+    elseif expr isa Expr
+        return Expr(expr.head, map(x -> eval_global_ref(mod, x), expr.args)...)
+    else
+        return expr
+    end
 end
 
 @pass function emit_variant_cons_inferred(info::EmitInfo)
