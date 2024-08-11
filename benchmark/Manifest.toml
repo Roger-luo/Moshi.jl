@@ -174,9 +174,9 @@ version = "0.12.11"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
-git-tree-sha1 = "b1c55339b7c6c350ee89f2c1604299660525b248"
+git-tree-sha1 = "8ae8d32e09f0dcf42a36b90d4e17f5dd2e4c4215"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.15.0"
+version = "4.16.0"
 weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
@@ -237,9 +237,9 @@ version = "1.11.0"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "9c405847cc7ecda2dc921ccf18b47ca150d7317e"
+git-tree-sha1 = "0e0a1264b0942f1f3abb2b30891f2a590cc652ac"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.109"
+version = "0.25.110"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -270,9 +270,9 @@ version = "0.6.8"
 
 [[deps.DynamicSumTypes]]
 deps = ["ExprTools", "MacroTools"]
-git-tree-sha1 = "e75711d70c3039c45892259e51e14b1a08358f38"
+git-tree-sha1 = "184fe02565476edd7733ca0a1807e13ce8d6c2f6"
 uuid = "5fcdbb90-de43-509e-b9a6-c4d43f29cf26"
-version = "3.4.1"
+version = "3.5.0"
 
 [[deps.EarCut_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -304,14 +304,14 @@ version = "0.1.10"
 
 [[deps.Expronicon]]
 deps = ["MLStyle"]
-git-tree-sha1 = "db30dc0e4012c2c30c9441d3eda5f73439f16f76"
+git-tree-sha1 = "22b598dcb0f692f76bcee4160a4a788eed9c1f3e"
 uuid = "6b7a57c9-7cc1-4fdf-b7f5-e857abae3636"
-version = "0.10.11"
+version = "0.10.13"
 
 [[deps.ExproniconLite]]
-git-tree-sha1 = "1095361e35ea8ad9c660560df4c03c06d5244956"
+git-tree-sha1 = "4c9ed87a6b3cd90acf24c556f2119533435ded38"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.10.11"
+version = "0.10.13"
 
 [[deps.Extents]]
 git-tree-sha1 = "94997910aca72897524d2237c41eb852153b0f65"
@@ -603,9 +603,9 @@ version = "0.21.4"
 
 [[deps.Jieko]]
 deps = ["DocStringExtensions", "ExproniconLite"]
-git-tree-sha1 = "fede6c8104e3057755a72512b5b6d6076b9e77e2"
+path = "../../Jieko"
 uuid = "ae98c720-c025-4a4a-838c-29b094483192"
-version = "0.1.2"
+version = "0.2.0"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
@@ -818,7 +818,7 @@ version = "0.3.4"
 deps = ["ExproniconLite", "Jieko"]
 path = ".."
 uuid = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
-version = "0.3.1"
+version = "0.3.3"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
@@ -1072,9 +1072,9 @@ version = "0.7.1"
 
 [[deps.Rmath_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d483cd324ce5cf5d61b77930f0bbd6cb61927d21"
+git-tree-sha1 = "e60724fd3beea548353984dc61c943ecddb0e29a"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
-version = "0.4.2+0"
+version = "0.4.3+0"
 
 [[deps.RoundingEmulator]]
 git-tree-sha1 = "40b9edad2e5287e05bd413a38f61a8ff55b9557b"
