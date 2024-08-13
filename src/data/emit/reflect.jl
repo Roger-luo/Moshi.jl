@@ -433,7 +433,9 @@ end
 @pass function emit_data_type(info::EmitInfo)
     return expr_map(info.storages) do storage
         main = quote
-            function $Data.data_type(::$Type{$(storage.variant_head)}) where {$(info.whereparams...)}
+            function $Data.data_type(
+                ::$Type{$(storage.variant_head)}
+            ) where {$(info.whereparams...)}
                 return $(info.type_head)
             end
         end

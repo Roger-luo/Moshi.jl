@@ -358,7 +358,8 @@ function contains_line_number_pattern(pat::Pattern.Type)
             return true
         end
         return contains_line_number_pattern(pat.body)
-    elseif isa_variant(pat, Pattern.Call) && (pat.head == :LineNumberNode || pat.head == LineNumberNode)
+    elseif isa_variant(pat, Pattern.Call) &&
+        (pat.head == :LineNumberNode || pat.head == LineNumberNode)
         return true
     else
         for (name, type) in zip(Data.variant_fieldnames(pat), Data.variant_fieldtypes(pat))

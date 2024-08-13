@@ -8,4 +8,4 @@ using Moshi.Data: @data
     end
 end
 
-@test SelfRefCons.A(a=1).b ≈ sin(1) + 1
+@test SelfRefCons.A(; a=1).b ≈ sin(1) + 1

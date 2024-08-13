@@ -49,10 +49,12 @@ function main!(xs)
         end
 
         if data isa C
-            xs[i] = Object(D(data.common_field + 1, isodd(data.common_field) ? "hi" : "bye"))
+            xs[i] = Object(
+                D(data.common_field + 1, isodd(data.common_field) ? "hi" : "bye")
+            )
             @goto final
         end
-        
+
         xs[i] = Object(A(data.common_field - 1, data.b == "hi", data.common_field))
         @label final
     end

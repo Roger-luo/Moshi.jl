@@ -50,7 +50,7 @@ function eq_derive_variant_field(func, variant_type)
     body = expr_map(
         Data.variant_fieldnames(variant_type), Data.variant_fieldtypes(variant_type)
     ) do field, type
-        type <: Hash.Cache && return
+        type <: Hash.Cache && return nothing
         lhs_value = gensym(:lhs_value)
         rhs_value = gensym(:rhs_value)
         return quote

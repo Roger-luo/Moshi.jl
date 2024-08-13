@@ -228,7 +228,7 @@ Return the storage types of the data type.
 !!! note
     This method is used by the pattern matching system to extract the field of the variant.
 """
-@pub function storage_types(value::Type)::Base.ImmutableDict{DataType, DataType}
+@pub function storage_types(value::Type)::Base.ImmutableDict{DataType,DataType}
     throw(IllegalDispatch())
 end
 
