@@ -36,10 +36,11 @@ function main!(xs)
     for i in eachindex(xs)
         @inbounds x = xs[i]
         @inbounds xs[i] = @compactified x::AT begin
-            A => B(common_field=x.common_field + 1, a=x.a, b=x.b, d=x.b)
-            B => C(common_field=x.common_field - 1, b=x.b, d=isodd(x.a), e=x.b, k=x.d)
-            C => D(common_field=x.common_field + 1, b = isodd(x.common_field) ? "hi" : "bye")
-            D => A(common_field=x.common_field - 1, a = x.b == "hi", b = x.common_field)
+            A => B(; common_field=x.common_field + 1, a=x.a, b=x.b, d=x.b)
+            B => C(; common_field=x.common_field - 1, b=x.b, d=isodd(x.a), e=x.b, k=x.d)
+            C =>
+                D(; common_field=x.common_field + 1, b=isodd(x.common_field) ? "hi" : "bye")
+            D => A(; common_field=x.common_field - 1, a=x.b == "hi", b=x.common_field)
         end
     end
 end

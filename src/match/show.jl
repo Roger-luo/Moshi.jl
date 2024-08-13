@@ -178,7 +178,7 @@ end
 function Base.show(io::IO, qp::QuotedPattern)
     print(io, "\$(")
     show(io, qp.pat)
-    print(io, ")")
+    return print(io, ")")
 end
 
 function show_expr(io::IO, pattern::Pattern.Type)
@@ -196,5 +196,5 @@ function show_expr(io::IO, pattern::Pattern.Type)
         return Expr(pat.head, map(unquote, pat.args)...)
     end
     ex = unquote(pattern)
-    show(io, ex)
+    return show(io, ex)
 end

@@ -62,12 +62,14 @@ delete!(speed, "baseline")
 speed
 set_theme!(theme_dark())
 colors = Makie.wong_colors()
-fig = Figure(size=(800, 1000), backgroundcolor=:transparent)
+fig = Figure(; size=(800, 1000), backgroundcolor=:transparent)
 for (idx, size) in enumerate([10, 100, 1000, 10000])
     packages = sort(collect(keys(speed)))
     tbl = (
         cat=[i for i in 1:length(speed) for j in 1:2],
-        height=[j == 1 ? alloc[key][idx] : speed[key][idx] for key in packages for j in 1:2],
+        height=[
+            j == 1 ? alloc[key][idx] : speed[key][idx] for key in packages for j in 1:2
+        ],
         grp=[j for i in 1:length(speed) for j in 1:2],
     )
 
@@ -77,24 +79,28 @@ for (idx, size) in enumerate([10, 100, 1000, 10000])
         tbl.height;
         dodge=tbl.grp,
         color=colors[tbl.grp],
-        axis= idx == 4 ? (
-            xticks=(1:length(speed), packages),
-            xticklabelrotation = pi/4,
-            title="# of elements: $(size)",
-            xlabel="packages",
-            yscale = log10,
-        ) : (
-            xticksvisible=false,
-            xticklabelsvisible=false,
-            yscale = log10,
-            title="# of elements: $(size)",
-        ),
+        axis=if idx == 4
+            (
+                xticks=(1:length(speed), packages),
+                xticklabelrotation=pi / 4,
+                title="# of elements: $(size)",
+                xlabel="packages",
+                yscale=log10,
+            )
+        else
+            (
+                xticksvisible=false,
+                xticklabelsvisible=false,
+                yscale=log10,
+                title="# of elements: $(size)",
+            )
+        end,
     )
 end
 
-Label(fig[:, 0], "relative to baseline", rotation = pi/2)
+Label(fig[:, 0], "relative to baseline"; rotation=pi / 2)
 
-elements = [PolyElement(polycolor = colors[1]), PolyElement(polycolor = colors[2])]
+elements = [PolyElement(; polycolor=colors[1]), PolyElement(; polycolor=colors[2])]
 Legend(fig[1, 2], elements, ["allocation", "slowdown"], "Benchmark")
 fig
 save("benchmark.svg", fig)
