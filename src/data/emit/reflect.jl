@@ -72,6 +72,14 @@ end
 end
 
 @pass function emit_variant_name(info::EmitInfo)
+    methods = expr_map(info.storages) do storage
+        quote
+            $Base.@inline function $Data.variant_name(::$Type{<:$(storage.parent.name)})
+                return $(QuoteNode(storage.parent.name))
+            end
+        end
+    end
+
     jl = JLIfElse()
     for storage in info.storages
         jl[:(data isa $(storage.name))] = quote
@@ -84,6 +92,8 @@ end
     end
 
     return quote
+        $methods
+
         function $Data.variant_name(value::Type)
             data = $Base.getfield(value, :data)
             return $(codegen_ast(jl))

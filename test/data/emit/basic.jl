@@ -9,6 +9,7 @@ using Moshi.Data:
     variant_type,
     variant_storage,
     variant_nfields,
+    variant_name,
     variant_fieldnames,
     variant_fieldtypes,
     variant_getfield,
@@ -122,4 +123,8 @@ end
     @test variant_nfields(Message.Move) == 2
     @test variant_nfields(Message.Write) == 1
     @test variant_nfields(Message.ChangeColor) == 3
+
+    @test variant_name(Message.Quit) == :Quit
+    @test variant_name(Message.Move) == :Move
+    @test variant_name(Message.Quit()) == :Quit
 end # Message
