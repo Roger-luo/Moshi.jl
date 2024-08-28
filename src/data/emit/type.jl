@@ -6,9 +6,19 @@
     end
 
     jl = JLStruct(;
-        name=:Type,
+        name=Symbol("typeof($(info.def.head.name))"),
         fields=[JLField(; name=:data, type=:(Union{$(union_params...)}))],
         typevars=info.whereparams,
     )
-    return codegen_ast(jl)
+
+    binding = if isempty(info.params)
+        :(const Type = $(jl.name))
+    else
+        :(const Type{$(info.params...)} = $(jl.name){$(info.params...)})
+    end
+
+    return quote
+        $(codegen_ast(jl))
+        $binding
+    end
 end
