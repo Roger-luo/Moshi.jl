@@ -1,7 +1,7 @@
-module DynamicSumTypesBench
+module LightSumTypesBench
 
 using Random
-using DynamicSumTypes
+using LightSumTypes
 
 @kwdef struct A
     common_field::Int = 0
@@ -29,7 +29,6 @@ end
 @sumtype AT(A, B, C, D)
 
 function generate(len::Int)
-    rng = MersenneTwister(123)
     return rand(MersenneTwister(123), (AT(A()), AT(B()), AT(C()), AT(D())), len)
 end
 
