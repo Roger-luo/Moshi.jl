@@ -15,7 +15,7 @@ function explore_size(mod::Module)
 end
 
 include("base.jl")
-include("dsumtypes.jl")
+include("lsumtypes.jl")
 include("expronicon.jl")
 include("moshi.jl")
 include("moshi_match.jl")
@@ -25,7 +25,7 @@ include("unityper.jl")
 
 data = Dict(
     "baseline" => explore_size(BaseBench),
-    "DynamicSumTypes" => explore_size(DynamicSumTypesBench),
+    "LightSumTypes" => explore_size(LightSumTypesBench),
     "Expronicon" => explore_size(ExproniconBench),
     "Moshi (reflection)" => explore_size(MoshiBench),
     "Moshi (match)" => explore_size(MoshiMatchBench),
