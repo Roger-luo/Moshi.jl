@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "a25c93596f37f75194e879f4e980a35b135e248a"
+project_hash = "b5d78e496395ccd5a75d0fdbc0a752d6cb090fae"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -250,12 +250,6 @@ version = "0.9.3"
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 version = "1.6.0"
-
-[[deps.DynamicSumTypes]]
-deps = ["ExprTools", "MacroTools"]
-git-tree-sha1 = "72a3b1ded4739d542b150ec68c218c8db64f7d6e"
-uuid = "5fcdbb90-de43-509e-b9a6-c4d43f29cf26"
-version = "3.7.4"
 
 [[deps.EarCut_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -712,6 +706,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "5ee6203157c120d79034c748a2acba45b82b8807"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.40.1+0"
+
+[[deps.LightSumTypes]]
+deps = ["ExprTools", "MacroTools", "PrecompileTools"]
+git-tree-sha1 = "f349e63748181ee1586a3fb9860a074e7b10266b"
+uuid = "f56206fc-af4c-5561-a72a-43fe2ca5a923"
+version = "4.0.2"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
