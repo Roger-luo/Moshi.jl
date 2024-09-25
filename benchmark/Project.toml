@@ -1,8 +1,8 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-DynamicSumTypes = "5fcdbb90-de43-509e-b9a6-c4d43f29cf26"
 Expronicon = "6b7a57c9-7cc1-4fdf-b7f5-e857abae3636"
+LightSumTypes = "f56206fc-af4c-5561-a72a-43fe2ca5a923"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 Moshi = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
