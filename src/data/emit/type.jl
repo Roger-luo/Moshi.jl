@@ -9,6 +9,7 @@
         name=Symbol("typeof($(info.def.head.name))"),
         fields=[JLField(; name=:data, type=:(Union{$(union_params...)}))],
         typevars=info.whereparams,
+	supertype=info.def.head.supertype,
     )
 
     binding = if isempty(info.params)
