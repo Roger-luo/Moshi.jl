@@ -19,7 +19,9 @@ using Moshi.Data:
     Anonymous,
     Singleton
 
-@data Message begin
+abstract type AbstractMessage end
+
+@data Message <: AbstractMessage begin
     Quit
     struct Move
         x::Int
@@ -36,6 +38,7 @@ end
     @test variants(Message.Type) ==
         (Message.Quit, Message.Move, Message.Write, Message.ChangeColor)
 
+    @test Message.Type <: AbstractMessage
     @testset "Quit" begin
         x = Message.Quit()
         @test variants(x) ==
