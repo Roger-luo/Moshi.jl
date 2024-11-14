@@ -10,7 +10,7 @@
     end
     head_str = string(info.def.head.name, ".", info.type_head)
     jl.otherwise = quote
-        error("unexpected type conversion from \
+        $Base.error("unexpected type conversion from \
         $($Data.variant_name(value)) to $($(head_str))")
     end
 

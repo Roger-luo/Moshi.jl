@@ -3,14 +3,14 @@
     for storage in info.storages
         if isnothing(storage.parent.fields)
             jl[:(data isa $(storage.name))] = quote
-                error("singleton variant has no fields")
+                $Base.error("singleton variant has no fields")
             end
             continue
         end
 
         if storage.parent.kind == Anonymous
             jl[:(data isa $(storage.name))] = quote
-                error("anonymous variant has no named fields")
+                $Base.error("anonymous variant has no named fields")
             end
             continue
         end
@@ -22,7 +22,7 @@
             end
         end
         variant_fields.otherwise = quote
-            error("unknown field name: $name")
+            $Base.error("unknown field name: $name")
         end
 
         jl[:(data isa $(storage.name))] = codegen_ast(variant_fields)
