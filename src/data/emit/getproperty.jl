@@ -28,7 +28,7 @@
         jl[:(data isa $(storage.name))] = codegen_ast(variant_fields)
     end
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     return quote
@@ -64,7 +64,7 @@ end
         jl[:(data isa $(storage.name))] = codegen_ast(variant_fields)
     end
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     if isempty(info.params)

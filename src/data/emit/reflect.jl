@@ -50,7 +50,7 @@ end
     end
 
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     on_type = expr_map(info.storages) do storage
@@ -88,7 +88,7 @@ end
     end
 
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     return quote
@@ -169,7 +169,7 @@ end
         end
     end
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     return if isempty(info.params)
@@ -209,7 +209,7 @@ end
         end
     end
     jl.otherwise = quote
-        error("unreachable reached")
+        $Base.error("unreachable reached")
     end
 
     unknown_variant = quote
