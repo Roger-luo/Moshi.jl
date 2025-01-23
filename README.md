@@ -12,7 +12,7 @@ Moshi is the pattern in Chinese （模式）. This package is the refactor of ML
 
 > [!IMPORTANT]
 >
-> This project is in the early stage of development. The macro syntax has been iterated acorss several packages including Expronicon, MLStyle. The syntax are mostly stable. However, the API and features are subject to change.
+> This project is in the early stage of development. The macro syntax has been iterated across several packages including Expronicon, MLStyle. The syntax are mostly stable. However, the API and features are subject to change.
 
 ## Installation
 
