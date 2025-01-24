@@ -13,7 +13,7 @@ The algebraic data type can be defined using `@data` macro. It can be imported f
 using Moshi.Data: @data
 ```
 
-The `Moshi.Data` module also defines a set of reflection functions to work with the algebraic data types. You can check [Reflection](reflection) for more information. All the name can be imported together using:
+The `Moshi.Data` module also defines a set of reflection functions to work with the algebraic data types. You can check [Reflection](/Moshi.jl/data/reflection) for more information. All the name can be imported together using:
 
 ```julia
 using Moshi.Data.Prelude
@@ -147,10 +147,10 @@ This is always the inverse operation of the generated constructor. Taking the `M
 
 ```julia
 @match message begin
-    Quit() => "Quit"
-    Move(x, y) => "Move to $(x), $(y)"
-    Write(msg) => "Write: $msg"
-    ChangeColor(r, g, b) => "Change color to ($r, $g, $b)"
+    Message.Quit() => "Quit"
+    Message.Move(x, y) => "Move to $(x), $(y)"
+    Message.Write(msg) => "Write: $msg"
+    Message.ChangeColor(r, g, b) => "Change color to ($r, $g, $b)"
     _ => "Unknown"
 end
 ```
@@ -163,6 +163,6 @@ pattern is also supported:
 
 ```julia
 @match message begin
-    Move(;y=10, x) => x
+    Message.Move(;y=10, x) => x
 end
 ```
