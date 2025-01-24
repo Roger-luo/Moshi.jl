@@ -59,11 +59,11 @@ end
 
 ## Further Reading
 
-- Examples and detailed syntax for `@data`: [ADT Syntax](../../data/syntax)
-- Builtin patterns for `@match`: [Builtin Patterns](../../match/syntax/#builtin-patterns)
-- The `@derive` macro: [Syntax and Examples](../../start/derive/)
+- Examples and detailed syntax for `@data`: [ADT Syntax](/Moshi.jl/data/syntax)
+- Builtin patterns for `@match`: [Builtin Patterns](/Moshi.jl/match/syntax/#builtin-patterns)
+- The `@derive` macro: [Syntax and Examples](/Moshi.jl/start/derive/)
 
 To understand how Moshi works, you can check the following sections:
 
-- [Understanding What Happens | Algebraic Data Type](../../data/understand)
-- [Behind the Scene | Pattern Matching](../../match/behind)
+- [Understanding What Happens | Algebraic Data Type](/Moshi.jl/data/understand)
+- [Behind the Scene | Pattern Matching](/Moshi.jl/match/behind)
