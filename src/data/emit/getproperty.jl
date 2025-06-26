@@ -33,8 +33,8 @@
 
     return quote
         $Base.@assume_effects :foldable function $Base.getproperty(
-            value::Type, name::Symbol
-        )
+            value::$(info.type_head), name::Symbol
+        ) where {$(info.whereparams...)}
             data = $Base.getfield(value, :data)
             return $(codegen_ast(jl))
         end
