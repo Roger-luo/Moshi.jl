@@ -9,6 +9,7 @@ end
 @testset "generic" begin
     include("option.jl")
     include("uninferable.jl")
+    include("named.jl")
 end
 
 module TestCons
