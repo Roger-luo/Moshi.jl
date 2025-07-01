@@ -24,7 +24,14 @@ using ExproniconLite:
 Create a new algebraic data type (also known as a sum type) with the given head and variants.
 """
 @pub macro data(head, body)
-    def = TypeDef(__module__, head, body; source=__source__)
+    def = TypeDef(__module__, false, head, body; source=__source__)
+    info = EmitInfo(def)
+    return esc(emit(info))
+end
+
+@pub macro data(mutable_kw, head, body)
+    @assert mutable_kw == :mutable
+    def = TypeDef(__module__, true, head, body; source=__source__)
     info = EmitInfo(def)
     return esc(emit(info))
 end

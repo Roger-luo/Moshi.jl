@@ -131,3 +131,111 @@ end
     @test variant_name(Message.Move) == :Move
     @test variant_name(Message.Quit()) == :Quit
 end # Message
+
+@data mutable MutableMessage <: AbstractMessage begin
+    struct Move
+        x::Int
+        const y::Int
+    end
+
+    Write(String)
+    ChangeColor(Int, Int, Int)
+end
+
+@derive MutableMessage[Show]
+
+@testset "MutableMessage" begin
+    @test variants(MutableMessage.Type) ==
+        (MutableMessage.Move, MutableMessage.Write, MutableMessage.ChangeColor)
+
+    @test MutableMessage.Type <: AbstractMessage
+
+    @testset "Move" begin
+        x = MutableMessage.Move(1, 2)
+        @test x.x == 1
+        @test x.y == 2
+        @test is_data_type(x)
+        @test is_variant_type(MutableMessage.Move)
+        @test variant_kind(x) == Named
+        @test variant_kind(MutableMessage.Move) == Named
+        @test propertynames(x) == (:x, :y)
+        @test sprint(show, x) == "MutableMessage.Move(x=1, y=2)"
+        @test variant_type(x) == MutableMessage.Move
+        @test variant_fieldtypes(x) == (Int, Int)
+        @test variant_fieldtypes(MutableMessage.Move) == (Int, Int)
+        @test variant_fieldnames(MutableMessage.Move) == (:x, :y)
+        @test variant_getfield(x, MutableMessage.Move, 1) == 1
+        @test variant_getfield(x, MutableMessage.Move, 2) == 2
+        @test variant_getfield(x, MutableMessage.Move, :x) == 1
+        @test variant_getfield(x, MutableMessage.Move, :y) == 2
+
+        x.x = 3
+        @test x.x === 3
+        @test variant_getfield(x, MutableMessage.Move, 1) == 3
+        @test variant_getfield(x, MutableMessage.Move, :x) == 3
+        @test_throws ["const field", "cannot be changed"] x.y = 0
+    end # Move
+
+    @testset "Write" begin
+        x = MutableMessage.Write("hi")
+        @test x.:1 == "hi"
+        @test is_data_type(x)
+        @test is_variant_type(MutableMessage.Write)
+        @test variant_kind(x) == Anonymous
+        @test variant_kind(MutableMessage.Write) == Anonymous
+        @test propertynames(x) == (1,)
+        @test getproperty(x, 1) == "hi"
+        @test sprint(show, x) == "MutableMessage.Write(\"hi\")"
+        @test variant_type(x) == MutableMessage.Write
+        @test variant_fieldtypes(x) == (String,)
+        @test variant_fieldtypes(MutableMessage.Write) == (String,)
+        @test variant_fieldnames(MutableMessage.Write) == (1,)
+        @test variant_getfield(x, MutableMessage.Write, 1) == "hi"
+
+        x.:1 = "bye"
+        @test x.:1 == "bye"
+        @test getproperty(x, 1) == "bye"
+        @test variant_getfield(x, MutableMessage.Write, 1) == "bye"
+    end # Write
+
+    @testset "ChangeColor" begin
+        x = MutableMessage.ChangeColor(1, 2, 3)
+        @test x.:1 == 1
+        @test x.:2 == 2
+        @test x.:3 == 3
+        @test is_data_type(x)
+        @test is_variant_type(MutableMessage.ChangeColor)
+        @test variant_kind(x) == Anonymous
+        @test variant_kind(MutableMessage.ChangeColor) == Anonymous
+        @test sprint(show, x) == "MutableMessage.ChangeColor(1, 2, 3)"
+        @test variant_type(x) == MutableMessage.ChangeColor
+        @test variant_fieldtypes(x) == (Int, Int, Int)
+        @test variant_fieldtypes(MutableMessage.ChangeColor) == (Int, Int, Int)
+        @test variant_fieldnames(MutableMessage.ChangeColor) == (1, 2, 3)
+        @test variant_getfield(x, MutableMessage.ChangeColor, 1) == 1
+        @test variant_getfield(x, MutableMessage.ChangeColor, 2) == 2
+        @test variant_getfield(x, MutableMessage.ChangeColor, 3) == 3
+
+        x.:1 = 10
+        @test x.:1 == 10
+        @test variant_getfield(x, MutableMessage.ChangeColor, 1) == 10
+        x.:2 = 20
+        @test x.:2 == 20
+        @test variant_getfield(x, MutableMessage.ChangeColor, 2) == 20
+        x.:3 = 30
+        @test x.:3 == 30
+        @test variant_getfield(x, MutableMessage.ChangeColor, 3) == 30
+    end
+
+    @test data_type_name(MutableMessage.Type) === :MutableMessage
+
+    @test_throws ErrorException variant_fieldtypes(MutableMessage.Type)
+    @test_throws ErrorException variant_fieldnames(MutableMessage.Type)
+
+    @test variant_nfields(MutableMessage.Move) == 2
+    @test variant_nfields(MutableMessage.Write) == 1
+    @test variant_nfields(MutableMessage.ChangeColor) == 3
+
+    @test variant_name(MutableMessage.Move) == :Move
+end # MutableMessage
+

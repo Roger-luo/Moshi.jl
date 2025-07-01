@@ -20,6 +20,7 @@ end
 
 struct NamedField
     name::Symbol
+    isconst::Bool
     type
 
     default::Any # nothing,literal,Expr,Symbol
@@ -81,6 +82,7 @@ end
 
 struct TypeDef
     mod::Module
+    ismutable::Bool
     head::TypeHead
     variants::Vector{Variant}
     source::LineNumberNode

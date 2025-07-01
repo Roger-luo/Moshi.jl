@@ -1,5 +1,5 @@
 # concrete
-function TypeDef(mod::Module, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
+function TypeDef(mod::Module, ismutable::Bool, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
     head = TypeHead(head)
     Meta.isexpr(body, :block) ||
         throw(ArgumentError("expect begin ... end block, got $body"))
@@ -14,7 +14,7 @@ function TypeDef(mod::Module, head, body::Expr; source::LineNumberNode=LineNumbe
         end
         push!(variants, Variant(expr; source=current_line))
     end
-    return TypeDef(mod, head, variants, source)
+    return TypeDef(mod, ismutable, head, variants, source)
 end
 
 TypeHead(head) = scan_type_head!(TypeHead(), head)
@@ -89,5 +89,5 @@ function Variant(expr::Expr; doc=nothing, source=nothing)
 end
 
 function NamedField(expr::JLKwField; source=nothing)
-    return NamedField(expr.name, expr.type, expr.default, expr.line)
+    return NamedField(expr.name, expr.isconst, expr.type, expr.default, expr.line)
 end
