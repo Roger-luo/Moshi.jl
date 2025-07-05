@@ -22,11 +22,20 @@ ex = quote
     end
 end
 
-def = TypeDef(Main, :Foo, ex)
+def = TypeDef(Main, false, :Foo, ex)
 show(devnull, MIME("text/plain"), def)
 
-def = TypeDef(Main, :(Foo{T}), ex)
+def = TypeDef(Main, false, :(Foo{T}), ex)
 show(devnull, MIME("text/plain"), def)
 
-def = TypeDef(Main, :(Foo{T} <: SuperType), ex)
+def = TypeDef(Main, false, :(Foo{T} <: SuperType), ex)
+show(devnull, MIME("text/plain"), def)
+
+def = TypeDef(Main, true, :Foo, ex)
+show(devnull, MIME("text/plain"), def)
+
+def = TypeDef(Main, true, :(Foo{T}), ex)
+show(devnull, MIME("text/plain"), def)
+
+def = TypeDef(Main, true, :(Foo{T} <: SuperType), ex)
 show(devnull, MIME("text/plain"), def)

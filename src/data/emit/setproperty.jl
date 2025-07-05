@@ -1,4 +1,7 @@
-@pass function emit_getproperty(info::EmitInfo)
+@pass function emit_setproperty(info::EmitInfo)
+    if !info.def.ismutable
+        return :()
+    end
     jl = JLIfElse()
     for storage in info.storages
         if isnothing(storage.parent.fields)
@@ -18,7 +21,7 @@
         variant_fields = JLIfElse()
         for (i, field) in enumerate(storage.parent.fields)
             variant_fields[:(name === $(QuoteNode(field.name)))] = quote
-                return $Base.getfield(data, name)::$(storage.annotations[i])
+                return $Base.setfield!(data, name, new_value)::$(storage.annotations[i])
             end
         end
         variant_fields.otherwise = quote
@@ -32,8 +35,8 @@
     end
 
     return quote
-        $Base.@inline function $Base.getproperty(
-            value::$(info.type_head), name::Symbol
+        $Base.@inline function $Base.setproperty!(
+            value::$(info.type_head), name::Symbol, new_value,
         ) where {$(info.whereparams...)}
             data = $Base.getfield(value, :data)
             return $(codegen_ast(jl))
@@ -41,7 +44,10 @@
     end # quote
 end
 
-@pass function emit_getproperty_index(info::EmitInfo)
+@pass function emit_setproperty_index(info::EmitInfo)
+    if !info.def.ismutable
+        return :()
+    end
     jl = JLIfElse()
     for storage in info.storages
         if isnothing(storage.parent.fields)
@@ -54,7 +60,7 @@ end
         variant_fields = JLIfElse()
         for (i, field) in enumerate(storage.parent.fields)
             variant_fields[:(index === $i)] = quote
-                return $Base.getfield(data, index)::$(storage.annotations[i])
+                return $Base.setfield!(data, index, new_value)::$(storage.annotations[i])
             end
         end
         variant_fields.otherwise = quote
@@ -69,8 +75,8 @@ end
 
     if isempty(info.params)
         return quote
-            $Base.@inline function $Base.getproperty(
-                value::Type, index::Int
+            $Base.@inline function $Base.setproperty!(
+                value::Type, index::Int, new_value
             )
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
@@ -78,44 +84,12 @@ end
         end # quote
     else
         return quote
-            $Base.@inline function $Base.getproperty(
-                value::$(info.type_head), index::Int
+            $Base.@inline function $Base.setproperty!(
+                value::$(info.type_head), index::Int, new_value
             ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end
         end # quote
-    end
-end
-
-@pass function emit_propertynames(info::EmitInfo)
-    jl = JLIfElse()
-    for storage in info.storages
-        if storage.parent.kind == Singleton
-            jl[:(data isa $(storage.name))] = quote
-                return ()
-            end
-        elseif storage.parent.kind == Anonymous
-            jl[:(data isa $(storage.name))] = quote
-                return $(Tuple(1:length(storage.parent.fields)))
-            end
-        else
-            names = [field.name for field in storage.parent.fields]
-            jl[:(data isa $(storage.name))] = quote
-                return $(Tuple(names))
-            end
-        end
-    end
-    jl.otherwise = quote
-        $Base.error("unreachable reached")
-    end
-
-    return quote
-        $Base.@inline $Base.@assume_effects :foldable function $Base.propertynames(
-            value::Type
-        )
-            data = $Base.getfield(value, :data)
-            return $(codegen_ast(jl))
-        end
     end
 end

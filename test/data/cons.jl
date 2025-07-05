@@ -23,7 +23,7 @@ using Moshi.Data:
             y::Float64 = 2.0
         end
     end
-    def = TypeDef(Main, :Foo, ex)
+    def = TypeDef(Main, false, :Foo, ex)
 
     @test def.head == TypeHead(:Foo)
     @test length(def.variants) == 3
@@ -51,7 +51,7 @@ end # TypeDef
             y::T = 2.0
         end
     end
-    def = TypeDef(Main, :(Foo{T}), ex)
+    def = TypeDef(Main, false, :(Foo{T}), ex)
 
     @test def.head == TypeHead(:(Foo{T}))
     @test length(def.variants) == 3
@@ -111,6 +111,7 @@ end # testset
     ex = @expr struct Foo
         x::Int
         y::Int = 2
+        const z::Int
     end
     x = Variant(ex)
 
@@ -118,8 +119,10 @@ end # testset
     @test x.name === :Foo
     f1 = x.fields[1]
     f2 = x.fields[2]
+    f3 = x.fields[3]
     @test f1.name === :x
     @test f1.type === :Int
     @test f1.default === no_default
     @test f1.source === ex.args[3].args[1]
+    @test f3.isconst
 end # Variant(Named)
