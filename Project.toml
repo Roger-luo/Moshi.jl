@@ -1,7 +1,7 @@
 name = "Moshi"
 uuid = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 authors = ["Roger-luo<rogerluo.rl18@gmail.com>"]
-version = "0.3.6"
+version = "0.3.7"
 
 [deps]
 ExproniconLite = "55351af7-c7e9-48d6-89ff-24e801d99491"
