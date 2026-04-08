@@ -1,0 +1,111 @@
+[[skill]]
+name = "brainstorming"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/brainstorming"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:1518efecf35139a9a5b9e60906b71de874af08322200fab18a54848cea8c15fe"
+
+[[skill]]
+name = "dispatching-parallel-agents"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/dispatching-parallel-agents"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:e21044ae7496fc285f1df9ff3fb518a3a20bea6f5216c1f59f4987e12c769a0a"
+
+[[skill]]
+name = "executing-plans"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/executing-plans"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:2f709d1a2c7564f8ce6a9bb707e7f5451117ba80f8e8e2302662c29bc61246a6"
+
+[[skill]]
+name = "finishing-a-development-branch"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/finishing-a-development-branch"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:9edba9a38684c060fdc38290f640e1dc0c37de286723ac9be73bacacf7cd6f3d"
+
+[[skill]]
+name = "receiving-code-review"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/receiving-code-review"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:2760c85d4f4117b0006e7ba755f4bbd61f8f4c185f347999763c97f507274e30"
+
+[[skill]]
+name = "requesting-code-review"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/requesting-code-review"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:046180bd8519589b176d575e32a720c43cf6834f2e4d182277faf8943fe03564"
+
+[[skill]]
+name = "subagent-driven-development"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/subagent-driven-development"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:96697eb8dde8631ee7cd5e1cb29c6d7c0b8ef2869c0875dd2eedf07762e5feae"
+
+[[skill]]
+name = "systematic-debugging"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/systematic-debugging"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:6fddb1f3952f65f1f3a2ef267ae4ab6919ff70a8b36672ea908640ae21a34ea0"
+
+[[skill]]
+name = "test-driven-development"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/test-driven-development"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:126f1ebf6ccd414f42544f6e83d8cc5adb089e1108eaffb7c400701e37eecd9f"
+
+[[skill]]
+name = "using-git-worktrees"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/using-git-worktrees"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:52bbb4b6e80918e83e92a1514f3b3757712154c2a8a42de24919e48a794c54fc"
+
+[[skill]]
+name = "using-superpowers"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/using-superpowers"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:35dd683a4d78ccf35bc8bf2b878a89900fa92e72bc2370a0daac0df086c4a41f"
+
+[[skill]]
+name = "verification-before-completion"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/verification-before-completion"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:9b446f0c7fe1cfb560b1d34439523b1a76d5f177290007b2c053a1c749a4a8ba"
+
+[[skill]]
+name = "writing-plans"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/writing-plans"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:90185bbb1bd9d4959826104c1c1900424180b8a4011f4432da886df599922788"
+
+[[skill]]
+name = "writing-skills"
+source = "https://github.com/obra/superpowers.git"
+kind = "git"
+path = "skills/writing-skills"
+commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+checksum = "sha256:272ccd701f41b94e1119aaa99455a52cdb8e07283cb6a6aab32a7722d96bef45"

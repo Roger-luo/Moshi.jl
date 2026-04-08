@@ -1,0 +1,21 @@
+[skills]
+ion-cli = { type = "local" }
+receiving-code-review = { source = "obra/superpowers/skills/receiving-code-review" }
+requesting-code-review = { source = "obra/superpowers/skills/requesting-code-review" }
+using-git-worktrees = { source = "obra/superpowers/skills/using-git-worktrees" }
+brainstorming = { source = "obra/superpowers/skills/brainstorming" }
+dispatching-parallel-agents = { source = "obra/superpowers/skills/dispatching-parallel-agents" }
+executing-plans = { source = "obra/superpowers/skills/executing-plans" }
+finishing-a-development-branch = { source = "obra/superpowers/skills/finishing-a-development-branch" }
+subagent-driven-development = { source = "obra/superpowers/skills/subagent-driven-development" }
+systematic-debugging = { source = "obra/superpowers/skills/systematic-debugging" }
+test-driven-development = { source = "obra/superpowers/skills/test-driven-development" }
+using-superpowers = { source = "obra/superpowers/skills/using-superpowers" }
+verification-before-completion = { source = "obra/superpowers/skills/verification-before-completion" }
+writing-plans = { source = "obra/superpowers/skills/writing-plans" }
+writing-skills = { source = "obra/superpowers/skills/writing-skills" }
+
+[options]
+
+[options.targets]
+claude = ".claude/skills"
