@@ -14,8 +14,12 @@ using-superpowers = { source = "obra/superpowers/skills/using-superpowers" }
 verification-before-completion = { source = "obra/superpowers/skills/verification-before-completion" }
 writing-plans = { source = "obra/superpowers/skills/writing-plans" }
 writing-skills = { source = "obra/superpowers/skills/writing-skills" }
+agents-update = { type = "local" }
 
 [options]
 
 [options.targets]
 claude = ".claude/skills"
+
+[agents]
+template = "builtin:julia"

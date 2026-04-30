@@ -109,3 +109,8 @@ kind = "git"
 path = "skills/writing-skills"
 commit = "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
 checksum = "sha256:272ccd701f41b94e1119aaa99455a52cdb8e07283cb6a6aab32a7722d96bef45"
+
+[agents]
+template = "builtin:julia"
+checksum = "sha256:b292f62661128c79f2f485110076bf42beb1168476c9e388ed1888461dbc3745"
+updated-at = "2026-04-30T01:18:24Z"

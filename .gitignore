@@ -39,3 +39,9 @@
 .claude/skills/writing-plans
 .agents/skills/writing-skills
 .claude/skills/writing-skills
+
+# Managed by ion
+.agents/templates/AGENTS.md.upstream
+CLAUDE.md
+.agents/skills/agents-update
+.claude/skills/agents-update
