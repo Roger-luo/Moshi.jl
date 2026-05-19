@@ -10,6 +10,7 @@ end
     include("option.jl")
     include("uninferable.jl")
     include("named.jl")
+    include("call_type.jl")
 end
 
 module TestCons

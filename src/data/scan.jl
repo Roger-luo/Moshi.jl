@@ -49,6 +49,12 @@ function guess_self_as_any(def::TypeDef, expr)
         end
         Any in typevars && return Any # no need to specialize further
         return :($type{$(typevars...)})
+    elseif Meta.isexpr(expr, :call)
+        fn = guess_self_as_any(def, expr.args[1])
+        args = map(expr.args[2:end]) do arg
+            guess_self_as_any(def, arg)
+        end
+        return :($fn($(args...)))
     else
         return expr
     end
@@ -76,6 +82,12 @@ function guess_self_as_annotation(def::TypeDef, expr)
             guess_self_as_annotation(def, param)
         end
         return :($type{$(typevars...)})
+    elseif Meta.isexpr(expr, :call)
+        fn = guess_self_as_annotation(def, expr.args[1])
+        args = map(expr.args[2:end]) do arg
+            guess_self_as_annotation(def, arg)
+        end
+        return :($fn($(args...)))
     else
         return expr
     end
