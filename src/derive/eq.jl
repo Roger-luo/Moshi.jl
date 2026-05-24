@@ -39,9 +39,6 @@ function derive_impl(::Val{:Eq}, mod::Module, type::Module)
 end
 
 function eq_derive_variant_field(func, variant_type)
-    if variant_type isa UnionAll
-        variant_type = variant_type.body
-    end
     cache_indices = findall(Data.variant_fieldtypes(variant_type)) do type
         type <: Hash.Cache
     end
