@@ -111,6 +111,8 @@ function is_inferrable(param::Symbol, type)
         return param == type
     elseif Meta.isexpr(type, :curly)
         return any(is_inferrable(param, each) for each in type.args[2:end])
+    elseif Meta.isexpr(type, :call)
+        return any(is_inferrable(param, each) for each in type.args[2:end])
     else
         return false
     end
