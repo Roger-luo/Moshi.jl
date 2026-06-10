@@ -118,6 +118,22 @@ function is_inferrable(param::Symbol, type)
     end
 end
 
+@pass function emit_variant_docs(info::EmitInfo)
+    return expr_map(x -> emit_each_variant_doc(info, x), info.storages; skip_nothing=true)
+end
+
+function emit_each_variant_doc(info::EmitInfo, storage::StorageInfo)
+    isnothing(storage.parent.doc) && return nothing
+    source = something(storage.parent.source, info.def.source)
+    return Expr(
+        :macrocall,
+        GlobalRef(Base, Symbol("@doc")),
+        source,
+        storage.parent.doc,
+        storage.parent.name,
+    )
+end
+
 # special singleton constructor with adaptive type parameters
 
 @pass function emit_variant_cons_singleton_bottom(info::EmitInfo)

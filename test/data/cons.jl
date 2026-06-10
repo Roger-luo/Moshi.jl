@@ -78,9 +78,10 @@ end
     @test x.doc == nothing
     @test x.source == nothing
 
-    x = Variant(@expr @doc "Foo" Foo)
-
-    @test x.doc == "Foo"
+    def = TypeDef(Main, false, :TestDoc, quote
+        @doc "Foo" Foo
+    end)
+    @test def.variants[1].doc == "Foo"
 end
 
 @testset "Variant(Anonymous)" begin
@@ -91,8 +92,10 @@ end
     @test x.doc == nothing
     @test x.source == nothing
 
-    x = Variant(@expr @doc "Foo" Foo(Int, Float16))
-    @test x.doc == "Foo"
+    def = TypeDef(Main, false, :TestDoc, quote
+        @doc "Foo" Foo(Int, Float16)
+    end)
+    @test def.variants[1].doc == "Foo"
 
     ex = quote
         """
@@ -100,7 +103,8 @@ end
         """
         Foo(Int, Int)
     end
-    x = Variant(ex.args[2])
+    def = TypeDef(Main, false, :TestDoc, ex)
+    x = def.variants[1]
     @test x.doc == """
     Foo
     """
