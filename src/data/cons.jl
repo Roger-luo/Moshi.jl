@@ -1,30 +1,21 @@
-function is_doc_expansion(expr)
-    Meta.isexpr(expr, :call) && expr.args[1] === Base.Docs.doc! && return true
-    Meta.isexpr(expr, :block) && return any(is_doc_expansion, expr.args)
+function is_doc_macro(head)
+    head === Symbol("@doc") && return true
+    head isa GlobalRef && head.name === Symbol("@doc") &&
+        (head.mod === Core || head.mod === Base) && return true
     return false
 end
 
-function push_variants!(variants::Vector{Variant}, mod::Module, expr, doc, source)
-    while Meta.isexpr(expr, :macrocall)
-        expanded = macroexpand(mod, expr; recursive=false)
-        if length(expr.args) == 4 && is_doc_expansion(expanded)
-            doc = expr.args[3]
-            expr.args[2] isa LineNumberNode && (source = expr.args[2])
-            expr = expr.args[4]
-            while Meta.isexpr(expr, (:escape, :var"hygienic-scope"))
-                expr = expr.args[1]
-            end
-            break
-        end
-        expr = expanded
-    end
-    if Meta.isexpr(expr, :block)
+function push_variants!(variants::Vector{Variant}, expr, doc, source)
+    if Meta.isexpr(expr, :macrocall) && length(expr.args) == 4 && is_doc_macro(expr.args[1])
+        new_source = expr.args[2] isa LineNumberNode ? expr.args[2] : source
+        push_variants!(variants, expr.args[4], expr.args[3], new_source)
+    elseif Meta.isexpr(expr, :block)
         current = source
         for arg in expr.args
             if arg isa LineNumberNode
                 current = arg
             elseif !isnothing(arg)
-                push_variants!(variants, mod, arg, doc, current)
+                push_variants!(variants, arg, doc, current)
             end
         end
     else
@@ -47,7 +38,7 @@ function TypeDef(mod::Module, ismutable::Bool, head, body::Expr; source::LineNum
         elseif isnothing(expr) # sometimes there are generated nothing in the block
             continue
         end
-        push_variants!(variants, mod, expr, nothing, current_line)
+        push_variants!(variants, expr, nothing, current_line)
     end
     return TypeDef(mod, ismutable, head, variants, source)
 end
