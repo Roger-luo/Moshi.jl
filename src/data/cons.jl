@@ -6,10 +6,16 @@ function _is_doc_macro(head)
 end
 
 function push_variants!(variants::Vector{Variant}, expr, doc, source)
-    if Meta.isexpr(expr, :macrocall) && length(expr.args) == 4 && _is_doc_macro(expr.args[1])
-        new_source = expr.args[2] isa LineNumberNode ? expr.args[2] : source
-        push_variants!(variants, expr.args[4], expr.args[3], new_source)
-    elseif Meta.isexpr(expr, :block)
+    if Meta.isexpr(expr, :macrocall) && _is_doc_macro(expr.args[1])
+        args = filter(a -> !(a isa LineNumberNode), expr.args)
+        if length(args) == 3
+            lnn_idx = findfirst(a -> a isa LineNumberNode, expr.args)
+            new_source = isnothing(lnn_idx) ? source : expr.args[lnn_idx]
+            push_variants!(variants, args[3], args[2], new_source)
+            return nothing
+        end
+    end
+    if Meta.isexpr(expr, :block)
         for arg in expr.args
             if arg isa LineNumberNode
                 source = arg

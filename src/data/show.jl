@@ -29,9 +29,10 @@ end
 
 function doc_string(doc)
     doc isa String && return doc
-    # Extract string content from macro calls like Markdown.doc"""..."""
-    Meta.isexpr(doc, :macrocall) && !isempty(doc.args) || return nothing
-    last = doc.args[end]
+    Meta.isexpr(doc, :macrocall) || return nothing
+    args = filter(a -> !(a isa LineNumberNode), doc.args)
+    length(args) >= 2 || return nothing
+    last = args[end]
     return last isa String ? last : nothing
 end
 
@@ -50,7 +51,8 @@ function Base.show(io::IO, mime::MIME"text/plain", x::Variant)
             tab(indent)
             printstyled(io, "\"\"\"\n"; color=:yellow)
         else
-            show(io, mime, x.doc)
+            tab(indent)
+            Base.show_unquoted(io, x.doc, indent)
             println(io)
         end
     end

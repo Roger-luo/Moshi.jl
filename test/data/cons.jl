@@ -129,4 +129,20 @@ end # testset
     @test f1.default === no_default
     @test f1.source === ex.args[3].args[1]
     @test f3.isconst
+
+    def = TypeDef(Main, false, :TestDocNamed, quote
+        @doc "Baz doc" struct Baz
+            x::Float64
+        end
+    end)
+    @test def.variants[1].doc == "Baz doc"
 end # Variant(Named)
+
+@testset "_is_doc_macro GlobalRef form" begin
+    # GlobalRef(Core, :@doc) is an alternative head form _is_doc_macro must handle
+    expr = Expr(:macrocall, GlobalRef(Core, Symbol("@doc")), LineNumberNode(1, :none), "CoreDoc", :Foo)
+    def = TypeDef(Main, false, :TestCoreDoc, Expr(:block, expr))
+    @test length(def.variants) == 1
+    @test def.variants[1].name == :Foo
+    @test def.variants[1].doc == "CoreDoc"
+end
