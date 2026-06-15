@@ -39,7 +39,7 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
 [[deps.Moshi]]
-deps = ["ExproniconLite", "Jieko"]
+deps = ["ExproniconLite", "Jieko", "Markdown"]
 path = ".."
 uuid = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 version = "0.3.8"

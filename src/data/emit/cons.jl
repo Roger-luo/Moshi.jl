@@ -118,19 +118,21 @@ function is_inferrable(param::Symbol, type)
     end
 end
 
-@pass function emit_variant_docs(info::EmitInfo)
+function emit_variant_docs(info::EmitInfo)
     return expr_map(x -> emit_each_variant_doc(info, x), info.storages; skip_nothing=true)
 end
 
 function emit_each_variant_doc(info::EmitInfo, storage::StorageInfo)
     isnothing(storage.parent.doc) && return nothing
     source = something(storage.parent.source, info.def.source)
+    # Qualified name so this can be emitted at toplevel, outside the variant module.
+    qualified = Expr(:., info.def.head.name, QuoteNode(storage.parent.name))
     return Expr(
         :macrocall,
         GlobalRef(Base, Symbol("@doc")),
         source,
         storage.parent.doc,
-        storage.parent.name,
+        qualified,
     )
 end
 

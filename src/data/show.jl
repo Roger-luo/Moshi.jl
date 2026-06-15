@@ -27,18 +27,32 @@ function Base.show(io::IO, head::TypeHead)
     end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", x::Variant)
+function doc_string(doc)
+    doc isa String && return doc
+    # Extract string content from macro calls like Markdown.doc"""..."""
+    Meta.isexpr(doc, :macrocall) && !isempty(doc.args) || return nothing
+    last = doc.args[end]
+    return last isa String ? last : nothing
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", x::Variant)
     tab(n) = print(io, " "^n)
     indent = get(io, :indent, 0)
     if !isnothing(x.doc)
         println(io)
-        tab(indent)
-        printstyled(io, "\"\"\"\n"; color=:yellow)
-        tab(indent)
-        printstyled(io, x.doc; color=:yellow)
-        print(io, "\n")
-        tab(indent)
-        printstyled(io, "\"\"\"\n"; color=:yellow)
+        str = doc_string(x.doc)
+        if !isnothing(str)
+            tab(indent)
+            printstyled(io, "\"\"\"\n"; color=:yellow)
+            tab(indent)
+            printstyled(io, str; color=:yellow)
+            print(io, "\n")
+            tab(indent)
+            printstyled(io, "\"\"\"\n"; color=:yellow)
+        else
+            show(io, mime, x.doc)
+            println(io)
+        end
     end
 
     if x.kind == Singleton
