@@ -1,4 +1,4 @@
-function is_doc_macro(head)
+function _is_doc_macro(head)
     head === Symbol("@doc") && return true
     head isa GlobalRef && head.name === Symbol("@doc") &&
         (head.mod === Core || head.mod === Base) && return true
@@ -6,16 +6,15 @@ function is_doc_macro(head)
 end
 
 function push_variants!(variants::Vector{Variant}, expr, doc, source)
-    if Meta.isexpr(expr, :macrocall) && length(expr.args) == 4 && is_doc_macro(expr.args[1])
+    if Meta.isexpr(expr, :macrocall) && length(expr.args) == 4 && _is_doc_macro(expr.args[1])
         new_source = expr.args[2] isa LineNumberNode ? expr.args[2] : source
         push_variants!(variants, expr.args[4], expr.args[3], new_source)
     elseif Meta.isexpr(expr, :block)
-        current = source
         for arg in expr.args
             if arg isa LineNumberNode
-                current = arg
+                source = arg
             elseif !isnothing(arg)
-                push_variants!(variants, arg, doc, current)
+                push_variants!(variants, arg, doc, source)
             end
         end
     else

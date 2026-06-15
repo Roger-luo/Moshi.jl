@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "10c5f2225c43e58c826f48c04e8b217e7df7bb1b"
+project_hash = "2f3175ef1d7482b57237abea55d78e1ab5073e5b"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -39,7 +39,7 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
 [[deps.Moshi]]
-deps = ["ExproniconLite", "Jieko", "Markdown"]
+deps = ["ExproniconLite", "Jieko"]
 path = ".."
 uuid = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 version = "0.3.8"
