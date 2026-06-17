@@ -2,11 +2,19 @@ using Test
 using Moshi.Data: @data, variants
 import Markdown
 
+# Homegrown doc macro: wraps text in a tagged string so we can detect it.
+macro customdoc_str(s)
+    return "CUSTOM: " * s
+end
+
 function doc_text(adtmod::Module, sym::Symbol)
     b = Base.Docs.Binding(adtmod, sym)
-    meta = Base.Docs.meta(parentmodule(adtmod))
+    meta = Base.Docs.meta(adtmod)
     haskey(meta, b) || return nothing
-    return first(values(meta[b].docs)).text[1]
+    docstr = first(values(meta[b].docs))
+    isempty(docstr.text) || return docstr.text[1]
+    isnothing(docstr.object) && return nothing
+    return string(docstr.object)
 end
 
 @testset "variant docstrings" begin
@@ -77,4 +85,32 @@ end
     @test doc_text(DocTest, :PlainStringFields) == "plain string, with fields"
     @test doc_text(DocTest, :PlainStringSingleton) == "plain string, no fields"
     @test doc_text(DocTest, :NamedWithDoc) == "named struct doc"
+    @test occursin("explicit doc markdown, with fields", doc_text(DocTest, :ExplicitMarkdownFields))
+    @test occursin("explicit doc markdown, no fields", doc_text(DocTest, :ExplicitMarkdownSingleton))
+end
+
+@testset "custom doc macro" begin
+    @data CustomDocTest begin
+        @doc customdoc"""singleton doc"""
+        CustomSingleton
+
+        @doc customdoc"""fields doc"""
+        CustomFields(Int, Float32)
+
+        @doc customdoc"""named doc"""
+        struct CustomNamed
+            x::Int
+        end
+
+        NoDoc(Int)
+    end
+
+    @test Base.Docs.hasdoc(CustomDocTest, :CustomSingleton)
+    @test Base.Docs.hasdoc(CustomDocTest, :CustomFields)
+    @test Base.Docs.hasdoc(CustomDocTest, :CustomNamed)
+    @test !Base.Docs.hasdoc(CustomDocTest, :NoDoc)
+
+    @test doc_text(CustomDocTest, :CustomSingleton) == "CUSTOM: singleton doc"
+    @test doc_text(CustomDocTest, :CustomFields) == "CUSTOM: fields doc"
+    @test doc_text(CustomDocTest, :CustomNamed) == "CUSTOM: named doc"
 end

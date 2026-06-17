@@ -8,14 +8,16 @@ end
 function push_variants!(variants::Vector{Variant}, expr, doc, source)
     if Meta.isexpr(expr, :macrocall) && _is_doc_macro(expr.args[1])
         args = filter(a -> !(a isa LineNumberNode), expr.args)
-        if length(args) == 3
-            lnn_idx = findfirst(a -> a isa LineNumberNode, expr.args)
-            new_source = isnothing(lnn_idx) ? source : expr.args[lnn_idx]
-            push_variants!(variants, args[3], args[2], new_source)
-            return nothing
-        end
+        length(args) == 3 ||
+            throw(ArgumentError("malformed @doc in @data body: expected `@doc <docstring> <variant>`, got: $expr"))
+        lnn_idx = findfirst(a -> a isa LineNumberNode, expr.args)
+        new_source = isnothing(lnn_idx) ? source : expr.args[lnn_idx]
+        push_variants!(variants, args[3], args[2], new_source)
+        return nothing
     end
     if Meta.isexpr(expr, :block)
+        isnothing(doc) ||
+            throw(ArgumentError("@doc cannot be applied to a block; place `@doc` before each variant individually"))
         for arg in expr.args
             if arg isa LineNumberNode
                 source = arg

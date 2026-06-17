@@ -35,7 +35,7 @@ function emit(info::EmitInfo)
         isnothing(expr) || push!(ret.args, expr)
     end
 
-    toplevel = Expr(
+    return Expr(
         :toplevel,
         Expr(:module, false, info.def.head.name, ret),
         Expr(
@@ -45,13 +45,6 @@ function emit(info::EmitInfo)
             info.def.head.name,
         ),
     )
-
-    # Variant docs are emitted at toplevel so doc expressions can reference
-    # names from the calling module's scope (e.g. Markdown).
-    docs = emit_variant_docs(info)
-    isnothing(docs) || push!(toplevel.args, docs)
-
-    return toplevel
 end
 
 include("storage.jl")

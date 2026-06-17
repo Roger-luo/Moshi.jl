@@ -146,3 +146,14 @@ end # Variant(Named)
     @test def.variants[1].name == :Foo
     @test def.variants[1].doc == "CoreDoc"
 end
+
+@testset "@doc on block raises error" begin
+    # @doc applied to a begin...end block must error rather than silently assign
+    # the same doc to every variant inside.
+    @test_throws ArgumentError TypeDef(Main, false, :TestDocBlock, quote
+        @doc "shared doc" begin
+            Foo
+            Bar(Int)
+        end
+    end)
+end
