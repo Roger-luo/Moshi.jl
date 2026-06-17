@@ -3,6 +3,7 @@
 **/**/**.cov
 
 /Manifest.toml
+/test/Manifest.toml
 /docs/build/
 /docs/Manifest.toml
 /docs/src/assets/main.css
