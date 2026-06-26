@@ -4,6 +4,7 @@ using Test
     include("basic.jl")
     include("unityper.jl")
     include("selfref.jl")
+    include("empty_struct.jl")
 end
 
 @testset "generic" begin

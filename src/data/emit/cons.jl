@@ -31,6 +31,7 @@ end
 
 function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
     storage.parent.kind == Named || return nothing
+    isempty(storage.parent.fields) && return nothing
 
     args = [field.name for field in storage.parent.fields]
     jl = JLFunction(;
