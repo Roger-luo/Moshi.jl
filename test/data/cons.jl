@@ -157,3 +157,20 @@ end
         end
     end)
 end
+
+@testset "non-@doc macrocall is rejected" begin
+    # A macrocall whose head is not `@doc` is not a doc wrapper: _is_doc_macro
+    # returns false and the macrocall falls through to Variant, which rejects it.
+    expr = Expr(:macrocall, Symbol("@foo"), LineNumberNode(1, :none), :Bar)
+    @test_throws ArgumentError TypeDef(Main, false, :TestNonDocMacro, Expr(:block, expr))
+end
+
+@testset "nested block without doc is flattened" begin
+    # A nested begin...end block (such as one produced by macro expansion) is
+    # recursed into, tracking line numbers and skipping generated `nothing` entries.
+    inner = Expr(:block, LineNumberNode(7, :none), :Foo, nothing, :(Bar(Int)))
+    def = TypeDef(Main, false, :TestNestedBlock, Expr(:block, inner))
+    @test length(def.variants) == 2
+    @test def.variants[1].name === :Foo
+    @test def.variants[2].name === :Bar
+end

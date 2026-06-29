@@ -85,3 +85,12 @@ end
     @test contains(out, "markdown doc")
     @test !contains(out, "@doc_str")
 end
+
+@testset "non-string doc renders via show_unquoted" begin
+    # When a variant's doc is neither a plain string nor a doc-string macrocall,
+    # doc_string returns nothing and the raw expression is shown unquoted.
+    mc = Expr(:macrocall, Symbol("@doc"), LineNumberNode(1, :none), :somevar, :Foo)
+    def = TypeDef(Main, false, :ShowRawDoc, Expr(:block, mc))
+    @test def.variants[1].doc === :somevar
+    @test contains(show_variant(def, 1), "somevar")
+end
