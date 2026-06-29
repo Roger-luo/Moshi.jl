@@ -17,6 +17,16 @@ function doc_text(adtmod::Module, sym::Symbol)
     return string(docstr.object)
 end
 
+# `Base.Docs.hasdoc` only exists on Julia >= 1.11; reproduce it on older versions.
+@static if VERSION >= v"1.11"
+    const hasdoc = Base.Docs.hasdoc
+else
+    function hasdoc(adtmod::Module, sym::Symbol)
+        b = Base.Docs.Binding(adtmod, sym)
+        return haskey(Base.Docs.meta(adtmod), b)
+    end
+end
+
 @testset "variant docstrings" begin
     @data DocTest begin
         "plain string, with fields"
@@ -68,18 +78,18 @@ end
         end
     end
 
-    @test Base.Docs.hasdoc(DocTest, :PlainStringFields)
-    @test Base.Docs.hasdoc(DocTest, :PlainStringSingleton)
-    @test Base.Docs.hasdoc(DocTest, :TripleStringFields)
-    @test Base.Docs.hasdoc(DocTest, :TripleStringSingleton)
-    @test Base.Docs.hasdoc(DocTest, :ExplicitTripleFields)
-    @test Base.Docs.hasdoc(DocTest, :ExplicitTripleSingleton)
-    @test Base.Docs.hasdoc(DocTest, :ExplicitMarkdownFields)
-    @test Base.Docs.hasdoc(DocTest, :ExplicitMarkdownSingleton)
-    @test Base.Docs.hasdoc(DocTest, :NamedWithDoc)
-    @test !Base.Docs.hasdoc(DocTest, :NoDocs)
-    @test !Base.Docs.hasdoc(DocTest, :NoDocsSingleton)
-    @test !Base.Docs.hasdoc(DocTest, :NamedNoDocs)
+    @test hasdoc(DocTest, :PlainStringFields)
+    @test hasdoc(DocTest, :PlainStringSingleton)
+    @test hasdoc(DocTest, :TripleStringFields)
+    @test hasdoc(DocTest, :TripleStringSingleton)
+    @test hasdoc(DocTest, :ExplicitTripleFields)
+    @test hasdoc(DocTest, :ExplicitTripleSingleton)
+    @test hasdoc(DocTest, :ExplicitMarkdownFields)
+    @test hasdoc(DocTest, :ExplicitMarkdownSingleton)
+    @test hasdoc(DocTest, :NamedWithDoc)
+    @test !hasdoc(DocTest, :NoDocs)
+    @test !hasdoc(DocTest, :NoDocsSingleton)
+    @test !hasdoc(DocTest, :NamedNoDocs)
 
     # Verify doc content is attached to the correct binding for each variant kind.
     @test doc_text(DocTest, :PlainStringFields) == "plain string, with fields"
@@ -105,10 +115,10 @@ end
         NoDoc(Int)
     end
 
-    @test Base.Docs.hasdoc(CustomDocTest, :CustomSingleton)
-    @test Base.Docs.hasdoc(CustomDocTest, :CustomFields)
-    @test Base.Docs.hasdoc(CustomDocTest, :CustomNamed)
-    @test !Base.Docs.hasdoc(CustomDocTest, :NoDoc)
+    @test hasdoc(CustomDocTest, :CustomSingleton)
+    @test hasdoc(CustomDocTest, :CustomFields)
+    @test hasdoc(CustomDocTest, :CustomNamed)
+    @test !hasdoc(CustomDocTest, :NoDoc)
 
     @test doc_text(CustomDocTest, :CustomSingleton) == "CUSTOM: singleton doc"
     @test doc_text(CustomDocTest, :CustomFields) == "CUSTOM: fields doc"
