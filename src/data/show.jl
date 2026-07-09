@@ -27,18 +27,34 @@ function Base.show(io::IO, head::TypeHead)
     end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", x::Variant)
+function doc_string(doc)
+    doc isa String && return doc
+    Meta.isexpr(doc, :macrocall) || return nothing
+    args = filter(a -> !(a isa LineNumberNode), doc.args)
+    length(args) >= 2 || return nothing
+    last = args[end]
+    return last isa String ? last : nothing
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", x::Variant)
     tab(n) = print(io, " "^n)
     indent = get(io, :indent, 0)
     if !isnothing(x.doc)
         println(io)
-        tab(indent)
-        printstyled(io, "\"\"\"\n"; color=:yellow)
-        tab(indent)
-        printstyled(io, x.doc; color=:yellow)
-        print(io, "\n")
-        tab(indent)
-        printstyled(io, "\"\"\"\n"; color=:yellow)
+        str = doc_string(x.doc)
+        if !isnothing(str)
+            tab(indent)
+            printstyled(io, "\"\"\"\n"; color=:yellow)
+            tab(indent)
+            printstyled(io, str; color=:yellow)
+            print(io, "\n")
+            tab(indent)
+            printstyled(io, "\"\"\"\n"; color=:yellow)
+        else
+            tab(indent)
+            Base.show_unquoted(io, x.doc, indent)
+            println(io)
+        end
     end
 
     if x.kind == Singleton

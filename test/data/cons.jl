@@ -78,9 +78,10 @@ end
     @test x.doc == nothing
     @test x.source == nothing
 
-    x = Variant(@expr @doc "Foo" Foo)
-
-    @test x.doc == "Foo"
+    def = TypeDef(Main, false, :TestDoc, quote
+        @doc "Foo" Foo
+    end)
+    @test def.variants[1].doc == "Foo"
 end
 
 @testset "Variant(Anonymous)" begin
@@ -91,8 +92,10 @@ end
     @test x.doc == nothing
     @test x.source == nothing
 
-    x = Variant(@expr @doc "Foo" Foo(Int, Float16))
-    @test x.doc == "Foo"
+    def = TypeDef(Main, false, :TestDoc, quote
+        @doc "Foo" Foo(Int, Float16)
+    end)
+    @test def.variants[1].doc == "Foo"
 
     ex = quote
         """
@@ -100,7 +103,8 @@ end
         """
         Foo(Int, Int)
     end
-    x = Variant(ex.args[2])
+    def = TypeDef(Main, false, :TestDoc, ex)
+    x = def.variants[1]
     @test x.doc == """
     Foo
     """
@@ -125,4 +129,48 @@ end # testset
     @test f1.default === no_default
     @test f1.source === ex.args[3].args[1]
     @test f3.isconst
+
+    def = TypeDef(Main, false, :TestDocNamed, quote
+        @doc "Baz doc" struct Baz
+            x::Float64
+        end
+    end)
+    @test def.variants[1].doc == "Baz doc"
 end # Variant(Named)
+
+@testset "_is_doc_macro GlobalRef form" begin
+    # GlobalRef(Core, :@doc) is an alternative head form _is_doc_macro must handle
+    expr = Expr(:macrocall, GlobalRef(Core, Symbol("@doc")), LineNumberNode(1, :none), "CoreDoc", :Foo)
+    def = TypeDef(Main, false, :TestCoreDoc, Expr(:block, expr))
+    @test length(def.variants) == 1
+    @test def.variants[1].name == :Foo
+    @test def.variants[1].doc == "CoreDoc"
+end
+
+@testset "@doc on block raises error" begin
+    # @doc applied to a begin...end block must error rather than silently assign
+    # the same doc to every variant inside.
+    @test_throws ArgumentError TypeDef(Main, false, :TestDocBlock, quote
+        @doc "shared doc" begin
+            Foo
+            Bar(Int)
+        end
+    end)
+end
+
+@testset "non-@doc macrocall is rejected" begin
+    # A macrocall whose head is not `@doc` is not a doc wrapper: _is_doc_macro
+    # returns false and the macrocall falls through to Variant, which rejects it.
+    expr = Expr(:macrocall, Symbol("@foo"), LineNumberNode(1, :none), :Bar)
+    @test_throws ArgumentError TypeDef(Main, false, :TestNonDocMacro, Expr(:block, expr))
+end
+
+@testset "nested block without doc is flattened" begin
+    # A nested begin...end block (such as one produced by macro expansion) is
+    # recursed into, tracking line numbers and skipping generated `nothing` entries.
+    inner = Expr(:block, LineNumberNode(7, :none), :Foo, nothing, :(Bar(Int)))
+    def = TypeDef(Main, false, :TestNestedBlock, Expr(:block, inner))
+    @test length(def.variants) == 2
+    @test def.variants[1].name === :Foo
+    @test def.variants[2].name === :Bar
+end

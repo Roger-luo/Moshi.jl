@@ -31,7 +31,7 @@ struct Variant
     kind::VariantKind
     name::Symbol
     fields::Maybe{Union{Vector{Field},Vector{NamedField}}}
-    doc::Maybe{String}
+    doc::Any
     source::Maybe{LineNumberNode}
 
     function Variant(kind, name, fields, doc, source)

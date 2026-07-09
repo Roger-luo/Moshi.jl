@@ -54,7 +54,7 @@ end
 
 function eval_global_ref(mod::Module, expr)
     if expr isa Symbol && isdefined(mod, expr)
-        return getfield(mod, expr)
+        return GlobalRef(mod, expr)
     elseif expr isa Expr
         return Expr(expr.head, map(x -> eval_global_ref(mod, x), expr.args)...)
     else
@@ -116,6 +116,28 @@ function is_inferrable(param::Symbol, type)
     else
         return false
     end
+end
+
+@pass 8 function emit_variant_docs(info::EmitInfo)
+    return expr_map(x -> emit_each_variant_doc(info, x), info.storages; skip_nothing=true)
+end
+
+function emit_each_variant_doc(info::EmitInfo, storage::StorageInfo)
+    isnothing(storage.parent.doc) && return nothing
+    raw = storage.parent.doc
+    raw isa String || Meta.isexpr(raw, :macrocall) ||
+        throw(ArgumentError(
+            "variant doc for $(storage.parent.name) must be a string literal or macro call, got: $(typeof(raw))"
+        ))
+    source = something(storage.parent.source, info.def.source)
+    doc = eval_global_ref(info.def.mod, raw)
+    return Expr(
+        :macrocall,
+        GlobalRef(Base, Symbol("@doc")),
+        source,
+        doc,
+        storage.parent.name,
+    )
 end
 
 # special singleton constructor with adaptive type parameters

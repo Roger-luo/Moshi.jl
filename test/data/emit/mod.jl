@@ -19,3 +19,7 @@ using Test
     include("cons.jl")
 end
 end # module
+
+@testset "docs" begin
+    include("docs.jl")
+end
