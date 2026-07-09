@@ -1,3 +1,37 @@
+function _is_doc_macro(head)
+    head === Symbol("@doc") && return true
+    head isa GlobalRef && head.name === Symbol("@doc") &&
+        (head.mod === Core || head.mod === Base) && return true
+    return false
+end
+
+function push_variants!(variants::Vector{Variant}, expr, doc, source)
+    if Meta.isexpr(expr, :macrocall) && _is_doc_macro(expr.args[1])
+        non_lnn = filter(a -> !(a isa LineNumberNode), expr.args)
+        length(non_lnn) == 3 ||
+            throw(ArgumentError("malformed @doc in @data body: expected `@doc <docstring> <variant>`, got: $expr"))
+        _, doc, variant_expr = non_lnn
+        lnn_idx = findfirst(a -> a isa LineNumberNode, expr.args)
+        doc_source = isnothing(lnn_idx) ? source : expr.args[lnn_idx]
+        push_variants!(variants, variant_expr, doc, doc_source)
+        return nothing
+    end
+    if Meta.isexpr(expr, :block)
+        isnothing(doc) ||
+            throw(ArgumentError("@doc cannot be applied to a block; place `@doc` before each variant individually"))
+        for arg in expr.args
+            if arg isa LineNumberNode
+                source = arg
+            elseif !isnothing(arg)
+                push_variants!(variants, arg, doc, source)
+            end
+        end
+    else
+        push!(variants, Variant(expr; doc, source))
+    end
+    return nothing
+end
+
 # concrete
 function TypeDef(mod::Module, ismutable::Bool, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
     head = TypeHead(head)
@@ -12,7 +46,7 @@ function TypeDef(mod::Module, ismutable::Bool, head, body::Expr; source::LineNum
         elseif isnothing(expr) # sometimes there are generated nothing in the block
             continue
         end
-        push!(variants, Variant(expr; source=current_line))
+        push_variants!(variants, expr, nothing, current_line)
     end
     return TypeDef(mod, ismutable, head, variants, source)
 end
@@ -73,10 +107,6 @@ function Variant(expr::Expr; doc=nothing, source=nothing)
         isempty(jl.typevars) ||
             throw(ArgumentError("invalid variant expression: $expr, cannot have typevars"))
         return Variant(Named, jl.name, NamedField.(jl.fields), doc, source)
-    elseif Meta.isexpr(expr, :macrocall) && (
-        expr.args[1] === GlobalRef(Core, Symbol("@doc")) || expr.args[1] === Symbol("@doc")
-    ) # allow calling @doc inside the macro
-        return Variant(expr.args[4]; doc=expr.args[3], source=expr.args[2])
     elseif Meta.isexpr(expr, :curly)
         throw(
             ArgumentError(
