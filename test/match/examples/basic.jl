@@ -98,6 +98,37 @@ end
     [1, xs::Float64...] => xs
 end
 
+# https://github.com/Roger-luo/Moshi.jl/issues/48
+# the type annotation on a splat must be respected, both for the `T[...]` (Ref)
+# and the `[...]` (Vector) syntax, and must match element subtypes/supertypes
+# rather than requiring an exact `eltype` match.
+@test "second" == @match [1, [2, 3]] begin
+    Any[a::Int, b::String...] => "first"
+    Any[a::Int, b::Vector{Int}...] => "second"
+end
+
+@test "second" == @match [1, [2, 3]] begin
+    [a::Int, b::String...] => "first"
+    [a::Int, b::Vector{Int}...] => "second"
+    _ => "third"
+end
+
+# a splat annotation on a `Ref` pattern must not be silently compiled away
+@test_throws UndefVarError @match [1, [2, 3]] begin
+    Any[a::Int, b::ThisTypeIsNotDefined...] => "sure"
+end
+
+# splats match supertypes of the elements, like other Moshi patterns
+@test "matched" == @match Union{Int,Vector{Int}}[1, [2, 3]] begin
+    [a::Int, b::String...] => "nope"
+    [a::Int, b::Any...] => "matched"
+end
+
+# a splat matching zero elements trivially satisfies its annotation
+@test [] == @match [1] begin
+    [a::Int, b::String...] => b
+end
+
 struct Foo
     x::Int
     y::Int
