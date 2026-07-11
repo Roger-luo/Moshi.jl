@@ -38,6 +38,8 @@ julia --project=docs/script docs/script/gendoc.jl
 
 ## Deploying to Vercel
 
+Vercel preview deployments run automatically on pull requests when files under `docs/` change.
+
 1. Import the repository on [Vercel](https://vercel.com).
 2. Set the **Root Directory** to `docs`.
 3. Vercel auto-detects Astro. The `vercel.json` in `docs/` configures the build.
