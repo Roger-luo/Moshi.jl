@@ -1,7 +1,11 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-const site = process.env.SITE_URL ?? 'https://moshi-jl.vercel.app';
+const site =
+	process.env.SITE_URL ??
+	(process.env.VERCEL_URL
+		? `https://${process.env.VERCEL_URL}`
+		: 'https://moshi.rogerluo.dev');
 const base = process.env.BASE_PATH ?? '/';
 
 // https://astro.build/config
