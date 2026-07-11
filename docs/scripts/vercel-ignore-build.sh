@@ -4,6 +4,7 @@
 
 set -euo pipefail
 
+cd "$(git rev-parse --show-toplevel)"
 PATHS=(docs/)
 
 if [ -n "${VERCEL_GIT_PREVIOUS_SHA:-}" ] && [ -n "${VERCEL_GIT_COMMIT_SHA:-}" ]; then
