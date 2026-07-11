@@ -3,5 +3,5 @@
   "outputDirectory": "dist",
   "framework": "astro",
   "installCommand": "npm install",
-  "ignoreCommand": "bash docs/scripts/vercel-ignore-build.sh"
+  "ignoreCommand": "bash scripts/vercel-ignore-build.sh"
 }
