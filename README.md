@@ -76,4 +76,4 @@ MIT License
 
 
 [docs-img]: https://img.shields.io/badge/docs-blue.svg
-[docs-url]: https://rogerluo.dev/Moshi.jl/
+[docs-url]: https://moshi.rogerluo.dev/
