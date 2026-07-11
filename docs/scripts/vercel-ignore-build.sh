@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Vercel "Ignored Build Step": exit 0 = skip, exit 1 = build.
-# Runs from the repository root (not docs/).
+# Runs from the Vercel root directory (docs/). Git paths stay repo-relative.
 
 set -euo pipefail
 
+cd "$(git rev-parse --show-toplevel)"
 PATHS=(docs/)
 
 if [ -n "${VERCEL_GIT_PREVIOUS_SHA:-}" ] && [ -n "${VERCEL_GIT_COMMIT_SHA:-}" ]; then
