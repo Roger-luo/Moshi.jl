@@ -28,11 +28,8 @@ npm run preview
 
 1. Import the repo on Vercel with **Root Directory** set to `docs`.
 2. Add Julia to the build environment, or commit generated files in `src/generated/`.
-3. Deploy — no `BASE_PATH` needed.
-
-### GitHub Pages
-
-The `Astro.yml` workflow builds with `BASE_PATH=Moshi.jl` for `https://rogerluo.dev/Moshi.jl/`.
+3. Set `SITE_URL=https://moshi.rogerluo.dev` for production (optional — Vercel infers preview URLs).
+4. Deploy — no `BASE_PATH` needed.
 
 ## Structure
 

@@ -49,7 +49,7 @@ No environment variables are required for a default deployment. Optionally set:
 | Variable | Purpose |
 |----------|---------|
 | `SITE_URL` | Canonical site URL (e.g. `https://moshi.example.com`) |
-| `BASE_PATH` | URL prefix if not deploying at root (e.g. `/Moshi.jl` for GitHub Pages) |
+| `BASE_PATH` | URL prefix if not deploying at root (default `/`) |
 
 Vercel runs `npm run build`, which invokes Julia for doc generation. Ensure Julia is available in the build environment — Vercel's default Node image does not include Julia. Use a [custom build command](https://vercel.com/docs/build-step) or a GitHub Action that builds and deploys.
 
@@ -58,7 +58,3 @@ Vercel runs `npm run build`, which invokes Julia for doc generation. Ensure Juli
 For Julia doc generation, use the existing GitHub Actions workflow or connect Vercel with a prebuild step that installs Julia. The simplest path is deploying via the GitHub integration with a `vercel.json` and adding Julia to the install step in Vercel project settings, or using `nixpacks`/`apt` in `vercel.json`.
 
 Alternatively, commit generated JSON files (remove `src/generated/` from `.gitignore`) so Vercel only needs Node.
-
-## GitHub Pages (legacy)
-
-The `Astro.yml` workflow deploys to GitHub Pages. Set `BASE_PATH=Moshi.jl` and `SITE_URL=https://rogerluo.dev` when building for that target.
