@@ -1,14 +1,14 @@
-name: Deploy to GitHub Pages
+name: Deploy Docs
 
 on:
-  # Trigger the workflow every time you push to the `main` branch
-  # Using a different branch name? Replace `main` with your branch’s name
   push:
-    branches: [ main ]
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'Project.toml'
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
@@ -18,21 +18,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
-        uses: actions/checkout@v6
-      - name: Set up Julia
-        uses: julia-actions/setup-julia@v3
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
         with:
-          version: "1"
+          version: '1'
       - uses: julia-actions/cache@v2
-      - name: Install Julia dependencies
+      - name: Install Julia doc dependencies
         run: julia --project=docs/script -e 'using Pkg; Pkg.instantiate()'
-      - name: Install, build, and upload your site
+      - name: Generate API docs
+        run: julia --project=docs/script docs/script/gendoc.jl
+      - name: Build site
         uses: withastro/action@v6
         with:
-          path: docs/ # The root location of your Astro project inside the repository. (optional)
-          # node-version: 24 # The specific version of Node that should be used to build your site. Defaults to 24. (optional)
-          # package-manager: pnpm@latest # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
+          path: docs/
+        env:
+          BASE_PATH: Moshi.jl
+          SITE_URL: https://rogerluo.dev
 
   deploy:
     needs: build

@@ -1,0 +1,92 @@
+[
+  {
+    "name": "@data",
+    "signature": "@data <mutable_kw> <head> <body>",
+    "doc": "@data <head> <variants>\n\nCreate a new algebraic data type (also known as a sum type) with the given head and variants."
+  },
+  {
+    "name": "data_type",
+    "signature": "data_type(variant::Type) -> Type",
+    "doc": "Return the data type of the given variant type."
+  },
+  {
+    "name": "data_type_name",
+    "signature": "data_type_name(x) -> Symbol",
+    "doc": "Return the data type name of the given variant."
+  },
+  {
+    "name": "is_data_type",
+    "signature": "is_data_type(x) -> Bool",
+    "doc": "Check if the given object is a variant of a algebraic data type."
+  },
+  {
+    "name": "is_variant_type",
+    "signature": "is_variant_type(x) -> Bool",
+    "doc": "Check if the given object is a variant type."
+  },
+  {
+    "name": "isa_variant",
+    "signature": "isa_variant(x, variant::Type) -> Bool",
+    "doc": "Check if the given variant is an instance of the given variant type."
+  },
+  {
+    "name": "show_variant",
+    "signature": "show_variant(io::IO, mime::Base.Multimedia.MIME{Symbol(\"text/plain\")}, x)",
+    "doc": "Print the variant to the given IO stream in multiple lines.\n\nPrint the variant to the given IO stream in a single line."
+  },
+  {
+    "name": "storage_types",
+    "signature": "storage_types(value::Type) -> Base.ImmutableDict{DataType, DataType}",
+    "doc": "Return the storage types of the data type.\n\n!!! note\n    This method is used by the pattern matching system to extract the field of the variant."
+  },
+  {
+    "name": "variant_fieldnames",
+    "signature": "variant_fieldnames(value)",
+    "doc": "Return the field names of the variant."
+  },
+  {
+    "name": "variant_fieldtypes",
+    "signature": "variant_fieldtypes(type::Type) -> Tuple",
+    "doc": "Return the field types of the variant."
+  },
+  {
+    "name": "variant_getfield",
+    "signature": "variant_getfield(value, tag::Type, field::Union{Int, Symbol})",
+    "doc": "Known the variant type `tag`, return the field of the variant by field name or index.\n\n!!! note\n    This method is used by the pattern matching system to extract the field of the variant.\n    It is not intended to be used directly. Most of cases, you can use the `x.field` syntax\n    to extract the field of the variant. However, Julia compiler is not able to infer the\n    type of the variant usually, so if you care about performance, you may want to use this\n    method in combine with [`variant_storage`](@ref)."
+  },
+  {
+    "name": "variant_kind",
+    "signature": "variant_kind(x) -> VariantKind",
+    "doc": "Return the kind of the variant, can be `Singleton`, `Anonymous`, or `Named`."
+  },
+  {
+    "name": "variant_name",
+    "signature": "variant_name(x) -> Symbol",
+    "doc": "Return the name of the variant."
+  },
+  {
+    "name": "variant_nfields",
+    "signature": "variant_nfields(value)",
+    "doc": "Return the number of fields of the variant."
+  },
+  {
+    "name": "variant_storage",
+    "signature": "variant_storage(value)",
+    "doc": "Return the storage object of the variant."
+  },
+  {
+    "name": "variant_storage_type",
+    "signature": "variant_storage_type(tag::Type) -> Type",
+    "doc": "Return the storage type of the variant."
+  },
+  {
+    "name": "variant_type",
+    "signature": "variant_type(x)",
+    "doc": "Return the variant type of the given variant."
+  },
+  {
+    "name": "variants",
+    "signature": "variants(x::Type) -> Tuple",
+    "doc": "Return a tuple of variants of the given data type.\n\nReturn a tuple of variants of the given data type."
+  }
+]

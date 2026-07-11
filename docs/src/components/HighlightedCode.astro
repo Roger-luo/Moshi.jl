@@ -1,0 +1,26 @@
+---
+import { Code } from 'astro-expressive-code/components';
+
+interface Props {
+	code: string;
+	lang?: string;
+	class?: string;
+}
+
+const { code, lang = 'julia', class: className } = Astro.props;
+---
+
+<div class:list={['highlighted-code', className]}>
+	<Code code={code} lang={lang} class:list={['not-content', className]} />
+</div>
+
+<style>
+	.highlighted-code :global(.expressive-code) {
+		margin: 0;
+	}
+
+	.highlighted-code :global(.frame) {
+		margin: 0;
+		box-shadow: none;
+	}
+</style>

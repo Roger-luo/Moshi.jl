@@ -1,0 +1,101 @@
+:root {
+	--julia-green: #389826;
+	--julia-red: #cb3c33;
+	--julia-purple: #9558b2;
+	--julia-blue: #4063d8;
+
+	--sl-font: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+	--sl-font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+	--sl-color-accent-low: #2a2030;
+	--sl-color-accent: var(--julia-purple);
+	--sl-color-accent-high: #b87fd4;
+
+	--sl-color-white: #fafafa;
+	--sl-color-gray-1: #e0e0e0;
+	--sl-color-gray-2: #bdbdbd;
+	--sl-color-gray-3: #9e9e9e;
+	--sl-color-gray-4: #616161;
+	--sl-color-gray-5: #424242;
+	--sl-color-gray-6: #303030;
+	--sl-color-black: #212121;
+
+	--sl-color-bg: var(--sl-color-black);
+	--sl-color-bg-nav: #212121;
+	--sl-color-bg-sidebar: #303030;
+	--sl-color-hairline-light: #424242;
+	--sl-color-hairline: #424242;
+	--sl-color-hairline-shade: #303030;
+
+	--sl-text-h1: 2.25rem;
+	--sl-text-h2: 1.65rem;
+	--sl-text-h3: 1.25rem;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f3e8f8;
+	--sl-color-accent: #7a3f9a;
+	--sl-color-accent-high: #5c2d78;
+
+	--sl-color-white: #212121;
+	--sl-color-gray-1: #424242;
+	--sl-color-gray-2: #616161;
+	--sl-color-gray-3: #757575;
+	--sl-color-gray-4: #bdbdbd;
+	--sl-color-gray-5: #e0e0e0;
+	--sl-color-gray-6: #f5f5f5;
+	--sl-color-black: #ffffff;
+
+	--sl-color-bg: #fafafa;
+	--sl-color-bg-nav: #ffffff;
+	--sl-color-bg-sidebar: #f5f5f5;
+}
+
+.site-title {
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+.sl-markdown-content pre {
+	border-radius: 0.5rem;
+	border: 1px solid var(--sl-color-gray-5);
+}
+
+.sl-markdown-content code:not(pre code) {
+	background: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
+	color: var(--sl-color-accent-high);
+	padding: 0.15em 0.35em;
+	border-radius: 0.25rem;
+	font-size: 0.9em;
+}
+
+:root[data-theme='light'] .sl-markdown-content code:not(pre code) {
+	color: var(--sl-color-accent);
+}
+
+.hero {
+	max-width: 72rem;
+	margin: 0 auto;
+	padding-inline: 1rem;
+}
+
+.features {
+	max-width: 72rem;
+	margin: 0 auto;
+	padding-inline: 1rem;
+}
+
+/* Splash landing: hide default Starlight hero when using custom components */
+[data-template='splash'] .hero > img,
+[data-template='splash'] .hero .tagline,
+[data-template='splash'] .hero .actions {
+	display: none;
+}
+
+[data-template='splash'] .hero {
+	padding: 0;
+}
+
+[data-template='splash'] main .content-panel .sl-container {
+	max-width: 72rem;
+}

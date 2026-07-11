@@ -1,0 +1,7 @@
+[
+  {
+    "name": "@match",
+    "signature": "@match <expr> <body>",
+    "doc": "Pattern matching macro."
+  }
+]

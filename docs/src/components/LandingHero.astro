@@ -1,0 +1,215 @@
+---
+import HighlightedCode from '@components/HighlightedCode.astro';
+
+interface Action {
+	text: string;
+	link: string;
+	variant?: 'primary' | 'secondary';
+}
+
+interface Props {
+	tagline: string;
+	title?: string;
+	actions?: Action[];
+}
+
+const {
+	tagline,
+	title = 'Moshi.jl',
+	actions = [
+		{ text: 'Quick Start', link: '/start/getting-started/', variant: 'primary' },
+		{ text: 'View on GitHub', link: 'https://github.com/Roger-luo/Moshi.jl', variant: 'secondary' },
+	],
+} = Astro.props;
+
+const exampleCode = `using Moshi.Data: @data
+using Moshi.Match: @match
+
+@data Shape begin
+    Circle(Float64)
+    Rect(Float64, Float64)
+end
+
+area = @match shape begin
+    Shape.Circle(r) => π * r^2
+    Shape.Rect(w, h) => w * h
+end`;
+---
+
+<section class="hero">
+	<div class="hero__grid" aria-hidden="true"></div>
+	<div class="hero__content">
+		<p class="hero__eyebrow">模式 · Pattern matching for Julia</p>
+		<h1 class="hero__title">{title}</h1>
+		<p class="hero__tagline">{tagline}</p>
+		<div class="hero__actions">
+			{
+				actions.map((action) => (
+					<a
+						class:list={['hero__btn', action.variant === 'secondary' && 'hero__btn--secondary']}
+						href={action.link}
+						target={action.link.startsWith('http') ? '_blank' : undefined}
+						rel={action.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+					>
+						{action.text}
+					</a>
+				))
+			}
+		</div>
+	</div>
+	<div class="hero__code">
+		<div class="hero__code-header">
+			<span></span><span></span><span></span>
+			<p>example.jl</p>
+		</div>
+		<div class="hero__code-body">
+			<HighlightedCode code={exampleCode} lang="julia" class="hero__highlight" />
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		position: relative;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 2.5rem;
+		padding: 3rem 0 4rem;
+		overflow: hidden;
+	}
+
+	@media (min-width: 56rem) {
+		.hero {
+			grid-template-columns: 1.1fr 1fr;
+			align-items: center;
+			padding: 4rem 0 5rem;
+		}
+	}
+
+	.hero__code {
+		position: relative;
+		z-index: 1;
+		border-radius: 4px;
+		border: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.hero__grid {
+		position: absolute;
+		inset: -20% -10%;
+		background-image:
+			linear-gradient(#424242 1px, transparent 1px),
+			linear-gradient(90deg, #424242 1px, transparent 1px);
+		background-size: 2.5rem 2.5rem;
+		opacity: 0.35;
+		pointer-events: none;
+	}
+
+	.hero__content {
+		position: relative;
+		z-index: 1;
+	}
+
+	.hero__title {
+		font-size: clamp(2.5rem, 6vw, 4rem);
+		font-weight: 700;
+		line-height: 1.05;
+		margin: 0 0 1rem;
+		color: var(--sl-color-white);
+	}
+
+	.hero__eyebrow {
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--julia-green, #389826);
+		margin: 0 0 1rem;
+	}
+
+	.hero__tagline {
+		font-size: 1.15rem;
+		line-height: 1.6;
+		color: var(--sl-color-gray-2);
+		max-width: 34ch;
+		margin: 0 0 2rem;
+	}
+
+	.hero__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.hero__btn {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.7rem 1.25rem;
+		border-radius: 4px;
+		font-weight: 600;
+		text-decoration: none;
+		background: #389826;
+		color: #ffffff;
+	}
+
+	.hero__btn:hover {
+		background: #2d7a1e;
+	}
+
+	.hero__btn--secondary {
+		background: transparent;
+		color: var(--sl-color-white);
+		border: 1px solid var(--sl-color-gray-4);
+	}
+
+	.hero__btn--secondary:hover {
+		border-color: #9558b2;
+		color: #b87fd4;
+	}
+
+	.hero__code-header {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-6);
+	}
+
+	.hero__code-header span {
+		width: 0.65rem;
+		height: 0.65rem;
+		border-radius: 50%;
+	}
+
+	.hero__code-header span:first-child {
+		background: #cb3c33;
+	}
+
+	.hero__code-header span:nth-child(2) {
+		background: #389826;
+	}
+
+	.hero__code-header span:nth-child(3) {
+		background: #4063d8;
+	}
+
+	.hero__code-header p {
+		margin: 0 0 0 0.5rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hero__code-body :global(.hero__highlight .frame) {
+		border: none;
+		border-radius: 0;
+	}
+
+	.hero__code-body :global(.hero__highlight pre) {
+		padding: 1.25rem 1.5rem;
+		font-size: 0.82rem;
+		line-height: 1.65;
+	}
+</style>

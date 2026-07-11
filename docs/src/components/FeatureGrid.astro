@@ -1,0 +1,115 @@
+---
+interface Feature {
+	title: string;
+	description: string;
+	href: string;
+	color: string;
+}
+
+const features: Feature[] = [
+	{
+		title: '@data',
+		description: 'Define algebraic data types with generics, reflection, and type-stable storage.',
+		href: '/start/algebra-data-type/',
+		color: '#389826',
+	},
+	{
+		title: '@match',
+		description: 'Exhaustive, type-stable pattern matching with guards, splats, and ADT deconstruction.',
+		href: '/start/match/',
+		color: '#cb3c33',
+	},
+	{
+		title: '@derive',
+		description: 'Rust-style trait derivation for Show, Hash, and Eq on structs and ADTs.',
+		href: '/start/derive/',
+		color: '#4063d8',
+	},
+];
+---
+
+<section class="features">
+	<h2 class="features__title">Three macros, one toolkit</h2>
+	<div class="features__grid">
+		{
+			features.map((feature) => (
+				<a class="feature-card" href={feature.href} style={`--card-accent: ${feature.color}`}>
+					<span class="feature-card__bar" />
+					<h3 class="feature-card__title">{feature.title}</h3>
+					<p class="feature-card__desc">{feature.description}</p>
+					<span class="feature-card__link">Learn more →</span>
+				</a>
+			))
+		}
+	</div>
+</section>
+
+<style>
+	.features {
+		padding: 2rem 0 3rem;
+	}
+
+	.features__title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0 0 1.5rem;
+		text-align: center;
+	}
+
+	.features__grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	@media (min-width: 48rem) {
+		.features__grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	.feature-card {
+		display: flex;
+		flex-direction: column;
+		padding: 1.25rem 1.5rem;
+		border-radius: 4px;
+		border: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-6);
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.feature-card:hover {
+		border-color: var(--card-accent);
+	}
+
+	.feature-card__bar {
+		display: block;
+		width: 2rem;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--card-accent);
+		margin-bottom: 1rem;
+	}
+
+	.feature-card__title {
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		margin: 0 0 0.5rem;
+		color: var(--card-accent);
+	}
+
+	.feature-card__desc {
+		flex: 1;
+		margin: 0 0 1rem;
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.feature-card__link {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--card-accent);
+	}
+</style>

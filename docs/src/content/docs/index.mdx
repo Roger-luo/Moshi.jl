@@ -1,55 +1,51 @@
 ---
-title: Welcome to Moshi
-description: Pattern match with & without generic algebraic data types in Julia!
+title: Moshi.jl
+description: Algebraic data types, pattern matching, and trait derivation for Julia.
 template: splash
+editUrl: false
+lastUpdated: false
 hero:
-  tagline: Pattern match with & without generic algebraic data types in Julia!
-  image:
-    file: ../../assets/hero-example.png
-  actions:
-    - text: Getting Started
-      link: /Moshi.jl/start/getting-started/
-      icon: right-arrow
-      variant: primary
-    - text: View GitHub
-      link: https://github.com/Roger-luo/Moshi.jl
-      icon: external
+  tagline: Algebraic data types, pattern matching, and trait derivation for Julia.
+  actions: []
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import LandingHero from '@components/LandingHero.astro';
+import FeatureGrid from '@components/FeatureGrid.astro';
 
-## Next steps
+<LandingHero
+  tagline="Type-stable ADTs, exhaustive pattern matching, and Rust-style derives — built for modern Julia."
+/>
 
-<Card title="Algebraic Data Type">
-	Define your own algebraic data types with `@data` macro.
+<FeatureGrid />
 
-	```julia
-	@data Message begin
-		Quit
-		struct Move
-			x::Int
-			y::Int
-		end
+## Why Moshi?
 
-		Write(String)
-		ChangeColor(Int, Int, Int)
-	end
-	```
-</Card>
-<Card title="Derive Macro">
-	Derive other methods from your type definitions (normal Julia `struct` or `@data`) with `@derive` macro.
+Moshi (模式, *móshì*) brings ML-family patterns to Julia: sum types with `@data`, expressive `@match`, and `@derive` for common traits. It builds on ideas from [MLStyle](https://github.com/thautwarm/MLStyle.jl), [SumTypes](https://github.com/MasonProtter/SumTypes.jl), and [Expronicon](https://github.com/Roger-luo/Expronicon.jl).
 
-	```julia
-	@derive Message[Show, Hash]
-	```
-</Card>
-<Card title="Pattern Matching">
-	```julia
-	@match value begin
-        Message.Move(; x, y) => (x, y)
-        Message.Quit() => 0
-        Message.Write(msg) => msg
-        Message.ChangeColor(a) => a
-    end
-	```
-</Card>
+```julia
+using Moshi.Data: @data
+using Moshi.Match: @match
+using Moshi.Derive: @derive
+
+@data Expr begin
+    Num(Int)
+    Add(Self, Self)
+    Mul(Self, Self)
+end
+
+@derive Expr[Show, Hash, Eq]
+
+eval = @match expr begin
+    Expr.Num(n) => n
+    Expr.Add(a, b) => eval(a) + eval(b)
+    Expr.Mul(a, b) => eval(a) * eval(b)
+end
+```
+
+## Get started in 30 seconds
+
+```julia
+pkg> add Moshi
+```
+
+Then head to the [Quick Start guide](/start/getting-started/) or browse the [API reference](/api/data/).

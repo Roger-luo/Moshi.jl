@@ -3,9 +3,11 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
+    "gendoc": "julia --project=script script/gendoc.jl",
+    "dev": "npm run gendoc && astro dev",
+    "start": "npm run dev",
     "build": "astro check && astro build",
+    "build:full": "npm run gendoc && npm run build",
     "preview": "astro preview",
     "astro": "astro"
   },

@@ -1,0 +1,97 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { Markdown } from '@astropub/md';
+import HighlightedCode from '@components/HighlightedCode.astro';
+
+interface DocEntry {
+	name: string;
+	signature: string;
+	doc: string;
+}
+
+interface Props {
+	module: string;
+}
+
+const { module } = Astro.props;
+const file = path.join(process.cwd(), 'src/generated', `${module}.json`);
+
+if (!fs.existsSync(file)) {
+	throw new Error(
+		`Missing API docs for ${module}. Run: julia --project=script script/gendoc.jl`,
+	);
+}
+
+const docs: DocEntry[] = JSON.parse(fs.readFileSync(file, 'utf8'));
+---
+
+<div class="api-docs">
+	{
+		docs.map((entry) => (
+			<article class="api-entry" id={entry.name}>
+				<header class="api-entry__header">
+					<h3 class="api-entry__name">{entry.name}</h3>
+					{entry.signature && (
+						<HighlightedCode
+							code={entry.signature}
+							lang="julia"
+							class="api-entry__sig"
+						/>
+					)}
+				</header>
+				<div class="api-entry__body">
+					<Markdown of={entry.doc} />
+				</div>
+			</article>
+		))
+	}
+</div>
+
+<style>
+	.api-docs {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.api-entry {
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.75rem;
+		padding: 1.25rem 1.5rem;
+		background: color-mix(in srgb, var(--sl-color-gray-6) 40%, transparent);
+		scroll-margin-top: 5rem;
+	}
+
+	.api-entry__header {
+		margin-bottom: 0.75rem;
+	}
+
+	.api-entry__name {
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: var(--sl-color-accent-high);
+		margin: 0 0 0.5rem;
+	}
+
+	.api-entry__sig :global(.frame) {
+		border-radius: 0.5rem;
+		border: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-black);
+	}
+
+	.api-entry__sig :global(pre) {
+		padding: 0.75rem 1rem;
+		font-size: 0.85rem;
+		line-height: 1.5;
+	}
+
+	.api-entry__body :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.api-entry__body :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

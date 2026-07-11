@@ -1,0 +1,7 @@
+[
+  {
+    "name": "@derive",
+    "signature": "@derive <expr>",
+    "doc": "Automatically derive traits for a concrete type. The following traits are supported:\n\n- `PartialEq`\n- `Hash`\n- `Tree`"
+  }
+]

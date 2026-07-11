@@ -1,23 +1,14 @@
 ---
-import * as fs from "fs";
-import type {
-	BuiltinLanguage,
-	LanguageRegistration,
-	SpecialLanguage,
-} from 'shiki';
-import { Code } from 'astro:components';
-
-function readCode(path: string, encoding: BufferEncoding): string {
-  return fs.readFileSync(path, "utf8");
-}
+import * as fs from 'node:fs';
+import HighlightedCode from '@components/HighlightedCode.astro';
 
 interface Props {
-    path: string;
-    lang?: BuiltinLanguage | SpecialLanguage | LanguageRegistration;
+	path: string;
+	lang?: string;
 }
 
-const { path, lang } = Astro.props;
-const code = readCode(path, "utf8");
+const { path: filePath, lang = 'julia' } = Astro.props;
+const code = fs.readFileSync(filePath, 'utf8');
 ---
 
-<Code code=`${code}` lang={lang}/>
+<HighlightedCode code={code} lang={lang} />

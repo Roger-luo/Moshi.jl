@@ -1,31 +1,21 @@
 ---
-title: Getting Started
-description: Getting started with Moshi.jl
+title: Quick Start
+description: Install Moshi and write your first ADT with pattern matching.
 ---
 
-Moshi (模式) is a Julia package for defining and working with **algebraic data types (ADTs)** and **pattern matching**. It also provides a **derive macro** similar to [Rust's derive macro](https://doc.rust-lang.org/reference/procedural-macros.html#derive-macros) for deriving traits (_a set of interface functions_) for ADTs or Julia structs.
+Moshi (模式) is a Julia package for **algebraic data types**, **pattern matching**, and **trait derivation**. This guide gets you from zero to a working example in a few minutes.
 
-## The Name and Acknowledgement
+## Install
 
-The name "Moshi" is derived from the Chinese word "模式" (móshì) which means "pattern". The design of pattern matching is inspired by its predecessor [MLStyle](https://github.com/thautwarm/MLStyle.jl), which tries to bring pattern matching and algebraic data types from ML family languages to Julia.
-
-The generic algebraic data type is highly inspired by previous work done in Julia ecosystem:
-
-- [SumTypes](https://github.com/MasonProtter/SumTypes.jl) by [@MasonProtter](https://github.com/MasonProtter).
-- [Expronicon](https://github.com/Roger-luo/Expronicon.jl) by [myself](https://github.com/Roger-luo/).
-- [this discussion](https://github.com/JuliaLang/julia/discussions/48883) about "generated struct" and how Julia implements `Union` types by [@vjnash](https://github.com/vtjnash).
-
-## Installation
-
-You can install `Moshi` using the Julia package manager. From the Julia REPL, type `]` to enter the Pkg REPL mode and run:
+From the Julia REPL, press `]` to enter Pkg mode:
 
 ```julia
 pkg> add Moshi
 ```
 
-## Quick Example
+## Your first ADT
 
-Here is a quick example of defining a simple algebraic data type:
+Import `@data` and define a sum type with several variants:
 
 ```julia
 using Moshi.Data: @data
@@ -36,34 +26,56 @@ using Moshi.Data: @data
         x::Int
         y::Int
     end
-
     Write(String)
     ChangeColor(Int, Int, Int)
 end
+
+msg = Message.Move(3, 4)
 ```
 
-For pattern matching, if you already used `MLStyle`, the syntax is very similar:
+Variants can be singletons (`Quit`), named structs (`Move`), or tuple-like constructors (`Write`, `ChangeColor`).
+
+## Pattern match on it
+
+`@match` destructures values and returns the right-hand side of the first matching arm:
 
 ```julia
 using Moshi.Match: @match
 
-@match [1.0, 2, 3] begin
-    [1, xs::Float64...] => xs
+describe(msg) = @match msg begin
+    Message.Quit() => "quit"
+    Message.Move(; x, y) => "move to ($x, $y)"
+    Message.Write(text) => text
+    Message.ChangeColor(r, g, b) => (r, g, b)
 end
 
-@match (1, 2.0, "a") begin
-    (1, x::Int, y::String) => x
-    (1, x::Real, y::String) => y
-end
+describe(msg)  # "move to (3, 4)"
 ```
 
-## Further Reading
+If you have used [MLStyle](https://github.com/thautwarm/MLStyle.jl), the syntax will feel familiar. Moshi also supports matching on arrays, tuples, and more — see [Builtin Patterns](/match/syntax/#builtin-patterns).
 
-- Examples and detailed syntax for `@data`: [ADT Syntax](/Moshi.jl/data/syntax)
-- Builtin patterns for `@match`: [Builtin Patterns](/Moshi.jl/match/syntax/#builtin-patterns)
-- The `@derive` macro: [Syntax and Examples](/Moshi.jl/start/derive/)
+## Derive traits
 
-To understand how Moshi works, you can check the following sections:
+Use `@derive` to implement `Show`, `Hash`, and `Eq` from your type definition:
 
-- [Understanding What Happens | Algebraic Data Type](/Moshi.jl/data/understand)
-- [Behind the Scene | Pattern Matching](/Moshi.jl/match/behind)
+```julia
+using Moshi.Derive: @derive
+
+@derive Message[Show, Hash, Eq]
+```
+
+Works on both `@data` types and ordinary Julia `struct`s.
+
+## Next steps
+
+| Topic | Guide |
+|-------|-------|
+| ADT concepts | [Algebraic Data Types](/start/algebra-data-type/) |
+| `@data` syntax | [ADT Syntax](/data/syntax/) |
+| `@match` patterns | [Pattern Matching Intro](/start/match/) |
+| `@derive` traits | [Derive Intro](/start/derive/) |
+| API docs | [Moshi.Data](/api/data/), [Moshi.Match](/api/match/), [Moshi.Derive](/api/derive/) |
+
+## Acknowledgements
+
+Moshi is named after the Chinese word 模式 (*móshì*, "pattern"). Pattern matching design draws from [MLStyle](https://github.com/thautwarm/MLStyle.jl). The ADT encoding is inspired by [SumTypes](https://github.com/MasonProtter/SumTypes.jl), [Expronicon](https://github.com/Roger-luo/Expronicon.jl), and [this Julia discussion](https://github.com/JuliaLang/julia/discussions/48883) on generated structs.
