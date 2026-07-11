@@ -73,3 +73,44 @@ end
         end => line
     end
 end # match LineNumberNode
+
+@testset "splatting pattern in Exprs (#53)" begin
+    # https://github.com/Roger-luo/Moshi.jl/issues/53
+    # a splat interpolation `$(args...)` inside a quoted `Expr` pattern should
+    # capture the remaining arguments, mirroring MLStyle's behavior.
+    expr = :(a = sin(5))
+    @test (:a, :sin, 5, Any[]) == @match expr begin
+        :($out = $f($arg0, $(args...))) => (out, f, arg0, args)
+        _ => nothing
+    end
+
+    # the trailing splat captures every remaining argument
+    @test (:f, 1, [2, 3, 4]) == @match :(f(1, 2, 3, 4)) begin
+        :($f($a, $(rest...))) => (f, a, rest)
+        _ => nothing
+    end
+
+    # a splat that consumes zero arguments still matches
+    @test (:g, 1, []) == @match :(g(1)) begin
+        :($f($a, $(rest...))) => (f, a, rest)
+        _ => nothing
+    end
+
+    # the captured splat elements keep their original (possibly nested) exprs
+    @test (:k, :a, [:(b + c), :d]) == @match :(k(a, b + c, d)) begin
+        :($f($x, $(mid...))) => (f, x, mid)
+        _ => nothing
+    end
+
+    # a leading splat before a fixed trailing argument
+    @test ([1, 2], 3) == @match :(h(1, 2, 3)) begin
+        :(h($(front...), $last)) => (front, last)
+        _ => nothing
+    end
+
+    # without a splat the argument count must match exactly
+    @test :fallthrough == @match :(f(1, 2)) begin
+        :($f($a)) => (:matched, f, a)
+        _ => :fallthrough
+    end
+end # splatting pattern in Exprs
