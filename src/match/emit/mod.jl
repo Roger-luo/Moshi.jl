@@ -10,6 +10,7 @@ include("call.jl")
 include("expr.jl")
 
 include("collection/splat.jl")
+include("collection/broadcast.jl")
 include("collection/decons.jl")
 include("collection/tuple.jl")
 include("collection/vect.jl")

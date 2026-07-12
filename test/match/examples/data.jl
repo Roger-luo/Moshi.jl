@@ -73,3 +73,70 @@ end
     @test is_a(1) == false
     @test is_a("string") == false
 end # testset
+
+@data Tree begin
+    Leaf(Int)
+    struct Branch
+        left::Int
+        right::Int
+    end
+end
+
+# https://github.com/Roger-luo/Moshi.jl/issues/26
+# broadcasting a constructor pattern over a splatted run of collection elements
+@testset "broadcast pattern (#26)" begin
+    # the exact example from the issue
+    @test (1, 2, 3) == @match (Tree.Leaf(1), Tree.Leaf(2), Tree.Leaf(3)) begin
+        (Tree.Leaf.(z...),) => z
+    end
+
+    # works inside a vector too
+    @test (1, 2) == @match [Tree.Leaf(1), Tree.Leaf(2)] begin
+        [Tree.Leaf.(z...)] => z
+    end
+
+    # fixed elements may surround the broadcast run
+    @test (0, (1, 2), 9) == @match (0, Tree.Leaf(1), Tree.Leaf(2), 9) begin
+        (a, Tree.Leaf.(z...), b) => (a, z, b)
+    end
+
+    # a broadcast run may be empty
+    @test () == @match () begin
+        (Tree.Leaf.(z...),) => z
+        _ => :fallback
+    end
+
+    # multiple fields each collect into their own tuple
+    @test ((1, 3), (2, 4)) == @match (Tree.Branch(1, 2), Tree.Branch(3, 4)) begin
+        (Tree.Branch.(l..., r...),) => (l, r)
+        _ => :fallback
+    end
+
+    # a wildcard argument keeps the field required but discards it
+    @test (1, 3) == @match (Tree.Branch(1, 2), Tree.Branch(3, 4)) begin
+        (Tree.Branch.(l..., _...),) => l
+        _ => :fallback
+    end
+
+    # elements that are not the expected variant fall through
+    @test :fallback == @match (Tree.Leaf(1), Tree.Branch(2, 3)) begin
+        (Tree.Leaf.(z...),) => z
+        _ => :fallback
+    end
+
+    # broadcasting also works over plain (non-variant) structs
+    @test ((1, 4), (2, 5), (3.0, 6.0)) == @match (Foo(1, 2, 3.0), Foo(4, 5, 6.0)) begin
+        (Foo.(a..., b..., c...),) => (a, b, c)
+        _ => :fallback
+    end
+
+    # a non-collecting, non-wildcard broadcast argument is rejected at expansion
+    @test_throws ErrorException @macroexpand @match (Tree.Leaf(1),) begin
+        (Tree.Leaf.(1),) => 1
+    end
+
+    # a broadcast pattern outside a collection is rejected at expansion
+    @test_throws ErrorException @macroexpand @match Tree.Leaf(1) begin
+        Tree.Leaf.(z...) => z
+    end
+end # testset

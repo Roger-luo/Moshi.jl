@@ -35,6 +35,15 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
         body::Pattern
     end
 
+    # broadcast a constructor pattern over a run of collection elements,
+    # e.g. `Leaf.(z...)` matches `(Leaf(1), Leaf(2), ...)` and collects the
+    # fields into `z`. `head` is the (constant) variant/struct constructor,
+    # `args` are per-field patterns (variables collect, `_` ignores).
+    struct Broadcast
+        head # must be some constant object
+        args::Vector{Pattern}
+    end
+
     struct TypeAnnotate
         body::Pattern
         type::JLType

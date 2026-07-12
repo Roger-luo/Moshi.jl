@@ -18,12 +18,12 @@ function CollectionDecons(
     splat_idx = 0
     splat_count = 0
     for (idx, p) in enumerate(children)
-        if isa_variant(p, Pattern.Splat)
+        if is_splat_like(p)
             splat_idx = idx
             splat_count += 1
         end
     end
-    splat_count > 1 && error("multiple splats in pattern $pat")
+    splat_count > 1 && error("multiple splats in pattern $pattern")
     min_length = splat_idx == 0 ? length(children) : length(children) - 1
     return CollectionDecons(
         ctx, type(splat_idx), pattern, children, splat_idx, min_length, [], always_true
@@ -35,9 +35,15 @@ function set_view_type_check!(view_type_check, coll::CollectionDecons)
     return coll
 end
 
+# a splat (`xs...`) and a broadcast (`Cons.(z...)`) both occupy the single
+# variable-length slot of a collection pattern.
+function is_splat_like(p::Pattern.Type)
+    return isa_variant(p, Pattern.Splat) || isa_variant(p, Pattern.Broadcast)
+end
+
 function coll_decons_until_splat!(coll::CollectionDecons, value)
     for (idx, p) in enumerate(coll.children)
-        isa_variant(p, Pattern.Splat) && break
+        is_splat_like(p) && break
         push!(coll.stmts, decons(coll.ctx, p)(:($Base.@inbounds $value[$idx])))
     end
     return coll
@@ -61,7 +67,11 @@ function coll_decons_splat!(coll::CollectionDecons, value)
     end
     push!(coll.stmts, stmt)
 
-    splat = decons_splat(coll.view_type_check, coll.ctx, p)
+    splat = if isa_variant(p, Pattern.Broadcast)
+        decons_broadcast(coll.ctx, p)
+    else
+        decons_splat(coll.view_type_check, coll.ctx, p)
+    end
     push!(coll.stmts, splat(placeholder))
     return coll
 end
@@ -69,7 +79,7 @@ end
 function coll_decons_from_splat!(coll::CollectionDecons, value)
     coll.splat_idx == 0 && return nothing
     for (idx, p) in enumerate(Iterators.reverse(coll.children))
-        isa_variant(p, Pattern.Splat) && break
+        is_splat_like(p) && break
         stmt = if idx == 1
             decons(coll.ctx, p)(:($Base.@inbounds($value[end])))
         else

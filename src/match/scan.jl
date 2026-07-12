@@ -230,11 +230,41 @@ end
 end
 
 @scan :. function dot2pattern(mod::Module, expr)
-    # NOTE: let's assume all dot expression
+    # a broadcast call `f.(args...)` parses to `Expr(:., f, Expr(:tuple, args...))`,
+    # while a field access like `Tree.Leaf` parses to `Expr(:., Tree, :(:Leaf))`.
+    # only the former is a broadcast pattern.
+    if length(expr.args) == 2 && Meta.isexpr(expr.args[2], :tuple)
+        return broadcast2pattern(mod, expr)
+    end
+    # NOTE: let's assume all other dot expressions
     # refers to some existing module/struct object
     # so they gets eval-ed later in the generated
     # code
     return Pattern.Quote(expr)
+end
+
+function broadcast2pattern(mod::Module, expr)
+    args = Pattern.Type[]
+    for each in expr.args[2].args
+        Meta.isexpr(each, :parameters) &&
+            return Pattern.Err("broadcast pattern does not support keyword arguments")
+        push!(args, expr2pattern(mod, each))
+    end
+
+    # NOTE: we have to eval this so we know what type this is
+    head = Base.eval(mod, expr.args[1])
+
+    nargs = length(args)
+    if Data.is_variant_type(head)
+        Data.variant_nfields(head) >= nargs ||
+            return Pattern.Err("too many fields to match in broadcast pattern")
+    elseif Data.is_data_type(head)
+        return Pattern.Err("cannot match the type of data type, specify a variant type")
+    else
+        Base.fieldcount(head) >= nargs ||
+            return Pattern.Err("too many fields to match in broadcast pattern")
+    end
+    return Pattern.Broadcast(head, args)
 end
 
 @scan :call function call2pattern(mod::Module, expr)

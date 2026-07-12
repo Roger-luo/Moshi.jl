@@ -199,6 +199,39 @@ end
 [3]
 ```
 
+### Broadcasting Pattern
+
+The broadcasting pattern deconstructs a *run* of collection elements that all share the same
+constructor, in the same way you would broadcast a constructor to build them. It is written with
+the broadcast syntax `Cons.(args...)` and, like the splatting pattern, occupies the variable-length
+slot of a tuple or vector pattern. Each argument corresponds to a field of the variant and collects
+that field across the run into a `Tuple`:
+
+```julia
+julia> @data Tree begin
+    Leaf(Int)
+    Node(Tree, Tree)
+end
+
+julia> @match (Tree.Leaf(1), Tree.Leaf(2), Tree.Leaf(3)) begin
+    (Tree.Leaf.(z...),) => z
+end
+(1, 2, 3)
+```
+
+The run may be surrounded by fixed elements, and a variant with several fields collects each field
+into its own variable. Use `_` for a field you want to require but discard:
+
+```julia
+julia> @match (0, Tree.Leaf(1), Tree.Leaf(2), 9) begin
+    (a, Tree.Leaf.(z...), b) => (a, z, b)
+end
+(0, (1, 2), 9)
+```
+
+If any element in the run is not an instance of the given variant, the arm does not match and the
+next arm is tried.
+
 ### Or Pattern
 
 The or pattern is a pattern that matches either of the two patterns. It is defined as the `||` operator in Julia.
@@ -365,8 +398,9 @@ we will discuss the formal definitions of the pattern language. The pattern lang
 
 <tuple> ::= "(" <element> ("," <element>)* ")"
 <vector> ::= "[" <element> ("," <element>)* "]"
-<element> ::= <pattern> | <splatting>
+<element> ::= <pattern> | <splatting> | <broadcast>
 <splatting> ::= <pattern> "..."
+<broadcast> ::= <quote> ".(" <element> ("," <element>)* ")"
 <ref> ::= <quote> <vector>
 
 <and> ::= <pattern> "&&" <pattern>
