@@ -123,4 +123,20 @@ end
         (Tree.Leaf.(z...),) => z
         _ => :fallback
     end
+
+    # broadcasting also works over plain (non-variant) structs
+    @test ((1, 4), (2, 5), (3.0, 6.0)) == @match (Foo(1, 2, 3.0), Foo(4, 5, 6.0)) begin
+        (Foo.(a..., b..., c...),) => (a, b, c)
+        _ => :fallback
+    end
+
+    # a non-collecting, non-wildcard broadcast argument is rejected at expansion
+    @test_throws ErrorException @macroexpand @match (Tree.Leaf(1),) begin
+        (Tree.Leaf.(1),) => 1
+    end
+
+    # a broadcast pattern outside a collection is rejected at expansion
+    @test_throws ErrorException @macroexpand @match Tree.Leaf(1) begin
+        Tree.Leaf.(z...) => z
+    end
 end # testset
