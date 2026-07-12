@@ -1,0 +1,31 @@
+name: Benchmarks
+# Runs the benchmark/benchmarks.jl SUITE with AirspeedVelocity.jl, comparing the
+# PR against `main` and posting a time + memory comparison table as a PR comment.
+on:
+  pull_request_target:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Cancel superseded runs on the same PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    name: Benchmark PR vs main
+    runs-on: ubuntu-latest
+    # `pull_request_target` runs in the base-repo context so the token can post
+    # a comment (needed for PRs from forks). The AirspeedVelocity action checks
+    # out the PR head to benchmark it, scrubs GITHUB_TOKEN from the benchmark
+    # steps, and uses persist-credentials: false for that checkout.
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: MilesCranmer/AirspeedVelocity.jl@action-v1
+        with:
+          julia-version: '1'
+          # Defaults compare the repository default branch (main) against the PR
+          # head and freeze benchmark/benchmarks.jl on main so history is not
+          # clobbered. Results are posted as a collapsible time/memory table.
