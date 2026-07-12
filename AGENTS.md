@@ -81,3 +81,20 @@ The `@data` macro pipeline has three stages:
 
 - **Conventional commits:** `feat:`, `fix:`, `docs:`, `test:`, `ci:`, `refactor:`, `perf:`, `build:`, `chore:`
 - **Breaking changes:** Use `feat!:` or `fix!:` (note the `!`) or add a `BREAKING CHANGE:` footer
+
+## Releases & Versioning
+
+Releases are automated by **release-please** (`.github/workflows/release-please.yml`,
+`release-type: julia`). On every push to `main` it reads Conventional Commits since the last release
+and maintains a "release PR" that bumps `Project.toml` + updates `CHANGELOG.md`; merging that PR
+creates the tag/GitHub Release and comments `@JuliaRegistrator register`. The last released version
+is tracked in `.release-please-manifest.json`.
+
+- **Do NOT bump `version` in `Project.toml` in a feature/fix PR.** release-please owns the version.
+  A manual bump conflicts with the manifest, and if that version has already been released it produces
+  merge conflicts against `main`. Leave `Project.toml` at whatever `main` currently has.
+- **Version bump is derived from commit types.** Pre-1.0 config: `bump-patch-for-minor-pre-major`
+  (a `feat:` bumps patch) and `bump-minor-pre-major` (a breaking `feat!:`/`fix!:` bumps minor).
+- **Do NOT edit `CHANGELOG.md` or `.release-please-manifest.json` by hand** — release-please owns them.
+- **Don't hard-code the next version number in docs/prose** — you don't choose it; reference the
+  behavior (e.g. "deprecated") or link the issue instead.
