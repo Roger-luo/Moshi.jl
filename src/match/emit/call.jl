@@ -27,21 +27,21 @@ function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
 
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
             call_ex = :($Data.variant_getfield($value, $head, $idx))
-            decons(ctx, x)(call_ex)
+            return decons(ctx, x)(call_ex)
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
             call_ex = :($Data.variant_getfield($value, $head, $(QuoteNode(key))))
-            decons(ctx, val)(call_ex)
+            return decons(ctx, val)(call_ex)
         end
     else # if isconcretetype(head)
         type_assert = :($value isa $head)
         args_conds = mapfoldl(and_expr, enumerate(pat.args); init=true) do (idx, x)
-            decons(ctx, x)(:($Core.getfield($value, $idx)))
+            return decons(ctx, x)(:($Core.getfield($value, $idx)))
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
-            decons(ctx, val)(:($Core.getfield($value, $key)))
+            return decons(ctx, val)(:($Core.getfield($value, $key)))
         end
     end
 

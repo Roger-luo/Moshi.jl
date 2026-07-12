@@ -9,7 +9,7 @@ function decons(::Type{Pattern.Ref}, ctx::PatternContext, pat::Pattern.Type)
     #    value.
     # 2 is not supported for now because I don't see any use case.
     coll = CollectionDecons(ctx, pat, pat.args) do _
-        :($Base.Vector{$(pat.head)})
+        return :($Base.Vector{$(pat.head)})
     end
     set_view_type_check!(coll) do view, eltype
         # For the pattern `AP[_, v::VP..., _]` matching a vector `A[_, V[...]..., _]`,
@@ -29,13 +29,15 @@ end
 
 function decons(::Type{Pattern.Vector}, ctx::PatternContext, pat::Pattern.Type)
     coll = CollectionDecons(ctx, pat, pat.xs) do _
-        :($Base.Vector)
+        return :($Base.Vector)
     end
     set_view_type_check!(coll) do view, eltype
         # The view shares the parent's (possibly abstract) `eltype`, so a bare
         # `eltype(view) == VP` never matches a more specific element type. Fall back to
         # checking each element when the static `eltype` is not already a subtype.
-        :($Base.eltype($view) <: $eltype || $Base.all($Base.Fix2(isa, $eltype), $view))
+        return :(
+            $Base.eltype($view) <: $eltype || $Base.all($Base.Fix2(isa, $eltype), $view)
+        )
     end
     return coll
 end

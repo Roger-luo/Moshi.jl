@@ -1,6 +1,6 @@
 using Test
 using Moshi.Data: @data, variants
-import Markdown
+using Markdown: Markdown
 
 # Homegrown doc macro: wraps text in a tagged string so we can detect it.
 macro customdoc_str(s)
@@ -95,8 +95,12 @@ end
     @test doc_text(DocTest, :PlainStringFields) == "plain string, with fields"
     @test doc_text(DocTest, :PlainStringSingleton) == "plain string, no fields"
     @test doc_text(DocTest, :NamedWithDoc) == "named struct doc"
-    @test occursin("explicit doc markdown, with fields", doc_text(DocTest, :ExplicitMarkdownFields))
-    @test occursin("explicit doc markdown, no fields", doc_text(DocTest, :ExplicitMarkdownSingleton))
+    @test occursin(
+        "explicit doc markdown, with fields", doc_text(DocTest, :ExplicitMarkdownFields)
+    )
+    @test occursin(
+        "explicit doc markdown, no fields", doc_text(DocTest, :ExplicitMarkdownSingleton)
+    )
 end
 
 @testset "custom doc macro" begin

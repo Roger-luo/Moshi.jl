@@ -45,14 +45,14 @@ function guess_self_as_any(def::TypeDef, expr)
         type === Any && return Any # no need to guess further
 
         typevars = map(expr.args[2:end]) do param
-            guess_self_as_any(def, param)
+            return guess_self_as_any(def, param)
         end
         Any in typevars && return Any # no need to specialize further
         return :($type{$(typevars...)})
     elseif Meta.isexpr(expr, :call)
         fn = guess_self_as_any(def, expr.args[1])
         args = map(expr.args[2:end]) do arg
-            guess_self_as_any(def, arg)
+            return guess_self_as_any(def, arg)
         end
         return :($fn($(args...)))
     else
@@ -79,13 +79,13 @@ function guess_self_as_annotation(def::TypeDef, expr)
         type = guess_self_as_annotation(def, expr.args[1])
 
         typevars = map(expr.args[2:end]) do param
-            guess_self_as_annotation(def, param)
+            return guess_self_as_annotation(def, param)
         end
         return :($type{$(typevars...)})
     elseif Meta.isexpr(expr, :call)
         fn = guess_self_as_annotation(def, expr.args[1])
         args = map(expr.args[2:end]) do arg
-            guess_self_as_annotation(def, arg)
+            return guess_self_as_annotation(def, arg)
         end
         return :($fn($(args...)))
     else
@@ -111,7 +111,11 @@ function EmitInfo(def::TypeDef)
         elseif isnothing(var.ub)
             :($(var.name) >: $(guess_type(def.mod, var.lb)))
         else
-            :($(guess_type(def.mod, var.lb)) <: $(var.name) <: $(guess_type(def.mod, var.ub)))
+            :(
+                $(guess_type(def.mod, var.lb)) <:
+                $(var.name) <:
+                $(guess_type(def.mod, var.ub))
+            )
         end
     end
 

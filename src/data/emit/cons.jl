@@ -9,7 +9,7 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
         [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
         map(storage.parent.fields) do field::NamedField
-            field.name
+            return field.name
         end
     end
 
@@ -126,18 +126,17 @@ end
 function emit_each_variant_doc(info::EmitInfo, storage::StorageInfo)
     isnothing(storage.parent.doc) && return nothing
     raw = storage.parent.doc
-    raw isa String || Meta.isexpr(raw, :macrocall) ||
-        throw(ArgumentError(
-            "variant doc for $(storage.parent.name) must be a string literal or macro call, got: $(typeof(raw))"
-        ))
+    raw isa String ||
+        Meta.isexpr(raw, :macrocall) ||
+        throw(
+            ArgumentError(
+                "variant doc for $(storage.parent.name) must be a string literal or macro call, got: $(typeof(raw))",
+            ),
+        )
     source = something(storage.parent.source, info.def.source)
     doc = eval_global_ref(info.def.mod, raw)
     return Expr(
-        :macrocall,
-        GlobalRef(Base, Symbol("@doc")),
-        source,
-        doc,
-        storage.parent.name,
+        :macrocall, GlobalRef(Base, Symbol("@doc")), source, doc, storage.parent.name
     )
 end
 

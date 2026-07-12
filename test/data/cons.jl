@@ -140,7 +140,13 @@ end # Variant(Named)
 
 @testset "_is_doc_macro GlobalRef form" begin
     # GlobalRef(Core, :@doc) is an alternative head form _is_doc_macro must handle
-    expr = Expr(:macrocall, GlobalRef(Core, Symbol("@doc")), LineNumberNode(1, :none), "CoreDoc", :Foo)
+    expr = Expr(
+        :macrocall,
+        GlobalRef(Core, Symbol("@doc")),
+        LineNumberNode(1, :none),
+        "CoreDoc",
+        :Foo,
+    )
     def = TypeDef(Main, false, :TestCoreDoc, Expr(:block, expr))
     @test length(def.variants) == 1
     @test def.variants[1].name == :Foo

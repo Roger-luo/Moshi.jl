@@ -206,7 +206,7 @@ Base.@assume_effects :foldable @inline function convert_singleton_bottom(
 end
 
 function convert_singleton_bottom_generated(::Type, x)
-    throw(IllegalDispatch())
+    return throw(IllegalDispatch())
 end
 
 """

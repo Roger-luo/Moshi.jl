@@ -8,7 +8,7 @@ function emit(info::EmitInfo)
         end
 
         cond = decons(ctx, case)(info.value_holder)
-        maybe_if(
+        return maybe_if(
             and_expr(cond, emit_check_duplicated_variables(ctx)),
             Expr(
                 :block,

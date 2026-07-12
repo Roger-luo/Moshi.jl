@@ -36,7 +36,7 @@
 
     return quote
         $Base.@inline function $Base.setproperty!(
-            value::$(info.type_head), name::Symbol, new_value,
+            value::$(info.type_head), name::Symbol, new_value
         ) where {$(info.whereparams...)}
             data = $Base.getfield(value, :data)
             return $(codegen_ast(jl))
@@ -75,9 +75,7 @@ end
 
     if isempty(info.params)
         return quote
-            $Base.@inline function $Base.setproperty!(
-                value::Type, index::Int, new_value
-            )
+            $Base.@inline function $Base.setproperty!(value::Type, index::Int, new_value)
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end

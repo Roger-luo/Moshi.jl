@@ -40,7 +40,7 @@ end
 
 function eq_derive_variant_field(func, variant_type)
     cache_indices = findall(Data.variant_fieldtypes(variant_type)) do type
-        type <: Hash.Cache
+        return type <: Hash.Cache
     end
     length(cache_indices) > 1 && error("Only one field of type Hash.Cache is allowed")
 
