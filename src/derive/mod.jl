@@ -26,7 +26,7 @@ function derive_m(mod::Module, expr)
     type_expr = expr.args[1]
     traits = expr.args[2:end]
     type = Base.eval(mod, type_expr)
-    type isa Module || type isa DataType || error("expected a type")
+    type isa Module || type isa DataType || type isa UnionAll || error("expected a type")
 
     return expr_map(traits) do trait
         return derive_impl(Val(trait), mod, type)
