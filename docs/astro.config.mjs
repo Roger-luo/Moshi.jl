@@ -23,9 +23,13 @@ export default defineConfig({
 				replacesTitle: false,
 			},
 			customCss: ['./src/styles/custom.css'],
-			social: {
-				github: 'https://github.com/Roger-luo/Moshi.jl',
-			},
+			social: [
+				{
+					icon: 'github',
+					label: 'GitHub',
+					href: 'https://github.com/Roger-luo/Moshi.jl',
+				},
+			],
 			head: [
 				{
 					tag: 'link',

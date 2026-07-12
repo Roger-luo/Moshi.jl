@@ -12,12 +12,11 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.8.1",
-    "@astrojs/starlight": "^0.25.1",
-    "@astropub/md": "^1.0.0",
-    "astro": "^4.10.2",
-    "marked": "^13.0.2",
-    "sharp": "^0.32.5",
-    "typescript": "^5.5.3"
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/starlight": "^0.41.3",
+    "astro": "^7.0.7",
+    "marked": "^18.0.6",
+    "sharp": "^0.35.3",
+    "typescript": "^5.9.3"
   }
 }

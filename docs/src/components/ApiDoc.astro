@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import { Markdown } from '@astropub/md';
+import { marked } from 'marked';
 import HighlightedCode from '@components/HighlightedCode.astro';
 
 interface DocEntry {
@@ -24,11 +24,17 @@ if (!fs.existsSync(file)) {
 }
 
 const docs: DocEntry[] = JSON.parse(fs.readFileSync(file, 'utf8'));
+const entries = await Promise.all(
+	docs.map(async (entry) => ({
+		...entry,
+		html: await marked.parse(entry.doc),
+	})),
+);
 ---
 
 <div class="api-docs">
 	{
-		docs.map((entry) => (
+		entries.map((entry) => (
 			<article class="api-entry" id={entry.name}>
 				<header class="api-entry__header">
 					<h3 class="api-entry__name">{entry.name}</h3>
@@ -40,9 +46,7 @@ const docs: DocEntry[] = JSON.parse(fs.readFileSync(file, 'utf8'));
 						/>
 					)}
 				</header>
-				<div class="api-entry__body">
-					<Markdown of={entry.doc} />
-				</div>
+				<div class="api-entry__body" set:html={entry.html} />
 			</article>
 		))
 	}
