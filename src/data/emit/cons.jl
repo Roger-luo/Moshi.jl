@@ -75,18 +75,69 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
 
     is_inferrable(info.params, storage) || return nothing
 
-    if storage.parent.kind == Anonymous
-        args = [:($(Symbol(i))::$(type)) for (i, type) in enumerate(storage.annotations)]
-        inputs = [Symbol(i) for i in 1:length(storage.parent.fields)]
+    names = if storage.parent.kind == Anonymous
+        [Symbol(i) for i in 1:length(storage.parent.fields)]
     else
-        args = [
-            :($(field.name)::$(type)) for
-            (field, type) in zip(storage.parent.fields, storage.annotations)
-        ]
-        inputs = [field.name for field in storage.parent.fields]
+        [field.name for field in storage.parent.fields]
     end
 
-    jl = JLFunction(;
+    # The "promoting" constructor additionally accepts a parametric singleton
+    # bottom (e.g. `Tree.Empty()::Tree.Type{Union{}}`) in self-referential field
+    # positions and converts it to the resolved `Tree.Type{T}` before storing, so
+    # `Tree.Node(5, Tree.Leaf(3), Tree.Empty())` works instead of erroring on a
+    # type parameter mismatch. See issue #34.
+    selfrefs = findall(is_self_ref_annotation, storage.annotations)
+    isempty(selfrefs) && return codegen_ast(exact_variant_cons(info, storage, names))
+
+    promoting = codegen_ast(promoting_variant_cons(info, storage, names))
+    # When the promoting constructor is not strictly more general than the exact
+    # one, their method signatures coincide and defining both would overwrite (and
+    # warn). This happens unless some argument can pin the type parameters while a
+    # self-reference is left as the bottom — i.e. there are multiple self-refs, or
+    # a non-self-ref field mentions a type parameter.
+    others_pin = any(eachindex(storage.annotations)) do i
+        i in selfrefs && return false
+        return any(is_inferrable(param, storage.annotations[i]) for param in info.params)
+    end
+    if length(selfrefs) >= 2 || others_pin
+        return Expr(
+            :block, codegen_ast(exact_variant_cons(info, storage, names)), promoting
+        )
+    else
+        return promoting
+    end
+end
+
+function exact_variant_cons(info::EmitInfo, storage::StorageInfo, names)
+    args = [:($(name)::$(type)) for (name, type) in zip(names, storage.annotations)]
+    return JLFunction(;
+        name=storage.parent.name,
+        args,
+        info.whereparams,
+        body=quote
+            $(Expr(:meta, :inline))
+            return $(info.type_head)($(storage.head)($(names...)))
+        end,
+    )
+end
+
+function promoting_variant_cons(info::EmitInfo, storage::StorageInfo, names)
+    bottom = :(Type{$([:(Union{}) for _ in info.params]...)})
+    args = [
+        if is_self_ref_annotation(type)
+            :($(name)::Union{$(type),$(bottom)})
+        else
+            :($(name)::$(type))
+        end for (name, type) in zip(names, storage.annotations)
+    ]
+    inputs = [
+        if is_self_ref_annotation(type)
+            :($Base.convert($(type), $(name)))
+        else
+            name
+        end for (name, type) in zip(names, storage.annotations)
+    ]
+    return JLFunction(;
         name=storage.parent.name,
         args,
         info.whereparams,
@@ -95,9 +146,11 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
             return $(info.type_head)($(storage.head)($(inputs...)))
         end,
     )
-
-    return codegen_ast(jl)
 end
+
+# A field annotation is a parametric self-reference (e.g. `Tree.Type{T}`) when it
+# is a `:curly` expression headed by the ADT's own `Type` alias.
+is_self_ref_annotation(type) = Meta.isexpr(type, :curly) && type.args[1] === :Type
 
 function is_inferrable(params::Vector{Symbol}, storage::StorageInfo)
     return all(is_inferrable(param, storage) for param in params)
