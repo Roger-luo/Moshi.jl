@@ -65,6 +65,21 @@ called `enum` type.
 
 </Aside>
 
+<Aside type="caution">
+
+One place the `@enum` analogy breaks down: a no-field (singleton) variant like `Quit` is **not** an
+instance. `Message.Quit` is the variant *type*; the value is `Message.Quit()`. So `messages` above
+must be written with `()`:
+
+```julia
+messages = Message.Type[Message.Quit(), Message.Move(10, 20), Message.Write("Hello, World!")]
+```
+
+See [Singleton Variant](/data/syntax/#singleton-variant) for the details and the errors you get when
+the `()` is missing.
+
+</Aside>
+
 ## Algebraic Data Type + Pattern Matching = ❤️
 
 The idea of algebraic data type actually came from representing expressions. This includes Syntax Trees,

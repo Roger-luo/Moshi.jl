@@ -35,6 +35,8 @@ msg = Message.Move(3, 4)
 
 Variants can be singletons (`Quit`), named structs (`Move`), or tuple-like constructors (`Write`, `ChangeColor`).
 
+> **Note:** even a singleton variant is constructed with `()` — `Message.Quit` is the variant *type*, while `Message.Quit()` is the value. See [Singleton Variant](/data/syntax/#singleton-variant).
+
 ## Pattern match on it
 
 `@match` destructures values and returns the right-hand side of the first matching arm:
