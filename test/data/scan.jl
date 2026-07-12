@@ -5,7 +5,7 @@ ex = quote
     """
     Goo
     """
-    Goo
+    Goo()
 
     """
     GooBar

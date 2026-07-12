@@ -45,7 +45,7 @@ However, this approach is not type-stable. The compiler cannot infer the type of
 using Moshi.Data: @data
 
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int
@@ -168,7 +168,7 @@ specify a type parameter. This allows us implementing the well-known [`Option` t
 ```julia
 @data Option{T} begin
     Some(T)
-    None
+    None()
 end
 ```
 

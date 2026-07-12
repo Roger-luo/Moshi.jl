@@ -3,7 +3,7 @@ using Moshi.Data: Data, @data
 using Moshi.Derive: @derive, Hash
 
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int

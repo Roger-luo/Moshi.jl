@@ -93,17 +93,23 @@ function scan_type_head!(head::TypeHead, head_expr)
 end
 
 function Variant(expr::Symbol; doc=nothing, source=nothing)
+    location = source === nothing ? "" : " (near $(source.file):$(source.line))"
+    Base.depwarn(
+        "the bare singleton variant syntax `$(expr)` is deprecated, " *
+        "write `$(expr)()` instead$(location)",
+        Symbol("@data");
+        force=true,
+    )
     return Variant(Singleton, expr, nothing, doc, source)
 end
 
 function Variant(expr::Expr; doc=nothing, source=nothing)
     if Meta.isexpr(expr, :call)
         expr.args[1] isa Symbol || throw(ArgumentError("invalid variant expression: $expr"))
-        length(expr.args) > 1 || throw(
-            ArgumentError(
-                "missing fields in variant expression: $expr, do you mean to use $(expr.args[1])?",
-            ),
-        )
+        if length(expr.args) == 1
+            # explicit singleton form `Name()`
+            return Variant(Singleton, expr.args[1], nothing, doc, source)
+        end
         return Variant(Anonymous, expr.args[1], Field.(expr.args[2:end]), doc, source)
     elseif Meta.isexpr(expr, :struct)
         jl = JLKwStruct(expr)

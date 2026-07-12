@@ -2,7 +2,7 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
 
 @data Pattern begin
     Err(String) # invalid pattern
-    Wildcard
+    Wildcard()
     Variable(Symbol)
     Quote(Any)
 

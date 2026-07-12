@@ -8,7 +8,7 @@ using Moshi.Data:
         """
         Goo
         """
-        Goo
+        Goo()
 
         """
         GooBar
@@ -36,7 +36,7 @@ end # TypeDef
         """
         Goo
         """
-        Goo
+        Goo()
 
         """
         GooBar
@@ -71,7 +71,8 @@ end # TypeDef
 end
 
 @testset "Variant(singleton)" begin
-    x = Variant(:Foo)
+    # explicit singleton form `Foo()` is the canonical spelling
+    x = Variant(:(Foo()))
     @test x.kind == Singleton
     @test x.name == :Foo
     @test x.fields == nothing
@@ -79,9 +80,22 @@ end
     @test x.source == nothing
 
     def = TypeDef(Main, false, :TestDoc, quote
-        @doc "Foo" Foo
+        @doc "Foo" Foo()
     end)
+    @test def.variants[1].kind == Singleton
     @test def.variants[1].doc == "Foo"
+end
+
+@testset "Variant(singleton) bare form is deprecated" begin
+    # The bare identifier form still parses to a Singleton, but is deprecated
+    # in favour of the explicit `Foo()` spelling. `--depwarn=error` escalates
+    # the deprecation to a throw, so only assert the warning when not enabled.
+    if Base.JLOptions().depwarn != 2
+        x = @test_deprecated r"deprecated" Variant(:Foo)
+        @test x.kind == Singleton
+        @test x.name == :Foo
+        @test x.fields === nothing
+    end
 end
 
 @testset "Variant(Anonymous)" begin
@@ -174,7 +188,7 @@ end
 @testset "nested block without doc is flattened" begin
     # A nested begin...end block (such as one produced by macro expansion) is
     # recursed into, tracking line numbers and skipping generated `nothing` entries.
-    inner = Expr(:block, LineNumberNode(7, :none), :Foo, nothing, :(Bar(Int)))
+    inner = Expr(:block, LineNumberNode(7, :none), :(Foo()), nothing, :(Bar(Int)))
     def = TypeDef(Main, false, :TestNestedBlock, Expr(:block, inner))
     @test length(def.variants) == 2
     @test def.variants[1].name === :Foo

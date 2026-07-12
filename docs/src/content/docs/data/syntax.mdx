@@ -25,7 +25,7 @@ Here is a quick example of defining a simple algebraic data type:
 
 ```julia
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int
@@ -64,7 +64,7 @@ The syntax is as follows:
     <variant>+
 end
 <variant> := <singleton> | <anonymous> | <named>
-<singleton> := <ident>
+<singleton> := <ident> ( )
 <anonymous> := <ident> ( <type>+ )
 <named> := struct <ident>
     <field>+
@@ -78,22 +78,24 @@ A `<variant>` can be one of three types: `<singleton>`, `<anonymous>`, or `<name
 
 ### Singleton Variant
 
-The singleton variant is a variant with no fields, similar to a `Base.@enum` member. It is defined by
-writing just an identifier:
+The singleton variant is a variant with no fields, similar to a `Base.@enum` member. It is defined
+with an empty argument list:
 
 ```julia
-<ident>
+<ident> ( )
 ```
+
+for example, the `Quit` variant in the above example is a singleton variant.
 
 <Aside type="caution" title="A singleton name is a type, not a value">
 
-Unlike `Base.@enum` and Rust's `enum`, the bare singleton name **is not an instance**. It refers to
-the variant *type*. To get an actual value, you must call the empty constructor with `()`:
+Unlike `Base.@enum` and Rust's `enum`, the singleton name **is not an instance**. It refers to the
+variant *type*. To get an actual value, you must call the empty constructor with `()`:
 
 ```julia
 @data Score begin
-    ZeroZero
-    Even
+    ZeroZero()
+    Even()
     Plus(Int)
 end
 
@@ -113,8 +115,12 @@ true
 
 </Aside>
 
-Because of this, remember to add `()` **everywhere you want a value** — when storing variants in a
-collection, passing them to a function, comparing them, or dispatching on them.
+This is why the definition also uses `()`: writing `ZeroZero()` in the `@data` block mirrors how you
+construct and pattern-match the variant everywhere else, so there is no illusion that the bare name
+is a value.
+
+Remember to add `()` **everywhere you want a value** — when storing variants in a collection, passing
+them to a function, comparing them, or dispatching on them.
 
 For example, building a `Vector{Score.Type}` requires calling every singleton constructor. Forgetting
 the `()` stores a *type* where a value is expected, which fails to convert:
@@ -146,6 +152,14 @@ The rule is uniform: a singleton variant always needs `()` to become a value —
 [`@match` pattern](#default-pattern), where `Score.ZeroZero()` matches the singleton value. The only
 time you write the bare name `Score.ZeroZero` is when you genuinely want the variant *type* itself,
 for example in a reflection function like [`isa_variant`](/data/reflection).
+
+<Aside type="tip">
+
+The bare identifier form (`ZeroZero` with no `()`) is **deprecated**. It still works but emits a
+warning; write `ZeroZero()` instead. See [issue #22](https://github.com/Roger-luo/Moshi.jl/issues/22)
+for the motivation.
+
+</Aside>
 
 ### Anonymous Variant
 
@@ -180,7 +194,7 @@ The `@data` macro also supports defining algebraic data types with type paramete
 ```julia
 @data Option{T} begin
     Some(T)
-    None
+    None()
 end
 ```
 

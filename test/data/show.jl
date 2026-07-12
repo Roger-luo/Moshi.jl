@@ -7,7 +7,7 @@ ex = quote
     """
     Goo
     """
-    Goo
+    Goo()
 
     """
     GooBar
@@ -51,7 +51,7 @@ end
     string_def = TypeDef(
         Main, false, :ShowDocTest, quote
             "plain string doc"
-            PlainSingleton
+            PlainSingleton()
 
             "plain string doc"
             PlainFields(Int, Float32)
@@ -59,7 +59,7 @@ end
             @doc Markdown.doc"""
             markdown doc
             """
-            MarkdownSingleton
+            MarkdownSingleton()
 
             @doc Markdown.doc"""
             markdown doc
@@ -91,7 +91,7 @@ end
 @testset "non-string doc renders via show_unquoted" begin
     # When a variant's doc is neither a plain string nor a doc-string macrocall,
     # doc_string returns nothing and the raw expression is shown unquoted.
-    mc = Expr(:macrocall, Symbol("@doc"), LineNumberNode(1, :none), :somevar, :Foo)
+    mc = Expr(:macrocall, Symbol("@doc"), LineNumberNode(1, :none), :somevar, :(Foo()))
     def = TypeDef(Main, false, :ShowRawDoc, Expr(:block, mc))
     @test def.variants[1].doc === :somevar
     @test contains(show_variant(def, 1), "somevar")

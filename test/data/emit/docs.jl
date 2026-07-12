@@ -33,7 +33,7 @@ end
         PlainStringFields(Int, Float32)
 
         "plain string, no fields"
-        PlainStringSingleton
+        PlainStringSingleton()
 
         """
         triple quoted string, with fields
@@ -43,7 +43,7 @@ end
         """
         triple quoted string, no fields
         """
-        TripleStringSingleton
+        TripleStringSingleton()
 
         @doc """
         explicit doc triple quoted, with fields
@@ -53,7 +53,7 @@ end
         @doc """
         explicit doc triple quoted, no fields
         """
-        ExplicitTripleSingleton
+        ExplicitTripleSingleton()
 
         @doc Markdown.doc"""
         explicit doc markdown, with fields
@@ -63,7 +63,7 @@ end
         @doc Markdown.doc"""
         explicit doc markdown, no fields
         """
-        ExplicitMarkdownSingleton
+        ExplicitMarkdownSingleton()
 
         "named struct doc"
         struct NamedWithDoc
@@ -72,7 +72,7 @@ end
         end
 
         NoDocs(Int)
-        NoDocsSingleton
+        NoDocsSingleton()
         struct NamedNoDocs
             z::Int
         end
@@ -106,7 +106,7 @@ end
 @testset "custom doc macro" begin
     @data CustomDocTest begin
         @doc customdoc"""singleton doc"""
-        CustomSingleton
+        CustomSingleton()
 
         @doc customdoc"""fields doc"""
         CustomFields(Int, Float32)
