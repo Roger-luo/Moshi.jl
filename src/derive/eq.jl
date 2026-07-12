@@ -56,22 +56,20 @@ function eq_derive_struct_field(func, type::Union{DataType,UnionAll})
     cache_indices = findall(t -> t <: Hash.Cache, collect(types))
     length(cache_indices) > 1 && error("Only one field of type Hash.Cache is allowed")
 
-    body = Expr(:block)
+    # Build the field comparisons as a line-number-free block so that, when
+    # spliced into the generated method, coverage attributes runtime hits to
+    # the splice site instead of shadowed interior lines.
+    compares = Expr(:block)
     for (field, fieldtype) in zip(names, types)
         fieldtype <: Hash.Cache && continue
         @gensym lhs_value rhs_value
-        push!(
-            body.args,
-            quote
-                $lhs_value = $Base.getfield(lhs, $(QuoteNode(field)))
-                $rhs_value = $Base.getfield(rhs, $(QuoteNode(field)))
-                $func($lhs_value, $rhs_value) || return false
-            end,
-        )
+        push!(compares.args, :($lhs_value = $Base.getfield(lhs, $(QuoteNode(field)))))
+        push!(compares.args, :($rhs_value = $Base.getfield(rhs, $(QuoteNode(field)))))
+        push!(compares.args, :($func($lhs_value, $rhs_value) || return false))
     end
 
     isempty(cache_indices) && return quote
-        $body
+        $compares
         return true
     end
 
@@ -83,7 +81,7 @@ function eq_derive_struct_field(func, type::Union{DataType,UnionAll})
         if $lhs_hash.is_set && $rhs_hash.is_set
             return $lhs_hash[] == $rhs_hash[]
         else
-            $body
+            $compares
             return true
         end
     end
