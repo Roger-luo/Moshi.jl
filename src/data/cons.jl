@@ -48,6 +48,7 @@ function TypeDef(
     Meta.isexpr(body, :block) ||
         throw(ArgumentError("expect begin ... end block, got $body"))
     variants = Variant[]
+    exports = Symbol[]
     current_line = nothing
     for expr in body.args
         if expr isa LineNumberNode
@@ -55,10 +56,38 @@ function TypeDef(
             continue
         elseif isnothing(expr) # sometimes there are generated nothing in the block
             continue
+        elseif Meta.isexpr(expr, :export)
+            push_exports!(exports, expr)
+            continue
         end
         push_variants!(variants, expr, nothing, current_line)
     end
-    return TypeDef(mod, ismutable, head, variants, source)
+    validate_exports(head, variants, exports)
+    return TypeDef(mod, ismutable, head, variants, exports, source)
+end
+
+function push_exports!(exports::Vector{Symbol}, expr::Expr)
+    for name in expr.args
+        name isa Symbol || throw(
+            ArgumentError(
+                "invalid `export` in @data body: expected variant names, got `$expr`"
+            ),
+        )
+        push!(exports, name)
+    end
+    return nothing
+end
+
+function validate_exports(
+    head::TypeHead, variants::Vector{Variant}, exports::Vector{Symbol}
+)
+    variant_names = Set(variant.name for variant in variants)
+    for name in exports
+        name in variant_names || throw(
+            ArgumentError("cannot export `$name`: it is not a variant of `$(head.name)`"),
+        )
+    end
+    return nothing
 end
 
 TypeHead(head) = scan_type_head!(TypeHead(), head)
