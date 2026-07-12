@@ -89,25 +89,75 @@ for example, the `Quit` variant in the above example is a singleton variant.
 
 <Aside type="caution" title="A singleton name is a type, not a value">
 
-Unlike `Base.@enum` and Rust's `enum`, the singleton name **is not an instance**. `Message.Quit`
-refers to the variant *type*; to get an actual value you must call the constructor:
+Unlike `Base.@enum` and Rust's `enum`, the singleton name **is not an instance**. It refers to the
+variant *type*. To get an actual value, you must call the empty constructor with `()`:
 
 ```julia
-Message.Quit    # the variant *type* (a `DataType`) — NOT a value
-Message.Quit()  # the value — an instance of `Message.Type`
+@data Score begin
+    ZeroZero()
+    Even()
+    Plus(Int)
+end
+
+Score.ZeroZero    # the variant *type* (a `DataType`) — NOT a value
+Score.ZeroZero()  # the value — an instance of `Score.Type`
 ```
 
-This is why the definition also uses `()`: writing `Quit()` in the `@data` block mirrors how you
-construct and pattern-match the variant everywhere else, so there is no illusion that the bare name
-is a value.
+You can confirm this at the REPL:
+
+```julia
+julia> Score.ZeroZero isa Score.Type
+false
+
+julia> Score.ZeroZero() isa Score.Type
+true
+```
 
 </Aside>
 
+This is why the definition also uses `()`: writing `ZeroZero()` in the `@data` block mirrors how you
+construct and pattern-match the variant everywhere else, so there is no illusion that the bare name
+is a value.
+
+Remember to add `()` **everywhere you want a value** — when storing variants in a collection, passing
+them to a function, comparing them, or dispatching on them.
+
+For example, building a `Vector{Score.Type}` requires calling every singleton constructor. Forgetting
+the `()` stores a *type* where a value is expected, which fails to convert:
+
+```julia
+# ❌ WRONG — Score.ZeroZero is a type, not a Score.Type value
+Score.Type[Score.ZeroZero, Score.Even, Score.Plus(1)]
+# ERROR: MethodError: Cannot `convert` an object of type
+#        Type{Score.ZeroZero} to an object of type Score.Type
+
+# ✅ RIGHT — call the constructor to get the value
+Score.Type[Score.ZeroZero(), Score.Even(), Score.Plus(1)]
+```
+
+The same applies when you dispatch on a value. Suppose you overload `+` on `Score.Type`:
+
+```julia
+Base.:+(s::Score.Type, n::Int) = ...
+```
+
+Then the caller must pass a *value*, not the bare singleton name:
+
+```julia
+Score.ZeroZero + 1    # ❌ MethodError: no method matching +(::Type{Score.ZeroZero}, ::Int)
+Score.ZeroZero() + 1  # ✅ dispatches on the Score.Type value
+```
+
+The rule is uniform: a singleton variant always needs `()` to become a value — including inside a
+[`@match` pattern](#default-pattern), where `Score.ZeroZero()` matches the singleton value. The only
+time you write the bare name `Score.ZeroZero` is when you genuinely want the variant *type* itself,
+for example in a reflection function like [`isa_variant`](/data/reflection).
+
 <Aside type="tip">
 
-The bare identifier form (`Quit` with no `()`) is **deprecated**. It still works but emits a warning;
-write `Quit()` instead. See [issue #22](https://github.com/Roger-luo/Moshi.jl/issues/22) for the
-motivation.
+The bare identifier form (`ZeroZero` with no `()`) is **deprecated**. It still works but emits a
+warning; write `ZeroZero()` instead. See [issue #22](https://github.com/Roger-luo/Moshi.jl/issues/22)
+for the motivation.
 
 </Aside>
 
