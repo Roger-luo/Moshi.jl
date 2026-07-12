@@ -8,7 +8,7 @@ function decons(::Type{Pattern.Tuple}, ctx::PatternContext, pat::Pattern.Type)
     end
     set_view_type_check!(coll) do view, eltype
         @gensym N
-        :($view isa $Base.NTuple{$N,$eltype} where {$N})
+        return :($view isa $Base.NTuple{$N,$eltype} where {$N})
     end
     return coll
 end

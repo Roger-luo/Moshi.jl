@@ -5,10 +5,12 @@ function decons(::Type{Pattern.Expression}, ctx::PatternContext, pat::Pattern.Ty
         # (e.g. `:($f($arg0, $(args...)))`) and an exact length check for free,
         # matching the semantics of the `[...]` and `(...)` patterns.
         coll = CollectionDecons(ctx, pat, pat.args) do _
-            :($Base.Vector)
+            return :($Base.Vector)
         end
         set_view_type_check!(coll) do view, eltype
-            :($Base.eltype($view) <: $eltype || $Base.all($Base.Fix2(isa, $eltype), $view))
+            return :(
+                $Base.eltype($view) <: $eltype || $Base.all($Base.Fix2(isa, $eltype), $view)
+            )
         end
         return and_expr(
             :($value isa Expr),

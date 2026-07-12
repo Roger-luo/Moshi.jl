@@ -69,9 +69,7 @@ end
 
     if isempty(info.params)
         return quote
-            $Base.@inline function $Base.getproperty(
-                value::Type, index::Int
-            )
+            $Base.@inline function $Base.getproperty(value::Type, index::Int)
                 data = $Base.getfield(value, :data)
                 return $(codegen_ast(jl))
             end

@@ -1,15 +1,20 @@
 function _is_doc_macro(head)
     head === Symbol("@doc") && return true
-    head isa GlobalRef && head.name === Symbol("@doc") &&
-        (head.mod === Core || head.mod === Base) && return true
+    head isa GlobalRef &&
+        head.name === Symbol("@doc") &&
+        (head.mod === Core || head.mod === Base) &&
+        return true
     return false
 end
 
 function push_variants!(variants::Vector{Variant}, expr, doc, source)
     if Meta.isexpr(expr, :macrocall) && _is_doc_macro(expr.args[1])
         non_lnn = filter(a -> !(a isa LineNumberNode), expr.args)
-        length(non_lnn) == 3 ||
-            throw(ArgumentError("malformed @doc in @data body: expected `@doc <docstring> <variant>`, got: $expr"))
+        length(non_lnn) == 3 || throw(
+            ArgumentError(
+                "malformed @doc in @data body: expected `@doc <docstring> <variant>`, got: $expr",
+            ),
+        )
         _, doc, variant_expr = non_lnn
         lnn_idx = findfirst(a -> a isa LineNumberNode, expr.args)
         doc_source = isnothing(lnn_idx) ? source : expr.args[lnn_idx]
@@ -17,8 +22,11 @@ function push_variants!(variants::Vector{Variant}, expr, doc, source)
         return nothing
     end
     if Meta.isexpr(expr, :block)
-        isnothing(doc) ||
-            throw(ArgumentError("@doc cannot be applied to a block; place `@doc` before each variant individually"))
+        isnothing(doc) || throw(
+            ArgumentError(
+                "@doc cannot be applied to a block; place `@doc` before each variant individually",
+            ),
+        )
         for arg in expr.args
             if arg isa LineNumberNode
                 source = arg
@@ -33,7 +41,9 @@ function push_variants!(variants::Vector{Variant}, expr, doc, source)
 end
 
 # concrete
-function TypeDef(mod::Module, ismutable::Bool, head, body::Expr; source::LineNumberNode=LineNumberNode(0))
+function TypeDef(
+    mod::Module, ismutable::Bool, head, body::Expr; source::LineNumberNode=LineNumberNode(0)
+)
     head = TypeHead(head)
     Meta.isexpr(body, :block) ||
         throw(ArgumentError("expect begin ... end block, got $body"))

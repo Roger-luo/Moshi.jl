@@ -1,7 +1,7 @@
 using Test
 using ExproniconLite: @expr, no_default
 using Moshi.Data: Variant, Singleton, Named, Anonymous, Field, NamedField, TypeHead, TypeDef
-import Markdown
+using Markdown: Markdown
 
 ex = quote
     """
@@ -48,23 +48,25 @@ function show_variant(def, i)
 end
 
 @testset "docstring rendering" begin
-    string_def = TypeDef(Main, false, :ShowDocTest, quote
-        "plain string doc"
-        PlainSingleton
+    string_def = TypeDef(
+        Main, false, :ShowDocTest, quote
+            "plain string doc"
+            PlainSingleton
 
-        "plain string doc"
-        PlainFields(Int, Float32)
+            "plain string doc"
+            PlainFields(Int, Float32)
 
-        @doc Markdown.doc"""
-        markdown doc
-        """
-        MarkdownSingleton
+            @doc Markdown.doc"""
+            markdown doc
+            """
+            MarkdownSingleton
 
-        @doc Markdown.doc"""
-        markdown doc
-        """
-        MarkdownFields(Int, Float32)
-    end)
+            @doc Markdown.doc"""
+            markdown doc
+            """
+            MarkdownFields(Int, Float32)
+        end
+    )
 
     @test contains(show_variant(string_def, 1), "plain string doc")
     @test contains(show_variant(string_def, 2), "plain string doc")

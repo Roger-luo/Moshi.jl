@@ -259,7 +259,7 @@ function emit_variant_fieldtypes_each_storage(info::EmitInfo, storage::StorageIn
     else
         # assign type params to Any
         assign_any = expr_map(info.params) do param
-            :($param = Any)
+            return :($param = Any)
         end
 
         return quote
@@ -290,7 +290,9 @@ end
         end
 
         return quote
-            $Base.@inline function $Data.variant_fieldnames(::$Type{<:$(storage.parent.name)})
+            $Base.@inline function $Data.variant_fieldnames(
+                ::$Type{<:$(storage.parent.name)}
+            )
                 return $(fieldnames)
             end
         end
@@ -342,9 +344,7 @@ end
 
         return quote
             $Base.@inline function $Data.variant_getfield(
-                value::$(info.type_head),
-                tag::$Type{$(storage.parent.name)},
-                field::Symbol,
+                value::$(info.type_head), tag::$Type{$(storage.parent.name)}, field::Symbol
             ) where {$(info.whereparams...)}
                 data = $Base.getfield(value, :data)::$(storage.head)
                 return $body

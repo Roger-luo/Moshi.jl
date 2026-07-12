@@ -29,7 +29,7 @@ function derive_m(mod::Module, expr)
     type isa Module || type isa DataType || error("expected a type")
 
     return expr_map(traits) do trait
-        derive_impl(Val(trait), mod, type)
+        return derive_impl(Val(trait), mod, type)
     end
 end
 

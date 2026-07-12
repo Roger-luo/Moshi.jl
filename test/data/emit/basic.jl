@@ -238,4 +238,3 @@ end
 
     @test variant_name(MutableMessage.Move) == :Move
 end # MutableMessage
-

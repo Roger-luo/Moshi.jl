@@ -41,7 +41,7 @@ end
 
 function emit_bind_match_values(ctx::PatternContext)
     return map(collect(keys(ctx.scope))) do k
-        :($k = $(first(ctx.scope[k])))
+        return :($k = $(first(ctx.scope[k])))
     end
 end
 
