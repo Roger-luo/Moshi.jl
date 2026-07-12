@@ -13,12 +13,21 @@ function emit_each_variant_cons(info::EmitInfo, storage::StorageInfo)
         end
     end
 
+    # Storage struct fields use `Any` whenever the declared type collapses (e.g. a
+    # `Vector{Any}` field or a self-referential `Vector{Self}`), so Julia's inner
+    # constructor performs no conversion. Convert each argument to its declared
+    # annotation type here to restore normal struct semantics; otherwise the value
+    # stored can mismatch the type assert in `getproperty`/`variant_getfield`. See #32.
+    inputs = [
+        :($Base.convert($(type), $(arg))) for (arg, type) in zip(args, storage.annotations)
+    ]
+
     return quote
         $Base.@constprop :aggressive function $(storage.variant_head)(
             $(args...)
         ) where {$(info.whereparams...)}
             $(Expr(:meta, :inline))
-            return $(info.type_head)($(storage.head)($(args...)))
+            return $(info.type_head)($(storage.head)($(inputs...)))
         end
     end
 end
@@ -34,6 +43,11 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
     isempty(storage.parent.fields) && return nothing
 
     args = [field.name for field in storage.parent.fields]
+    # See `emit_each_variant_cons`: convert to the declared field types so the
+    # stored value matches the annotation used by `getproperty`. See #32.
+    inputs = [
+        :($Base.convert($(type), $(arg))) for (arg, type) in zip(args, storage.annotations)
+    ]
     jl = JLFunction(;
         name=storage.variant_head,
         kwargs=[
@@ -46,7 +60,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
         info.whereparams,
         body=quote
             $(Expr(:meta, :inline))
-            return $(info.type_head)($(storage.head)($(args...)))
+            return $(info.type_head)($(storage.head)($(inputs...)))
         end,
     )
 

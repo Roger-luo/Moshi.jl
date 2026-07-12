@@ -13,6 +13,7 @@ end
     include("named.jl")
     include("call_type.jl")
     include("singleton_promote.jl")
+    include("container.jl")
 end
 
 module TestCons
