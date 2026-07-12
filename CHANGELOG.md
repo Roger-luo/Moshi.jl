@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.11](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.10...v0.3.11) (2026-07-12)
+
+
+### Features
+
+* **data:** require explicit `()` for singleton variants; deprecate bare form ([#80](https://github.com/Roger-luo/Moshi.jl/issues/80)) ([f79750c](https://github.com/Roger-luo/Moshi.jl/commit/f79750c4b1a7d6af01ae3871a6c43c787b9c33ec))
+* **data:** support `export` statement inside `[@data](https://github.com/data)` block ([#86](https://github.com/Roger-luo/Moshi.jl/issues/86)) ([acac360](https://github.com/Roger-luo/Moshi.jl/commit/acac360e6de088432f735a12780349f6eff6c64d)), closes [#45](https://github.com/Roger-luo/Moshi.jl/issues/45)
+* **match:** broadcast a constructor pattern over a run ([#26](https://github.com/Roger-luo/Moshi.jl/issues/26)) ([#82](https://github.com/Roger-luo/Moshi.jl/issues/82)) ([a74db69](https://github.com/Roger-luo/Moshi.jl/commit/a74db69f6d80606207d83621ca3ef34bcdf28e19))
+
+
+### Bug Fixes
+
+* **data:** convert constructor arguments to declared field types ([#83](https://github.com/Roger-luo/Moshi.jl/issues/83)) ([16c3497](https://github.com/Roger-luo/Moshi.jl/commit/16c3497dea185b111b65faba659115d2365653f4)), closes [#32](https://github.com/Roger-luo/Moshi.jl/issues/32)
+* **data:** convert self-referential container fields and defaults to declared types ([#85](https://github.com/Roger-luo/Moshi.jl/issues/85)) ([79a1053](https://github.com/Roger-luo/Moshi.jl/commit/79a10532ca1e577387ee5c32de2acaa8400b75a4))
+
 ## [0.3.10](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.9...v0.3.10) (2026-07-12)
 
 
