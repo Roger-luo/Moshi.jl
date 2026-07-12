@@ -57,36 +57,36 @@ a module. The detailed implementations are as follows:
 <Tabs>
 <TabItem label="match">
 This is with the normal `@match` macro.
-<RawCode path="../benchmark/moshi_match.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/moshi_match.jl" lang="julia"/>
 </TabItem>
 <TabItem label="reflection">
 This is using Moshi's reflections.
 
-<RawCode path="../benchmark/moshi.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/moshi.jl" lang="julia"/>
 
 </TabItem>
 <TabItem label="hacky">
 This is using Moshi's `variant_getfield` reflection, which is equivalent to the pattern matching.
 
-<RawCode path="../benchmark/moshi_hacky.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/moshi_hacky.jl" lang="julia"/>
 
 </TabItem>
 <TabItem label="Expronicon">
 
-<RawCode path="../benchmark/expronicon.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/expronicon.jl" lang="julia"/>
 
 </TabItem>
 <TabItem label="SumTypes">
 
-<RawCode path="../benchmark/sumtypes.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/sumtypes.jl" lang="julia"/>
 
 </TabItem>
 
 <TabItem label="DynamicSumTypes">
-<RawCode path="../benchmark/lsumtypes.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/lsumtypes.jl" lang="julia"/>
 </TabItem>
 
 <TabItem label="Unityper">
-<RawCode path="../benchmark/unityper.jl" lang="julia"/>
+<RawCode path="../benchmark/comparison/unityper.jl" lang="julia"/>
 </TabItem>
 </Tabs>
