@@ -11,3 +11,7 @@ end
 @testset "derive" begin
     include("derive/mod.jl")
 end
+
+@testset "perf regression" begin
+    include("perf.jl")
+end
