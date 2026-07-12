@@ -38,6 +38,55 @@ function derive_impl(::Val{:Eq}, mod::Module, type::Module)
     end
 end
 
+function derive_impl(::Val{:Eq}, mod::Module, type::Union{DataType,UnionAll})
+    return quote
+        Base.@constprop :aggressive function $Base.:(==)(lhs::$type, rhs::$type)
+            return $(eq_derive_struct_field(:($Base.:(==)), type))
+        end
+
+        Base.@constprop :aggressive function $Base.isequal(lhs::$type, rhs::$type)
+            return $(eq_derive_struct_field(:($Base.isequal), type))
+        end
+    end
+end
+
+function eq_derive_struct_field(func, type::Union{DataType,UnionAll})
+    names = fieldnames(type)
+    types = fieldtypes(type)
+    cache_indices = findall(t -> t <: Hash.Cache, collect(types))
+    length(cache_indices) > 1 && error("Only one field of type Hash.Cache is allowed")
+
+    # Build the field comparisons as a line-number-free block so that, when
+    # spliced into the generated method, coverage attributes runtime hits to
+    # the splice site instead of shadowed interior lines.
+    compares = Expr(:block)
+    for (field, fieldtype) in zip(names, types)
+        fieldtype <: Hash.Cache && continue
+        @gensym lhs_value rhs_value
+        push!(compares.args, :($lhs_value = $Base.getfield(lhs, $(QuoteNode(field)))))
+        push!(compares.args, :($rhs_value = $Base.getfield(rhs, $(QuoteNode(field)))))
+        push!(compares.args, :($func($lhs_value, $rhs_value) || return false))
+    end
+
+    isempty(cache_indices) && return quote
+        $compares
+        return true
+    end
+
+    cache_field = names[first(cache_indices)]
+    @gensym lhs_hash rhs_hash
+    return quote
+        $lhs_hash = $Base.getfield(lhs, $(QuoteNode(cache_field)))
+        $rhs_hash = $Base.getfield(rhs, $(QuoteNode(cache_field)))
+        if $lhs_hash.is_set && $rhs_hash.is_set
+            return $lhs_hash[] == $rhs_hash[]
+        else
+            $compares
+            return true
+        end
+    end
+end # eq_derive_struct_field
+
 function eq_derive_variant_field(func, variant_type)
     cache_indices = findall(Data.variant_fieldtypes(variant_type)) do type
         return type <: Hash.Cache
