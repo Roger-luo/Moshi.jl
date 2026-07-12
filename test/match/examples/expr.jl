@@ -113,4 +113,16 @@ end # match LineNumberNode
         :($f($a)) => (:matched, f, a)
         _ => :fallthrough
     end
+
+    # a type annotation on the splat is respected: it matches only when every
+    # captured element is of the annotated type
+    @test (:f, [:a, :b, :c]) == @match :(f(a, b, c)) begin
+        :($f($(rest::Symbol...))) => (f, rest)
+        _ => :nomatch
+    end
+
+    @test :nomatch == @match :(f(1, 2)) begin
+        :($f($(rest::Symbol...))) => (f, rest)
+        _ => :nomatch
+    end
 end # splatting pattern in Exprs
