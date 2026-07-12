@@ -52,7 +52,20 @@ end
     @test hash(a) == hash(b)
     @test a.cache.is_set
     @test a.cache[] == hash(a)
+
+    # both caches set -> fast path compares cached hashes
     @test a == b
+    @test isequal(a, b)
+
+    # caches unset -> falls back to field-by-field comparison
+    c = Cached(1, 2)
+    d = Cached(1, 2)
+    e = Cached(1, 3)
+    @test !c.cache.is_set
+    @test c == d
+    @test isequal(c, d)
+    @test c != e
+    @test !isequal(c, e)
 end
 
 @testset "parametric struct" begin

@@ -80,20 +80,18 @@ function derive_impl(::Val{:Hash}, mod::Module, type::Union{DataType,UnionAll})
     types = fieldtypes(type)
     cache_idx = Hash.find_cache(types)
 
-    body = quote
-        h = $Base.hash($(hash(type)), h)
-    end
+    # Fold the type and every (non-cache) field into the running hash `h`.
+    fold = Expr(:block, :(h = $Base.hash($(hash(type)), h)))
     for (name, fieldtype) in zip(names, types)
         fieldtype === Hash.Cache && continue
-        push!(body.args, LineNumberNode(@__LINE__() + 1, @__FILE__)) # address errors here
-        push!(body.args, :(h = $Base.hash($Base.getfield(x, $(QuoteNode(name))), h)))
+        push!(fold.args, :(h = $Base.hash($Base.getfield(x, $(QuoteNode(name))), h)))
     end
-    push!(body.args, :h) # block returns the accumulated hash
 
     if isnothing(cache_idx)
         return quote
             Base.@constprop :aggressive function $Base.hash(x::$type, h::UInt)
-                return $body
+                $fold
+                return h
             end
         end
     end
@@ -104,7 +102,8 @@ function derive_impl(::Val{:Hash}, mod::Module, type::Union{DataType,UnionAll})
         Base.@constprop :aggressive function $Base.hash(x::$type, h::UInt)
             $cache = $f_cache
             if !$cache.is_set
-                $cache[] = $body
+                $fold
+                $cache[] = h
             end
             return $cache[]
         end
