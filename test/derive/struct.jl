@@ -26,7 +26,7 @@ end
     c = Point(1, 3)
     @test hash(a) == hash(b)
     @test hash(a) != hash(c)
-    @test hash(a) == hash(a, zero(UInt)) # deterministic on default seed
+    @test hash(a, UInt(7)) == hash(b, UInt(7)) # equal values hash equally under any seed
 end
 
 @testset "eq" begin
