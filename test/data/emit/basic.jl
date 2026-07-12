@@ -22,7 +22,7 @@ using Moshi.Data:
 abstract type AbstractMessage end
 
 @data Message <: AbstractMessage begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int

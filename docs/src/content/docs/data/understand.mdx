@@ -17,7 +17,7 @@ Now we will look into the generated code of the following
 
 ```julia
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int
@@ -135,14 +135,18 @@ Move() # will error!
 Now we can define the constructors of our variants!
 
 <Aside type="note">
-For singleton like `Message.Quit`, I have been thinking back and forth about whether
-supporting the syntax sugar `Message.Quit` to access the instance of this variant.
-After going back and forth for a while, it turns out not supporting `Message.Quit` as
-the instance of `Message.Quit` is way simpler for both human brains and program implementation.
+For a singleton like `Message.Quit`, we deliberately do **not** make the bare name
+`Message.Quit` an instance — it stays the variant *type*, and the value is `Message.Quit()`.
+Not supporting `Message.Quit` as the instance is way simpler for both human brains and program
+implementation.
 
-The problem become more obvious when we support generic ADT, it is not possible to make
-the syntax `Message.Quit{Float64}` to be a constant binding of a variant instance. On the
-other hand, in pattern matching support such syntax will require special handling.
+The problem becomes more obvious when we support generic ADT, it is not possible to make
+the syntax `Message.Quit{Float64}` be a constant binding of a variant instance. On the
+other hand, in pattern matching support such syntax would require special handling.
+
+For this reason the singleton is declared with an explicit empty argument list — `Quit()` — so
+the definition mirrors construction and pattern matching. The old bare `Quit` form is deprecated
+(see [issue #22](https://github.com/Roger-luo/Moshi.jl/issues/22)).
 </Aside>
 
 We will define an example constructor for `Move` all other variants share similar definitions. Because
@@ -220,7 +224,7 @@ singleton types. Considering the following case:
 ```julia
 @data Option{T} begin
     Some(T)
-    None
+    None()
 end
 ```
 
@@ -231,7 +235,7 @@ However, it is possible one define an ADT with type bounds, e.g considering the 
 ```julia
 @data Option{T <: Real} begin
     Some(T)
-    None
+    None()
 end
 ```
 

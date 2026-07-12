@@ -10,7 +10,7 @@ using Moshi.Data:
 
 @data Option{T} begin
     Some(T)
-    None
+    None()
 end
 
 @testset "Option{T}" begin

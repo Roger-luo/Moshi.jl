@@ -3,7 +3,7 @@ using Moshi.Data: @data, variant_type
 using Moshi.Derive: @derive
 
 @data Message{T} begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int

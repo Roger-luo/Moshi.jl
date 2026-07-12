@@ -14,7 +14,7 @@ using Moshi.Match: @match
 # Reconstructs the linked list from issue #15:
 # https://github.com/Roger-luo/Moshi.jl/issues/15
 @data List{T} begin
-    Nil
+    Nil()
     Cons(T, List{T})
 end
 

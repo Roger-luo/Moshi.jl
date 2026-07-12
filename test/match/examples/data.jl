@@ -23,7 +23,7 @@ end
 end # testset
 
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int
@@ -54,8 +54,8 @@ end
 end # testset
 
 @data ADT begin
-    A
-    B
+    A()
+    B()
 end
 
 # https://github.com/Roger-luo/Moshi.jl/issues/43

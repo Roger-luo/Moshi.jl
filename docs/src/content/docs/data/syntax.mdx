@@ -25,7 +25,7 @@ Here is a quick example of defining a simple algebraic data type:
 
 ```julia
 @data Message begin
-    Quit
+    Quit()
     struct Move
         x::Int
         y::Int
@@ -64,7 +64,7 @@ The syntax is as follows:
     <variant>+
 end
 <variant> := <singleton> | <anonymous> | <named>
-<singleton> := <ident>
+<singleton> := <ident> ( )
 <anonymous> := <ident> ( <type>+ )
 <named> := struct <ident>
     <field>+
@@ -78,17 +78,38 @@ A `<variant>` can be one of three types: `<singleton>`, `<anonymous>`, or `<name
 
 ### Singleton Variant
 
-The singleton variant is like an `Base.@enum` variant. It can be defined directly as:
+The singleton variant is a variant with no fields, similar to a `Base.@enum` member. It is defined
+with an empty argument list:
 
 ```julia
-<ident>
+<ident> ( )
 ```
 
-Unlike `Base.@enum` and rust `enum`, the singleton variant instance must be constructed explicitly with an empty constructor:
+for example, the `Quit` variant in the above example is a singleton variant.
+
+<Aside type="caution" title="A singleton name is a type, not a value">
+
+Unlike `Base.@enum` and Rust's `enum`, the singleton name **is not an instance**. `Message.Quit`
+refers to the variant *type*; to get an actual value you must call the constructor:
 
 ```julia
-<ident>()
+Message.Quit    # the variant *type* (a `DataType`) — NOT a value
+Message.Quit()  # the value — an instance of `Message.Type`
 ```
+
+This is why the definition also uses `()`: writing `Quit()` in the `@data` block mirrors how you
+construct and pattern-match the variant everywhere else, so there is no illusion that the bare name
+is a value.
+
+</Aside>
+
+<Aside type="tip">
+
+The bare identifier form (`Quit` with no `()`) is **deprecated** as of Moshi v0.3.10. It still works
+but emits a warning; write `Quit()` instead. See [issue #22](https://github.com/Roger-luo/Moshi.jl/issues/22)
+for the motivation.
+
+</Aside>
 
 ### Anonymous Variant
 
@@ -123,7 +144,7 @@ The `@data` macro also supports defining algebraic data types with type paramete
 ```julia
 @data Option{T} begin
     Some(T)
-    None
+    None()
 end
 ```
 

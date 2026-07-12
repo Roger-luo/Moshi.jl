@@ -6,7 +6,7 @@ using Test
 using Moshi.Data: @data, isa_variant, variant_getfield
 
 @data Tree{T} begin
-    Empty
+    Empty()
     Leaf(T)
     Node(T, Tree{T}, Tree{T})
 end
@@ -53,7 +53,7 @@ end
 # A variant whose only fields are self-references: the all-bottom call must still
 # resolve (to `Union{}`), while a mixed call promotes to the concrete type.
 @data Lst{T} begin
-    Nil
+    Nil()
     Cons(Lst{T}, Lst{T})
 end
 
