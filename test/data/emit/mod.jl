@@ -12,6 +12,7 @@ end
     include("uninferable.jl")
     include("named.jl")
     include("call_type.jl")
+    include("singleton_promote.jl")
 end
 
 module TestCons
