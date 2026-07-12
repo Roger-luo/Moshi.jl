@@ -85,5 +85,6 @@ struct TypeDef
     ismutable::Bool
     head::TypeHead
     variants::Vector{Variant}
+    exports::Vector{Symbol} # variant names to `export` (rest are only `public`)
     source::LineNumberNode
 end

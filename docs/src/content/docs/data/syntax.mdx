@@ -61,8 +61,10 @@ The syntax is as follows:
 
 ```julia
 <data> := @data <ident> [ <supertype> ] begin
+    [ <export> ]
     <variant>+
 end
+<export> := export <ident> ( , <ident> )*
 <variant> := <singleton> | <anonymous> | <named>
 <singleton> := <ident> ( )
 <anonymous> := <ident> ( <type>+ )
@@ -205,6 +207,43 @@ SExpr.Add()  # arguments === SExpr.Type[]
 
 Writing `SExpr.Type[]` explicitly is equivalent. See
 [issue #33](https://github.com/Roger-luo/Moshi.jl/issues/33).
+
+</Aside>
+
+## Exporting Variants
+
+By default the `@data` namespace only marks its variant constructors as
+[`public`](https://docs.julialang.org/en/v1/base/base/#public) (on Julia 1.11+),
+so you always reach them through the namespace, e.g. `Message.Quit()`. If you
+want some variants to be brought into scope automatically when the namespace is
+`using`ed, list them in an `export` statement inside the `@data` body:
+
+```julia
+@data Shape begin
+    export Circle, Square
+
+    Circle(Float64)
+    Square(Float64)
+    Triangle(Float64, Float64)
+end
+
+using .Shape          # brings `Circle` and `Square` into scope
+
+Circle(1.0)           # no need to write `Shape.Circle(1.0)`
+Square(2.0)
+Shape.Triangle(3.0, 4.0)  # `Triangle` was not exported
+```
+
+Only the listed variants are exported; the rest stay `public`-only. Every name
+in the `export` list must be a variant of the data type, otherwise the macro
+raises an error.
+
+<Aside type="tip">
+
+This is opt-in on purpose — scoping variants behind the namespace keeps a
+codebase readable. Reach for `export` when a handful of variants are used often
+enough that the namespace prefix becomes noise. See
+[issue #45](https://github.com/Roger-luo/Moshi.jl/issues/45) for the discussion.
 
 </Aside>
 
