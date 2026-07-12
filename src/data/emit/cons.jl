@@ -54,7 +54,7 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
             if field.default === no_default
                 field.name
             else
-                Expr(:kw, field.name, eval_global_ref(info.def.mod, field.default))
+                Expr(:kw, field.name, eval_default(info.def, field.default))
             end for field in storage.parent.fields
         ],
         info.whereparams,
@@ -72,6 +72,50 @@ function eval_global_ref(mod::Module, expr)
         return GlobalRef(mod, expr)
     elseif expr isa Expr
         return Expr(expr.head, map(x -> eval_global_ref(mod, x), expr.args)...)
+    else
+        return expr
+    end
+end
+
+# Rewrite a variant field's default value for emission inside the generated module.
+#
+# A default may refer to the ADT itself by name, e.g.
+# `arguments::Vector{SExpr} = SExpr[]`. Inside the generated module the bare name
+# `SExpr` resolves to the *module*, not the type, so `SExpr[]` would expand to
+# `getindex(::Module)` and error. Like every other `SExpr` occurrence in the
+# `@data` block, the name should mean `SExpr.Type`; here we rewrite it (and its
+# explicit `SExpr.Type` / `SExpr{...}` forms) to the module-local `Type` alias.
+#
+# All other global symbols are resolved to a `GlobalRef` exactly like
+# `eval_global_ref`, so defaults keep referring to bindings from the module where
+# `@data` was written. Qualified access to the ADT module (e.g. `SExpr.Add`) is
+# preserved so variant constructors remain reachable. See issue #33.
+function eval_default(def::TypeDef, expr)
+    name = def.head.name
+    if expr isa Symbol
+        expr === name && return :Type
+        isdefined(def.mod, expr) && return GlobalRef(def.mod, expr)
+        return expr
+    elseif Meta.isexpr(expr, :.)
+        # explicit `SExpr.Type` self-reference => module-local `Type`
+        if expr.args[1] === name &&
+            expr.args[2] isa QuoteNode &&
+            expr.args[2].value === :Type
+            return :Type
+        end
+        # qualified access such as `SExpr.Add`: keep the base as the module itself
+        base = if expr.args[1] === name
+            GlobalRef(def.mod, name)
+        else
+            eval_default(def, expr.args[1])
+        end
+        return Expr(:., base, expr.args[2])
+    elseif Meta.isexpr(expr, :curly)
+        head = expr.args[1] === name ? :Type : eval_default(def, expr.args[1])
+        params = map(x -> eval_default(def, x), expr.args[2:end])
+        return Expr(:curly, head, params...)
+    elseif expr isa Expr
+        return Expr(expr.head, map(x -> eval_default(def, x), expr.args)...)
     else
         return expr
     end
