@@ -180,9 +180,14 @@ end
 $DEF
 
 Check if the given variant is an instance of the given variant type.
+
+The fallback returns `false`: if `x` is not an instance of the algebraic data
+type that owns `variant` (e.g. an unrelated value such as `nothing`), then it is
+not an instance of `variant`. This lets `@match` fall through to a wildcard arm
+instead of erroring on values that are not the expected data type.
 """
 @pub function isa_variant(x, variant::Type)::Bool
-    throw(IllegalDispatch("got $(typeof(x)) for $variant"))
+    return false
 end
 
 """

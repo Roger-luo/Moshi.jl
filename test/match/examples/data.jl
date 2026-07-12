@@ -52,3 +52,24 @@ end
     @test foo(Message.Write("aaa")) == "aaa"
     @test foo(Message.ChangeColor(1, 2, 3)) == 1
 end # testset
+
+@data ADT begin
+    A
+    B
+end
+
+# https://github.com/Roger-luo/Moshi.jl/issues/43
+# matching a value that is not the ADT should fall through to the wildcard
+# instead of throwing IllegalDispatch.
+is_a(x) = @match x begin
+    ADT.A() => true
+    _ => false
+end
+
+@testset "wildcard matches non-ADT value (#43)" begin
+    @test is_a(ADT.A()) == true
+    @test is_a(ADT.B()) == false
+    @test is_a(nothing) == false
+    @test is_a(1) == false
+    @test is_a("string") == false
+end # testset
