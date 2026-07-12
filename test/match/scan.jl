@@ -37,6 +37,18 @@ end))) == "(x::Int) && (if :(x > 2) end)"
 @test expr2pattern(:(x...)) == Pattern.Splat(Pattern.Variable(:x))
 @test sprint(show, expr2pattern(:(x...))) == "x..."
 
+# broadcast pattern (https://github.com/Roger-luo/Moshi.jl/issues/26)
+@test expr2pattern(:(Foo.(z...))) ==
+    Pattern.Broadcast(Foo, [Pattern.Splat(Pattern.Variable(:z))])
+@test sprint(show, expr2pattern(:(Foo.(z...)))) == "\$(Main.TestScan.Foo).(z...)"
+@test expr2pattern(:(Foo.(x..., y...))) == Pattern.Broadcast(
+    Foo, [Pattern.Splat(Pattern.Variable(:x)), Pattern.Splat(Pattern.Variable(:y))]
+)
+# a plain field access is still quoted, not a broadcast pattern
+@test isa_variant(expr2pattern(:(Base.Int)), Pattern.Quote)
+# too many broadcast args for the number of fields is an error
+@test isa_variant(expr2pattern(:(Foo.(a..., b..., c..., d...))), Pattern.Err)
+
 @test expr2pattern(:([1 x])) == Pattern.HCat([Pattern.Quote(1), Pattern.Variable(:x)])
 @test sprint(show, expr2pattern(:([1 x]))) == "[1 x]"
 @test expr2pattern(:([1; x])) == Pattern.VCat([Pattern.Quote(1), Pattern.Variable(:x)])
