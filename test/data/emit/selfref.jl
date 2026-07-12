@@ -30,3 +30,39 @@ end
     y = SelfRef.Ref(SelfRef.Val(1))
     @test x == y
 end # selfref{T}
+
+# Issue #33: the ADT name in a default value should refer to `<Name>.Type`, just
+# like everywhere else in the `@data` block. `SExpr[]` must not resolve to the
+# generated module (which would error with `getindex(::Module)`).
+@data SExpr begin
+    struct Add
+        arguments::Vector{SExpr} = SExpr[]
+    end
+end
+
+# explicit `.Type` form is accepted and equivalent
+@data SExprExplicit begin
+    struct Add
+        arguments::Vector{SExprExplicit} = SExprExplicit.Type[]
+    end
+end
+
+@data SExprP{T} begin
+    struct Add
+        arguments::Vector{SExprP{T}} = SExprP{T}[]
+    end
+end
+
+@testset "issue #33: self-ref default values" begin
+    x = SExpr.Add()
+    @test x.arguments isa Vector{SExpr.Type}
+    @test isempty(x.arguments)
+
+    y = SExprExplicit.Add()
+    @test y.arguments isa Vector{SExprExplicit.Type}
+    @test isempty(y.arguments)
+
+    p = SExprP.Add{Int}()
+    @test p.arguments isa Vector{SExprP.Type{Int}}
+    @test isempty(p.arguments)
+end # issue #33

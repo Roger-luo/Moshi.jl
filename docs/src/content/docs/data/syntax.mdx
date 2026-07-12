@@ -187,6 +187,27 @@ for example, the `Move` variant in the above example is a named variant.
 In the case of named fields, it supports `Base.@kwdef` syntax for default values.
 </Aside>
 
+<Aside type="tip" title="The ADT name refers to `.Type` inside the body">
+
+Everywhere inside the `@data` body — field types *and* default values — the bare
+ADT name refers to `<ident>.Type`. This makes self-referential defaults read
+naturally:
+
+```julia
+@data SExpr begin
+    struct Add
+        arguments::Vector{SExpr} = SExpr[]   # `SExpr` means `SExpr.Type`
+    end
+end
+
+SExpr.Add()  # arguments === SExpr.Type[]
+```
+
+Writing `SExpr.Type[]` explicitly is equivalent. See
+[issue #33](https://github.com/Roger-luo/Moshi.jl/issues/33).
+
+</Aside>
+
 ## Generics/Type Parameters
 
 The `@data` macro also supports defining algebraic data types with type parameters. For example:
