@@ -30,6 +30,13 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
         xs::Vector{Pattern}
     end
 
+    # `Indexable[...]` — matches any `AbstractVector` (a `view`/`SubArray`, range,
+    # ...) through the array interface, rather than only a concrete `Vector` the way
+    # `[...]` does. `Indexable` is a reserved keyword recognised by the scanner.
+    struct Indexable
+        xs::Vector{Pattern}
+    end
+
     # <splat>...
     struct Splat
         body::Pattern
