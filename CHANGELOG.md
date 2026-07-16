@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.12](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.11...v0.3.12) (2026-07-16)
+
+
+### Features
+
+* **match:** match any AbstractVector via Indexable[...] and abstract-array heads ([#89](https://github.com/Roger-luo/Moshi.jl/issues/89)) ([9cab453](https://github.com/Roger-luo/Moshi.jl/commit/9cab45373356526594ea13daee37a887f03ab005))
+
 ## [0.3.11](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.10...v0.3.11) (2026-07-12)
 
 
