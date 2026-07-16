@@ -35,6 +35,91 @@ end
     Int[_, _] => :b
 end
 
+# https://github.com/Roger-luo/Moshi.jl/issues/36
+# `Indexable[...]` and an abstract-array head (`AbstractVector[...]`) match any
+# `AbstractVector` via the array interface, while bare `[...]` stays `Vector`-only.
+@test 2 == @match view([1, 2, 3], :) begin
+    Indexable[1, x, 3] => x
+    _ => nothing
+end
+@test 2 == @match view([1, 2, 3], :) begin
+    AbstractVector[1, x, 3] => x
+    _ => nothing
+end
+@test nothing === @match view([1, 2, 3], :) begin
+    [1, x, 3] => x # a bare vector pattern must NOT match a `SubArray`
+    _ => nothing
+end
+# both spellings still match a plain `Vector`
+@test 2 == @match [1, 2, 3] begin
+    Indexable[1, x, 3] => x
+    _ => nothing
+end
+@test 2 == @match [1, 2, 3] begin
+    AbstractVector[1, x, 3] => x
+    _ => nothing
+end
+# a range is an `AbstractVector` too
+@test 3 == @match 1:2:5 begin
+    Indexable[1, x, 5] => x
+    _ => nothing
+end
+# splats work over the abstract container
+@test [2, 3] == @match view([1, 2, 3], :) begin
+    Indexable[1, xs...] => xs
+    _ => nothing
+end
+@test [2, 3] == @match view([1, 2, 3], :) begin
+    AbstractVector[1, xs...] => xs
+    _ => nothing
+end
+# a concrete head still means element type: `Int[...]` is `Vector{Int}`, not a container
+@test nothing === @match view([1, 2, 3], :) begin
+    Int[1, x, 3] => x
+    _ => nothing
+end
+# typed splats are still respected under an abstract container head
+@test_throws ErrorException @match view([1.0, 2, 3], :) begin
+    AbstractVector[1, xs::Int...] => xs
+end
+@test [2.0, 3.0] == @match view([1.0, 2, 3], :) begin
+    AbstractVector[1, xs::Float64...] => xs
+end
+
+# a minimal non-1-based AbstractVector: collection patterns must index relative to
+# `firstindex`/`lastindex`, not hard-coded `1`, so offset vectors deconstruct correctly.
+struct OffsetVec{T} <: AbstractVector{T}
+    data::Vector{T}
+    off::Int # elements live at indices (off + 1):(off + length(data))
+end
+Base.size(v::OffsetVec) = size(v.data)
+Base.axes(v::OffsetVec) = (v.off .+ only(axes(v.data)),)
+Base.getindex(v::OffsetVec, i::Int) = v.data[i - v.off]
+Base.IndexStyle(::Type{<:OffsetVec}) = IndexLinear()
+
+@test firstindex(OffsetVec([10, 20, 30], 5)) == 6
+@test 20 == @match OffsetVec([10, 20, 30], 5) begin
+    Indexable[10, x, 30] => x
+    _ => nothing
+end
+@test 20 == @match OffsetVec([10, 20, 30], 5) begin
+    AbstractVector[10, x, 30] => x
+    _ => nothing
+end
+# leading element + trailing splat, both anchored off `firstindex`/`lastindex`
+@test [20, 30] == @match OffsetVec([10, 20, 30], 5) begin
+    Indexable[10, xs...] => xs
+    _ => nothing
+end
+@test [10, 20] == @match OffsetVec([10, 20, 30], 5) begin
+    Indexable[xs..., 30] => xs
+    _ => nothing
+end
+@test [20] == @match OffsetVec([10, 20, 30], 5) begin
+    Indexable[10, xs..., 30] => xs
+    _ => nothing
+end
+
 VAL = 123
 @test "a" == @match [1, VAL, "a"] begin
     [1, $VAL, y::String] => y

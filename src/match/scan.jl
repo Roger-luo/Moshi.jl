@@ -148,6 +148,11 @@ end
 end
 
 @scan :ref function ref2pattern(mod::Module, expr)
+    # `Indexable[...]` is a reserved keyword for matching any `AbstractVector` through
+    # the array interface, as opposed to `T[...]` which pins the element/container type.
+    if expr.args[1] === :Indexable
+        return Pattern.Indexable(expr2pattern.(Ref(mod), expr.args[2:end]))
+    end
     return Pattern.Ref(expr.args[1], expr2pattern.(Ref(mod), expr.args[2:end]))
 end
 

@@ -25,6 +25,9 @@ end))) == "(x::Int) && (if :(x > 2) end)"
 @test expr2pattern(:(Int[1, x])) ==
     Pattern.Ref(:Int, [Pattern.Quote(1), Pattern.Variable(:x)])
 @test sprint(show, expr2pattern(:(Int[1, x]))) == "\$(Int)[1, x]"
+@test expr2pattern(:(Indexable[1, x])) ==
+    Pattern.Indexable([Pattern.Quote(1), Pattern.Variable(:x)])
+@test sprint(show, expr2pattern(:(Indexable[1, x]))) == "Indexable[1, x]"
 @test expr2pattern(:(Foo(x; y=1))) ==
     Pattern.Call(Foo, [Pattern.Variable(:x)], Dict(:y => Pattern.Quote(1)))
 @test sprint(show, expr2pattern(:(Foo(x; y=1)))) == "\$(Main.TestScan.Foo)(x; y=1)"

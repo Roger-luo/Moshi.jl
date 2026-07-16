@@ -41,10 +41,21 @@ function is_splat_like(p::Pattern.Type)
     return isa_variant(p, Pattern.Splat) || isa_variant(p, Pattern.Broadcast)
 end
 
+# Index of the `k`-th (1-based) leading element, relative to `firstindex` so the
+# collection machinery works on non-1-based `AbstractVector`s (e.g. `OffsetArray`)
+# as well as `Vector`/`Tuple` (for which `firstindex` is `1` and this folds away).
+function leading_index(value, k::Int)
+    k == 1 && return :($Base.firstindex($value))
+    return :($Base.firstindex($value) + $(k - 1))
+end
+
 function coll_decons_until_splat!(coll::CollectionDecons, value)
     for (idx, p) in enumerate(coll.children)
         is_splat_like(p) && break
-        push!(coll.stmts, decons(coll.ctx, p)(:($Base.@inbounds $value[$idx])))
+        push!(
+            coll.stmts,
+            decons(coll.ctx, p)(:($Base.@inbounds $value[$(leading_index(value, idx))])),
+        )
     end
     return coll
 end
@@ -53,15 +64,16 @@ function coll_decons_splat!(coll::CollectionDecons, value)
     coll.splat_idx == 0 && return coll
     p = coll.children[coll.splat_idx]
     @gensym placeholder
+    start = leading_index(value, coll.splat_idx)
     stmt = if coll.splat_idx == length(coll.children) # splat is last
         quote
-            $placeholder = $Base.@views($value[($(coll.splat_idx)):end])
+            $placeholder = $Base.@views($value[($start):end])
             true
         end
     else
         nleft = length(coll.children) - coll.splat_idx
         quote
-            $placeholder = $Base.@views($value[($(coll.splat_idx)):(end - $nleft)])
+            $placeholder = $Base.@views($value[($start):(end - $nleft)])
             true
         end
     end
