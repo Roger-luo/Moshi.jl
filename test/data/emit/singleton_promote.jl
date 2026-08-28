@@ -60,6 +60,13 @@ end
 @testset "issue #34: self-referential-only variant" begin
     @test typeof(Lst.Cons(Lst.Nil(), Lst.Nil())) == Lst.Type{Union{}}
     @test typeof(Lst.Cons(Lst.Cons(Lst.Nil(), Lst.Nil()), Lst.Nil())) == Lst.Type{Union{}}
+    @test typeof(Lst.Cons(Lst.Nil{Int}(), Lst.Nil())) == Lst.Type{Int}
+    @test typeof(Lst.Cons(Lst.Nil(), Lst.Nil{Int}())) == Lst.Type{Int}
+end
+
+@testset "generated constructors bind type parameters" begin
+    @test isempty(Test.detect_unbound_args(TestSingletonPromote; recursive=true))
+    @test isempty(Test.detect_ambiguities(TestSingletonPromote; recursive=true))
 end
 
 end # module TestSingletonPromote

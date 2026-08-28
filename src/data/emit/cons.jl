@@ -147,23 +147,24 @@ function emit_each_variant_cons_inferred(info::EmitInfo, storage::StorageInfo)
     selfrefs = findall(is_self_ref_annotation, storage.annotations)
     isempty(selfrefs) && return codegen_ast(exact_variant_cons(info, storage, names))
 
-    promoting = codegen_ast(promoting_variant_cons(info, storage, names))
-    # When the promoting constructor is not strictly more general than the exact
-    # one, their method signatures coincide and defining both would overwrite (and
-    # warn). This happens unless some argument can pin the type parameters while a
-    # self-reference is left as the bottom — i.e. there are multiple self-refs, or
-    # a non-self-ref field mentions a type parameter.
-    others_pin = any(eachindex(storage.annotations)) do i
-        i in selfrefs && return false
-        return any(is_inferrable(param, storage.annotations[i]) for param in info.params)
+    exact = codegen_ast(exact_variant_cons(info, storage, names))
+    pinned_by_others = map(info.params) do param
+        any(eachindex(storage.annotations)) do i
+            i in selfrefs && return false
+            return is_inferrable(param, storage.annotations[i])
+        end
     end
-    if length(selfrefs) >= 2 || others_pin
+    if all(pinned_by_others)
         return Expr(
-            :block, codegen_ast(exact_variant_cons(info, storage, names)), promoting
+            :block, exact, codegen_ast(promoting_variant_cons(info, storage, names))
         )
-    else
-        return promoting
     end
+
+    length(selfrefs) == 1 && return exact
+    promoting = map(selfrefs) do anchor
+        return codegen_ast(promoting_variant_cons(info, storage, names, anchor))
+    end
+    return Expr(:block, promoting...)
 end
 
 function exact_variant_cons(info::EmitInfo, storage::StorageInfo, names)
@@ -179,14 +180,22 @@ function exact_variant_cons(info::EmitInfo, storage::StorageInfo, names)
     )
 end
 
-function promoting_variant_cons(info::EmitInfo, storage::StorageInfo, names)
+function promoting_variant_cons(
+    info::EmitInfo, storage::StorageInfo, names, anchor::Union{Int,Nothing}=nothing
+)
     bottom = :(Type{$([:(Union{}) for _ in info.params]...)})
     args = [
         if is_self_ref_annotation(type)
-            :($(name)::Union{$(type),$(bottom)})
+            if isnothing(anchor) || i > anchor
+                :($(name)::Union{$(type),$(bottom)})
+            elseif i == anchor
+                :($(name)::$(type))
+            else
+                :($(name)::$(bottom))
+            end
         else
             :($(name)::$(type))
-        end for (name, type) in zip(names, storage.annotations)
+        end for (i, (name, type)) in enumerate(zip(names, storage.annotations))
     ]
     inputs = [
         if is_self_ref_annotation(type)
@@ -195,15 +204,24 @@ function promoting_variant_cons(info::EmitInfo, storage::StorageInfo, names)
             name
         end for (name, type) in zip(names, storage.annotations)
     ]
-    return JLFunction(;
-        name=storage.parent.name,
-        args,
-        info.whereparams,
-        body=quote
+    body = if isnothing(anchor)
+        quote
             $(Expr(:meta, :inline))
             return $(info.type_head)($(storage.head)($(inputs...)))
-        end,
-    )
+        end
+    else
+        all_bottom = reduce(
+            (x, y) -> :($x && $y), [:($param === Union{}) for param in info.params]
+        )
+        quote
+            $(Expr(:meta, :inline))
+            if $all_bottom
+                return $(info.type_head)($(storage.head)($(names...)))
+            end
+            return $(info.type_head)($(storage.head)($(inputs...)))
+        end
+    end
+    return JLFunction(; name=storage.parent.name, args, info.whereparams, body)
 end
 
 # A field annotation is a parametric self-reference (e.g. `Tree.Type{T}`) when it
