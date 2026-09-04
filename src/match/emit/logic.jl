@@ -1,8 +1,6 @@
 function decons(::Type{Pattern.And}, ctx::PatternContext, pat::Pattern.Type)
     return function and(value)
-        return quote
-            $(decons(ctx, pat.:1)(value)) && $(decons(ctx, pat.:2)(value))
-        end
+        return Expr(:&&, decons(ctx, pat.:1)(value), decons(ctx, pat.:2)(value))
     end
 end
 

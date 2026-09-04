@@ -51,7 +51,7 @@ function and_expr(lhs, rhs)
     elseif rhs == true
         return lhs
     else
-        return Expr(:block, :($lhs && $rhs))
+        return Expr(:&&, lhs, rhs)
     end
 end
 
