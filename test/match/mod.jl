@@ -23,3 +23,4 @@ include_test"scan.jl"
 end
 
 include_test"exception.jl"
+include_test"undef.jl"

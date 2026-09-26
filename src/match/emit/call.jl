@@ -46,10 +46,15 @@ function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
     end
 
     return function call(x)
-        return quote
-            $value = $x
-            $(and_expr(type_assert, args_conds, kwargs_conds))
-        end
+        # Keep the whole condition a flat `&&` chain: a `begin ... end` whose value is a
+        # `&&` makes Julia lower the pattern variables through a phi node that may be
+        # `#undef`, so every later use of them (guard, body) gets a spurious
+        # `throw_undef_if_not` and a JET "may be undefined" report.
+        return Expr(
+            :&&,
+            Expr(:block, :($value = $x), true),
+            and_expr(type_assert, args_conds, kwargs_conds),
+        )
     end
 end
 
