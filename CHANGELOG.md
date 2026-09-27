@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.13](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.12...v0.3.13) (2026-09-26)
+
+
+### Bug Fixes
+
+* **data:** bind promoted constructor parameters ([#92](https://github.com/Roger-luo/Moshi.jl/issues/92)) ([8fe64d3](https://github.com/Roger-luo/Moshi.jl/commit/8fe64d3b25056138ea73505dc6d5ce0db94e0f57))
+* **match:** emit flat `&&` chains so guards see defined pattern variables ([#93](https://github.com/Roger-luo/Moshi.jl/issues/93)) ([000345a](https://github.com/Roger-luo/Moshi.jl/commit/000345a42b2b17fda3b04cb4f9f1417a3dddd3fe))
+
 ## [0.3.12](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.11...v0.3.12) (2026-07-16)
 
 
