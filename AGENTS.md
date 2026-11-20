@@ -21,7 +21,13 @@ julia --project -e 'include("test/data/mod.jl")'
 # Run a specific testset (from REPL)
 # julia --project
 # include("test/data/emit/basic.jl")
+
+# Regenerate macro expansion snapshots (test/snapshot/references), then review the diff
+JULIA_REFERENCETESTS_UPDATE=true julia --project -e 'using Pkg; Pkg.test()'
 ```
+
+Snapshots are compared only on the Julia version set by `SNAPSHOT_VERSION` in
+`test/snapshot/mod.jl`; a snapshot file that does not exist yet is created and its test skipped.
 
 ## Pre-commit Checklist
 

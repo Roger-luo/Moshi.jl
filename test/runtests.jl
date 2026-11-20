@@ -12,6 +12,10 @@ end
     include("derive/mod.jl")
 end
 
+@testset "expansion snapshots" begin
+    include("snapshot/mod.jl")
+end
+
 @testset "perf regression" begin
     include("perf.jl")
 end
