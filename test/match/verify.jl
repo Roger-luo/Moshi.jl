@@ -227,7 +227,7 @@ end
         end))
         # a repeated name in one `||` branch narrows only that branch
         @test_logs expand(:(@match Grid.Blank() begin
-            Grid.Duo(a, a) || Grid.Blank() => 0
+            Grid.Duo(a, a) || Grid.Mono(a && a) => 0
             Grid.Duo(Bit.Zero(), Bit.One()) => 1
             _ => 2
         end))
