@@ -369,6 +369,43 @@ Stacktrace:
 
 this pattern above now matches only if the line number is greater than 3.
 
+## Static Checks
+
+`@match` checks its arms when it expands, and warns about mistakes.
+
+An arm is unreachable when earlier arms already match every value it accepts:
+
+```julia
+julia> @data Bit begin
+           Zero()
+           One()
+       end
+
+julia> @data Grid begin
+           Blank()
+           Mono(Bit.Type)
+       end
+
+julia> g(x) = @match x begin
+           Grid.Mono(_) => 0
+           Grid.Mono(Bit.One()) => 1
+           _ => 2
+       end
+┌ Warning: unreachable match arm: earlier arms already match every value it accepts
+└ @ Main REPL[3]:3
+```
+
+Reachability assumes only declared field types, so a final `_` arm stays reachable: it catches values of other types.
+
+As in Rust, an arm with a guard covers nothing, since its condition can fail. A variable bound twice, such as `a` in `Point(a, a)`, tests equality and counts as a guard.
+
+`@match` cannot read some patterns: parametrized variant heads such as `Opt.Some{Int}`, interpolated values such as `$x`, and call patterns of other types, such as a struct pattern `Box(x)`.
+In a type annotation such as `p::Grid.Type`, `@match` reads `p` but cannot read the type.
+An unreadable part in an earlier arm never makes a later arm unreachable. In the arm under check, `@match` counts an unreadable part as matching every value.
+
+The checks stop after a fixed number of steps. If a match needs more steps, `@match` warns that the match is too complex to check.
+In that match, `@match` can then miss unreachable arms.
+
 ## The Pattern Language
 
 The pattern matching in `Moshi` is backed by a pattern language describing the structure of the data. In this section

@@ -1,5 +1,6 @@
 function emit(info::EmitInfo)
     isempty(info.cases) && return x_syntax_error("empty match body", info.source)
+    verify(info)
 
     matches = expr_map(info.cases, info.exprs, info.lines) do case, expr, line
         ctx = PatternContext(info, case)

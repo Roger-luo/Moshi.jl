@@ -8,10 +8,13 @@ using Moshi.Match: @match
     _ => error("no match")
 end
 
-@test 1 == @match 1 begin
-    _ => 1
-    _ => error("no match")
-end
+# the warning comes from macro expansion, so expand inside `@test_logs`
+@test_logs (:warn, r"unreachable match arm") @test 1 == Core.eval(
+    @__MODULE__, :(@match 1 begin
+        _ => 1
+        _ => error("no match")
+    end)
+)
 
 @test 3 == @match [1, 2, 2] begin
     [1, x, x] => x + 1
