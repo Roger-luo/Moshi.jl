@@ -54,3 +54,20 @@ end
         @test variant_fieldtypes(Option.Some{Int}) == (Int,)
     end
 end # Option{T}
+
+@data Two{A,B} begin
+    One(A)
+    Other(B)
+end
+
+@testset "partially parametrized variant types" begin
+    x = Two.One{String,Int}("a")
+    @test isa_variant(x, Two.One{String})
+    @test isa_variant(x, Two.One{<:AbstractString})
+    @test !isa_variant(x, Two.One{Int})
+    @test !isa_variant(x, Two.Other{String})
+    @test isa_variant(Option.Some(1), Option.Some{<:Real})
+    @test !isa_variant(Option.Some("a"), Option.Some{<:Real})
+    @test variant_getfield(x, Two.One{String}, 1) == "a"
+    @test_throws ErrorException variant_getfield(x, Two.One{Int}, 1)
+end

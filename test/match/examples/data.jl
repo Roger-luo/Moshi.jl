@@ -140,3 +140,21 @@ end
         Tree.Leaf.(z...) => z
     end
 end # testset
+
+@data Two{A,B} begin
+    One(A)
+    Other(B)
+end
+
+@testset "partially parametrized variant heads" begin
+    # issue #98
+    partial(t) = @match t begin
+        Two.One{String}(v) => v
+        Two.One{<:Real}(v) => v + 1
+        _ => "fallback"
+    end
+    @test partial(Two.One{String,Int}("a")) == "a"
+    @test partial(Two.One{Int,Int}(1)) == 2
+    @test partial(Two.One{Symbol,Int}(:a)) == "fallback"
+    @test partial(Two.Other{String,Int}(1)) == "fallback"
+end
