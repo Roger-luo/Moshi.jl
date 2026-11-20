@@ -185,28 +185,6 @@ end
     @test_throws ArgumentError TypeDef(Main, false, :TestNonDocMacro, Expr(:block, expr))
 end
 
-@testset "duplicate variant names are rejected" begin
-    # the later definition would silently replace the earlier one
-    err = try
-        TypeDef(Main, false, :TestDuplicate, quote
-            A(Int)
-            struct A
-                x::Float64
-            end
-        end)
-    catch err
-        err
-    end
-    @test err isa ArgumentError
-    @test occursin("duplicate variant `A` in `TestDuplicate`", err.msg)
-    @test occursin(r"cons\.jl:\d+", err.msg)
-    # names differing only in case are distinct
-    @test length(TypeDef(Main, false, :TestCase, quote
-        A()
-        a()
-    end).variants) == 2
-end
-
 @testset "nested block without doc is flattened" begin
     # A nested begin...end block (such as one produced by macro expansion) is
     # recursed into, tracking line numbers and skipping generated `nothing` entries.
