@@ -28,8 +28,6 @@ function decons(::Type{Pattern.Or}, ctx::PatternContext, pat::Pattern.Type)
         # the arm binds every name either side binds, so the matching side must bind it
         lhs_count == ctx.variable_count ||
             throw(PatternSyntaxError(or_binding_message(lhs_count, ctx.variable_count)))
-        return quote
-            $lhs || $rhs
-        end
+        return Expr(:||, lhs, rhs)
     end
 end

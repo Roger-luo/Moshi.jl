@@ -23,7 +23,7 @@ function emit(info::EmitInfo)
                     info.return_var,
                     Expr(:let, Expr(:block, emit_bind_match_values(ctx)...), expr),
                 ),
-                :(@goto $(info.final_label)),
+                Expr(:symbolicgoto, info.final_label),
             ),
         )
     end
@@ -48,9 +48,47 @@ function decons(::Type, ctx::PatternContext, pat::Pattern.Type)
     return error("invalid pattern: $pat")
 end
 
+"""
+`body` when `cond` holds. `cond` runs as jumps rather than as a `Bool` value, so a pattern
+variable assigned on every path to `body` is defined there; an `||` in a `Bool` value
+leaves Julia a path where it is undefined.
+"""
 function maybe_if(cond, body)
-    if cond == true
-        return body
+    cond == true && return body
+    matched, unmatched = gensym(:matched), gensym(:unmatched)
+    return Expr(
+        :block,
+        emit_branch(cond, matched, unmatched)...,
+        Expr(:symboliclabel, matched),
+        body,
+        Expr(:symboliclabel, unmatched),
+    )
+end
+
+"Statements that run `cond`, then jump to label `on_true` or `on_false`."
+function emit_branch(cond, on_true::Symbol, on_false::Symbol)::Vector{Any}
+    cond === true && return Any[Expr(:symbolicgoto, on_true)]
+    cond === false && return Any[Expr(:symbolicgoto, on_false)]
+    if Meta.isexpr(cond, (:&&, :||))
+        stmts = []
+        for arg in cond.args[1:(end - 1)]
+            next = gensym(:next)
+            targets = cond.head === :&& ? (next, on_false) : (on_true, next)
+            append!(stmts, emit_branch(arg, targets...))
+            push!(stmts, Expr(:symboliclabel, next))
+        end
+        return append!(stmts, emit_branch(last(cond.args), on_true, on_false))
     end
-    return Expr(:if, cond, body)
+    idx = if Meta.isexpr(cond, :block)
+        findlast(arg -> !(arg isa LineNumberNode), cond.args)
+    else
+        nothing
+    end
+    if !isnothing(idx)
+        return Any[
+            cond.args[1:(idx - 1)]...;
+            emit_branch(cond.args[idx], on_true, on_false)
+        ]
+    end
+    return Any[Expr(:if, cond, Expr(:symbolicgoto, on_true), Expr(:symbolicgoto, on_false))]
 end
