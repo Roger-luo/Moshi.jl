@@ -9,13 +9,13 @@ function or_binding_message(lhs::Dict{Symbol,Int}, rhs::Dict{Symbol,Int})::Strin
         name for
         name in union(keys(lhs), keys(rhs)) if get(lhs, name, 0) != get(rhs, name, 0)
     ])
-    times(n) = n == 1 ? "once" : "$n times"
-    details = join(
-        ("`$name` is bound $(times(get(lhs, name, 0))) on the left and \
-          $(times(get(rhs, name, 0))) on the right" for name in names),
-        "; ",
-    )
-    return "both sides of `||` must bind the same variables: $details"
+    function detail(name)
+        left, right = get(lhs, name, 0), get(rhs, name, 0)
+        iszero(right) && return "`$name` is bound only on the left"
+        iszero(left) && return "`$name` is bound only on the right"
+        return "`$name` is bound $left times on the left and $right times on the right"
+    end
+    return "both sides of `||` must bind the same variables: $(join(map(detail, names), "; "))"
 end
 
 function decons(::Type{Pattern.Or}, ctx::PatternContext, pat::Pattern.Type)

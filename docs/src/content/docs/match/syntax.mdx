@@ -243,13 +243,22 @@ julia> @match [1, 2, "a"] begin
 "a"
 ```
 
-Both sides must bind the same variables, each the same number of times, since the arm can use them whichever side matches. Otherwise `@match` throws a `PatternSyntaxError` when it expands:
+Both sides must bind the same variables, since the arm can use them whichever side matches. Otherwise `@match` throws a `PatternSyntaxError` when it expands:
 
 ```julia
 julia> @match x begin
            [1, y] || [2, z] => y
        end
-ERROR: both sides of `||` must bind the same variables: `y` is bound once on the left and 0 times on the right; `z` is bound 0 times on the left and once on the right
+ERROR: both sides of `||` must bind the same variables: `y` is bound only on the left; `z` is bound only on the right
+```
+
+A variable repeated on one side tests equality on that side only:
+
+```julia
+julia> @match [1, 2] begin
+           [x, x] || [x, _] => x
+       end
+1
 ```
 
 ### And Pattern
