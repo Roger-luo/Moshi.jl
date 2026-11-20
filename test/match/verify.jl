@@ -73,6 +73,16 @@ function spent(run)::Int
     return Match.BUDGET - steps.steps
 end
 
+@testset "log group" begin
+    logs, _ = Test.collect_test_logs() do
+        expand(:(@match Shape.Empty() begin
+            _ => 0
+            Shape.Empty() => 1
+        end))
+    end
+    @test only(logs).group === :unreachable_match_arm
+end
+
 @testset "unreachable arm" begin
     @test_logs (:warn, r"unreachable match arm") expand(:(@match Shape.Empty() begin
         _ => 0
