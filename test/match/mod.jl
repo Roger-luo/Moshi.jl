@@ -25,3 +25,4 @@ end
 include_test"exception.jl"
 include_test"undef.jl"
 include_test"verify.jl"
+include_test"edge.jl"

@@ -11,3 +11,10 @@ using Test
     include("struct.jl")
 end
 end # struct
+
+module TestDeriveEdge
+using Test
+@testset "edge" begin
+    include("edge.jl")
+end
+end # edge
