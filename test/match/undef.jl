@@ -25,6 +25,35 @@ guarded_struct(x) = @match x begin
     _ => nothing
 end
 
+either_variant(s) = @match s begin
+    Shape.Circle(r) || Shape.Rect(r, _) => r
+end
+
+either_guarded(s) = @match s begin
+    (Shape.Circle(r) || Shape.Rect(_, r)) && if r > 0
+    end => r
+    _ => 0.0
+end
+
+either_nested(x) = @match x begin
+    Box(Shape.Circle(v) || Shape.Rect(v, _)) || Box(Box(v)) => v
+    _ => nothing
+end
+
+@testset "`||` pattern variables are never maybe-undefined" begin
+    @test either_variant(Shape.Circle(1.0)) == 1.0
+    @test either_variant(Shape.Rect(2.0, 3.0)) == 2.0
+    @test either_guarded(Shape.Rect(2.0, 3.0)) == 3.0
+    @test either_guarded(Shape.Circle(-1.0)) == 0.0
+    @test either_nested(Box(Shape.Rect(4.0, 5.0))) == 4.0
+    @test either_nested(Box(Box(6))) == 6
+    @test either_nested(Box(7)) === nothing
+    for (f, T) in ((either_variant, Shape.Type), (either_guarded, Shape.Type), (either_nested, Any))
+        ir = string(first(only(code_typed(f, (T,)))))
+        @test !occursin("throw_undef_if_not", ir)
+    end
+end
+
 @testset "guarded pattern variables are never maybe-undefined" begin
     @test guarded_variant(Shape.Rect(2.0, 2.0)) == 2.0
     @test guarded_variant(Shape.Rect(2.0, 3.0)) == 6.0
