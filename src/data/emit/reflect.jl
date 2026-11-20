@@ -156,6 +156,14 @@ end
                 ) where {$(info.whereparams...),$(others...)}
                     return false
                 end
+
+                # partially parametrized, e.g. `Some{<:Real}`
+                $Base.@constprop :aggressive function $Data.isa_variant(
+                    value::$(info.type_head), variant::$Type{<:$(storage.parent.name)}
+                ) where {$(info.whereparams...)}
+                    data = $Base.getfield(value, :data)
+                    return data isa $(storage.name) && $(storage.variant_head) <: variant
+                end
             end
         end
     end
@@ -396,9 +404,10 @@ end
                     tag::$Type{<:$(storage.parent.name)},
                     field::Union{Int,Symbol},
                 ) where {$(info.whereparams...)}
-                    return $Base.error(
+                    $(storage.variant_head) <: tag || $Base.error(
                         "type parameters of given variant type do not match input value"
                     )
+                    return $Data.variant_getfield(value, $(storage.parent.name), field)
                 end
             end
         end
