@@ -1,6 +1,5 @@
 function emit(info::EmitInfo)
     isempty(info.cases) && return x_syntax_error("empty match body", info.source)
-    verify(info)
 
     matches = expr_map(info.cases, info.exprs, info.lines) do case, expr, line
         ctx = PatternContext(info, case)
@@ -8,7 +7,12 @@ function emit(info::EmitInfo)
             return x_syntax_error(case.:1, line)
         end
 
-        cond = decons(ctx, case)(info.value_holder)
+        cond = try
+            decons(ctx, case)(info.value_holder)
+        catch err
+            err isa PatternSyntaxError || rethrow()
+            throw(PatternSyntaxError(err.msg, something(line, info.source)))
+        end
         return maybe_if(
             and_expr(cond, emit_check_duplicated_variables(ctx)),
             Expr(
@@ -23,6 +27,7 @@ function emit(info::EmitInfo)
             ),
         )
     end
+    verify(info)
 
     return Expr(
         :block,
