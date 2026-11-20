@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.0](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.13...v0.4.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **match:** a match with such an || arm now fails to expand instead of throwing when that side matches.
+
+### Features
+
+* **match:** give unreachable-arm warnings a log group ([#103](https://github.com/Roger-luo/Moshi.jl/issues/103)) ([d26717d](https://github.com/Roger-luo/Moshi.jl/commit/d26717d43ae9a3b80dfff3c0a137bcb4c3b79f94))
+* **match:** read literal patterns in the unreachable-arm check ([#105](https://github.com/Roger-luo/Moshi.jl/issues/105)) ([b8e3b58](https://github.com/Roger-luo/Moshi.jl/commit/b8e3b58a780f6a508de8588b1c04bb174e1778a1))
+* **match:** reject || branches that bind different variables ([#106](https://github.com/Roger-luo/Moshi.jl/issues/106)) ([ffd5cf2](https://github.com/Roger-luo/Moshi.jl/commit/ffd5cf294c2110059ac73af9630be0aaf3f8f54e))
+* **match:** warn on unreachable match arms ([#96](https://github.com/Roger-luo/Moshi.jl/issues/96)) ([9be4c21](https://github.com/Roger-luo/Moshi.jl/commit/9be4c21c1c4c7eca87e23e83f26489fc18054af7))
+
+
+### Bug Fixes
+
+* **data:** accept partially parametrized variant types in isa_variant ([#108](https://github.com/Roger-luo/Moshi.jl/issues/108)) ([9ccab42](https://github.com/Roger-luo/Moshi.jl/commit/9ccab429dccdc609e74ed6c87140d99bc8025de8)), closes [#98](https://github.com/Roger-luo/Moshi.jl/issues/98)
+* **data:** convert in setproperty! before storing the value ([#101](https://github.com/Roger-luo/Moshi.jl/issues/101)) ([0611889](https://github.com/Roger-luo/Moshi.jl/commit/0611889821ecea0a76fbeb955462319568936960))
+* **data:** reject duplicate variant names in [@data](https://github.com/data) ([#112](https://github.com/Roger-luo/Moshi.jl/issues/112)) ([34702f1](https://github.com/Roger-luo/Moshi.jl/commit/34702f1d8d62fb29239b88940a715daae2b1c1d1))
+* **match:** emit arm conditions as jumps so || variables are defined ([#109](https://github.com/Roger-luo/Moshi.jl/issues/109)) ([41e3758](https://github.com/Roger-luo/Moshi.jl/commit/41e375859910f9335d3f1a340d8782fcee6c9b70))
+* **match:** test repeated names in place so every || branch binds them ([#107](https://github.com/Roger-luo/Moshi.jl/issues/107)) ([7a5343c](https://github.com/Roger-luo/Moshi.jl/commit/7a5343ce0618814dd717afc54756c1880adfcde5)), closes [#99](https://github.com/Roger-luo/Moshi.jl/issues/99)
+
 ## [0.3.13](https://github.com/Roger-luo/Moshi.jl/compare/v0.3.12...v0.3.13) (2026-09-26)
 
 
