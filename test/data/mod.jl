@@ -15,3 +15,10 @@ end
 @testset "exception" begin
     include("exception.jl")
 end
+
+module TestDataEdge
+using Test
+@testset "edge" begin
+    include("edge.jl")
+end
+end # module
