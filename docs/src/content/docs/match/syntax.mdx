@@ -406,6 +406,14 @@ An unreadable part in an earlier arm never makes a later arm unreachable. In the
 The checks stop after a fixed number of steps. If a match needs more steps, `@match` warns that the match is too complex to check.
 In that match, `@match` can then miss unreachable arms.
 
+The unreachable-arm warnings have log group `:unreachable_match_arm`, so a logger can filter them out, for example with [LoggingExtras.jl](https://github.com/JuliaLogging/LoggingExtras.jl):
+
+```julia
+using Logging, LoggingExtras
+
+global_logger(EarlyFilteredLogger(log -> log.group !== :unreachable_match_arm, global_logger()))
+```
+
 ## The Pattern Language
 
 The pattern matching in `Moshi` is backed by a pattern language describing the structure of the data. In this section

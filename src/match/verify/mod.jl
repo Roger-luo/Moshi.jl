@@ -21,7 +21,8 @@ end
 const BUDGET = 100_000
 
 """
-Warn, at macro expansion, about unreachable arms.
+Warn, at macro expansion, about unreachable arms. The warnings have log group
+`:unreachable_match_arm`.
 
 The check assumes only declared field types, so a final `_` arm stays reachable. As in
 Rust, a guard or a repeated name covers nothing, since its test can fail. Unreadable parts
@@ -36,7 +37,8 @@ function verify(info, budget::Int=BUDGET)
         for idx in unreachable_arms(info.cases, Budget(budget))
             line = info.lines[idx]
             @warn "unreachable match arm: earlier arms already match every value it accepts" _module =
-                info.mod _file = line_file(line) _line = line_number(line)
+                info.mod _file = line_file(line) _line = line_number(line) _group =
+                :unreachable_match_arm
         end
     catch err
         err isa OutOfSteps || rethrow()
