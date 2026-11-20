@@ -11,10 +11,14 @@ function PatternContext(info::EmitInfo, case::Pattern.Type)
     )
 end
 
+function placeholder(ctx::PatternContext, name::Symbol, count::Int)
+    return Symbol("##", ctx.scope_prefix, "#", name, "#", count)
+end
+
 function var!(ctx::PatternContext, name::Symbol)
     count = get(ctx.variable_count, name, 0) + 1
     ctx.variable_count[name] = count
-    return Symbol("##", ctx.scope_prefix, "#", name, "#", count)
+    return placeholder(ctx, name, count)
 end
 
 function Base.setindex!(ctx::PatternContext, v::Symbol, k::Symbol)

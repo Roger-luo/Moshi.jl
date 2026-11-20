@@ -4,16 +4,16 @@ function decons(::Type{Pattern.Variable}, ctx::PatternContext, pat::Pattern.Type
         # using let ... end later, so we cannot
         # directly assign it to the pattern variable
         #
-        # we use a new variable everytime we match a pattern
-        # variable, so that we can check if duplicated
-        # variables are equivalent later
-        #
-        # placeholder! is used to control within the same pattern
-        # that branches created by or are using the same placeholder
-        placeholder = var!(ctx, pat.:1)
-        ctx[pat.:1] = placeholder
+        # a name already bound on this path tests equality in place, so every
+        # branch of an or pattern binds the name to the same placeholder
+        name = pat.:1
+        if get(ctx.variable_count, name, 0) > 0
+            return xcall(Base, :(==), placeholder(ctx, name, 1), value)
+        end
+        bound = var!(ctx, name)
+        ctx[name] = bound
         return quote
-            $(placeholder) = $value
+            $(bound) = $value
             true
         end
     end
