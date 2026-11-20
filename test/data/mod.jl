@@ -22,3 +22,10 @@ using Test
     include("validate.jl")
 end
 end # module
+
+module TestDataEdge
+using Test
+@testset "edge" begin
+    include("edge.jl")
+end
+end # module
