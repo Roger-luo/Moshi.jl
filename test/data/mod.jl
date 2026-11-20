@@ -16,6 +16,13 @@ end
     include("exception.jl")
 end
 
+module TestValidate
+using Test
+@testset "validate" begin
+    include("validate.jl")
+end
+end # module
+
 module TestDataEdge
 using Test
 @testset "edge" begin

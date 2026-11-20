@@ -62,8 +62,25 @@ function TypeDef(
         end
         push_variants!(variants, expr, nothing, current_line)
     end
+    validate_variant_names(head, variants)
     validate_exports(head, variants, exports)
     return TypeDef(mod, ismutable, head, variants, exports, source)
+end
+
+function validate_variant_names(head::TypeHead, variants::Vector{Variant})
+    seen = Set{Symbol}()
+    for variant in variants
+        variant.name in seen || (push!(seen, variant.name); continue)
+        location = if isnothing(variant.source)
+            ""
+        else
+            " (near $(variant.source.file):$(variant.source.line))"
+        end
+        throw(
+            ArgumentError("duplicate variant `$(variant.name)` in `$(head.name)`$location")
+        )
+    end
+    return nothing
 end
 
 function push_exports!(exports::Vector{Symbol}, expr::Expr)
