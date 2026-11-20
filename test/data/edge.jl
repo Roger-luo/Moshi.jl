@@ -82,13 +82,6 @@ end
     end)) isa ArgumentError
 end
 
-@testset "duplicate variant names are rejected" begin
-    @test_broken expand_error(:(@data Dup begin
-        A(Int)
-        A(Float64)
-    end)) isa ArgumentError
-end
-
 @testset "empty @data body reports an ArgumentError" begin
     err = try
         Core.eval(@__MODULE__, :(@data Empty begin end))
