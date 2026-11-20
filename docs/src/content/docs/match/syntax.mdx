@@ -403,6 +403,9 @@ As in Rust, an arm with a guard covers nothing, since its condition can fail. A 
 In a type annotation such as `p::Grid.Type`, `@match` reads `p` but cannot read the type.
 An unreadable part in an earlier arm never makes a later arm unreachable. In the arm under check, `@match` counts an unreadable part as matching every value.
 
+Literal patterns such as `1`, `"a"`, `'c'` and `:sym` are readable: an arm repeating an earlier literal is unreachable.
+Since `==` relates values of different types, only the same literal counts, so `1.0` after `1` stays reachable.
+
 The checks stop after a fixed number of steps. If a match needs more steps, `@match` warns that the match is too complex to check.
 In that match, `@match` can then miss unreachable arms.
 

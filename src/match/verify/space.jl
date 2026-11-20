@@ -1,11 +1,25 @@
 "A set of values, as the `@match` checks see it."
 abstract type Space end
 
-"Values of type `type`, except values of the `@data` variants in `excluded`."
+"""
+Values `==` to the literal `value`. Two literals are the same when they have the same type
+and are `isequal`.
+"""
+struct Lit <: Space
+    value::Any
+end
+
+"""
+Values of type `type`, except values of the `@data` variants in `excluded` and values `==`
+to a literal in `literals`.
+"""
 struct Wild <: Space
     type::Type
     excluded::Vector{Type}
+    literals::Vector{Lit}
 end
+
+Wild(type::Type, excluded::Vector{Type}) = Wild(type, excluded, Lit[])
 
 "Values of one `@data` variant whose fields lie in `fields`."
 struct Ctor <: Space
@@ -24,8 +38,18 @@ const ANY = Wild(Any, Type[])
 "No value."
 const NO_VALUE = Alt(Space[])
 
-Base.:(==)(lhs::Wild, rhs::Wild) = lhs.type === rhs.type && lhs.excluded == rhs.excluded
-Base.hash(space::Wild, h::UInt) = hash(space.excluded, hash(space.type, hash(:Wild, h)))
+function Base.:(==)(lhs::Lit, rhs::Lit)
+    return typeof(lhs.value) === typeof(rhs.value) && isequal(lhs.value, rhs.value)
+end
+Base.hash(space::Lit, h::UInt) = hash(space.value, hash(typeof(space.value), hash(:Lit, h)))
+function Base.:(==)(lhs::Wild, rhs::Wild)
+    return lhs.type === rhs.type &&
+           lhs.excluded == rhs.excluded &&
+           lhs.literals == rhs.literals
+end
+function Base.hash(space::Wild, h::UInt)
+    return hash(space.literals, hash(space.excluded, hash(space.type, hash(:Wild, h))))
+end
 Base.:(==)(lhs::Ctor, rhs::Ctor) = lhs.variant === rhs.variant && lhs.fields == rhs.fields
 Base.hash(space::Ctor, h::UInt) = hash(space.fields, hash(space.variant, hash(:Ctor, h)))
 Base.:(==)(lhs::Alt, rhs::Alt) = lhs.alts == rhs.alts
@@ -52,12 +76,15 @@ full(variant::Type)::Ctor =
 ctor(variant::Type, fields::Vector{Space})::Space =
     any(==(NO_VALUE), fields) ? NO_VALUE : Ctor(variant, fields)
 
-"`Wild(type, excluded)`, or `NO_VALUE` when `excluded` holds every value of `type`."
-function wild(type::Type, excluded::Vector{Type})::Space
+"""
+`Wild(type, excluded, literals)`, or `NO_VALUE` when `excluded` holds every value of
+`type`.
+"""
+function wild(type::Type, excluded::Vector{Type}, literals::Vector{Lit})::Space
     type === Union{} && return NO_VALUE
     adts = unique(Type[adt(variant) for variant in excluded])
     complete(adts, type) && issubset(Data.variants(only(adts)), excluded) && return NO_VALUE
-    return Wild(type, excluded)
+    return Wild(type, excluded, literals)
 end
 
 """

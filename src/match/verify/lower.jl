@@ -46,6 +46,12 @@ function branches!(f, reading::Reading, pat::Pattern.Type)::Tuple
     return results
 end
 
+"Values both `left` and `right` accept; `NO_VALUE` in `COVER` mode when `both` widens."
+function meet(reading::Reading, left::Space, right::Space)::Space
+    reading.mode.widen || exact(left, right) || return NO_VALUE
+    return both(reading.budget, left, right)
+end
+
 "Space of values `pat` accepts, read in `mode`."
 lower(pat::Pattern.Type, mode::Mode, budget::Budget)::Space =
     lower!(Reading(mode, budget, Set{Symbol}()), pat)
@@ -63,9 +69,16 @@ end
 function lower!(reading::Reading, ::Type{Pattern.Or}, pat::Pattern.Type)
     return alt(reading.budget, branches!(lower!, reading, pat))
 end
+function lower!(reading::Reading, ::Type{Pattern.Quote}, pat::Pattern.Type)
+    # `$x` and `Foo.Bar` also quote, as a `Symbol` or an `Expr`
+    value = pat.:1
+    value isa QuoteNode && value.value isa Symbol && return Lit(value.value)
+    value isa Union{Number,AbstractString,AbstractChar} && return Lit(value)
+    return unreadable(reading.mode)
+end
 function lower!(reading::Reading, ::Type{Pattern.And}, pat::Pattern.Type)
     left = lower!(reading, pat.:1)
-    return both(reading.budget, left, lower!(reading, pat.:2))
+    return meet(reading, left, lower!(reading, pat.:2))
 end
 function lower!(reading::Reading, ::Type{Pattern.TypeAnnotate}, pat::Pattern.Type)
     return both(reading.budget, lower!(reading, pat.body), unreadable(reading.mode))
@@ -83,7 +96,7 @@ function lower!(reading::Reading, ::Type{Pattern.Call}, pat::Pattern.Type)
     end
     for (name, arg) in pat.kwargs
         idx = findfirst(==(name), fieldnames)
-        fields[idx] = both(reading.budget, fields[idx], lower!(reading, arg))
+        fields[idx] = meet(reading, fields[idx], lower!(reading, arg))
     end
     return ctor(variant, fields)
 end

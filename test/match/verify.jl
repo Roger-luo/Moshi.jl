@@ -258,6 +258,69 @@ end
     end
 end
 
+@testset "literal patterns" begin
+    @testset "unreachable" begin
+        @test_logs (:warn, r"unreachable match arm") expand(:(@match 1 begin
+            1 => 0
+            1 => 1
+            _ => 2
+        end))
+        @test_logs (:warn, r"unreachable match arm") expand(:(@match "a" begin
+            "a" || :b || 'c' => 0
+            :b => 1
+            _ => 2
+        end))
+        @test_logs (:warn, r"unreachable match arm") expand(:(@match Shape.Empty() begin
+            Shape.Rect(1.0, _) => 0
+            Shape.Rect(1.0, 2.0) => 1
+            _ => 2
+        end))
+        @test_logs (:warn, r"unreachable match arm") expand(:(@match Shape.Empty() begin
+            Shape.Rect(1.0, 2.0) => 0
+            Shape.Rect(_, 3.0) => 1
+            Shape.Rect(1.0, 2.0) => 2
+            _ => 3
+        end))
+        # `1 && 1.0` accepts only values `==` to 1, which the first arm took
+        @test_logs (:warn, r"unreachable match arm") expand(:(@match 1 begin
+            1 => 0
+            1 && 1.0 => 1
+            _ => 2
+        end))
+    end
+
+    @testset "reachable" begin
+        @test_logs expand(:(@match 1 begin
+            1 => 0
+            2 => 1
+            _ => 2
+        end))
+        # `==` relates literals of different types, so only the same literal repeats
+        @test_logs expand(:(@match 1 begin
+            1 => 0
+            1.0 => 1
+            _ => 2
+        end))
+        # an earlier `&&` of different literals covers nothing
+        @test_logs expand(:(@match 1 begin
+            1 && 1.0 => 0
+            1 => 1
+            _ => 2
+        end))
+        @test_logs expand(:(@match Shape.Empty() begin
+            Shape.Rect(1.0; w=2.0) => 0
+            Shape.Rect(1.0, _) => 1
+            _ => 2
+        end))
+        @test_logs expand(:(@match Shape.Empty() begin
+            Shape.Rect(1.0, 2.0) => 0
+            Shape.Rect(1.0, _) => 1
+            Shape.Rect(_, 2.0) => 2
+            _ => 3
+        end))
+    end
+end
+
 @testset "edge cases" begin
     # a keyword field narrows the positional pattern on the same field
     @test_logs expand(:(@match Shape.Empty() begin
@@ -285,6 +348,13 @@ end
     without_zero = Match.Wild(Bit.Type, Type[Bit.Zero])
     @test Match.both(budget(), Match.ANY, without_zero) == without_zero
     @test Match.both(budget(), without_zero, Match.ANY) == without_zero
+    # a leftover set excludes the literals earlier arms took
+    one = Match.Lit(1)
+    without_one = Match.minus(budget(), Match.ANY, one)
+    @test without_one == Match.Wild(Any, Type[], [one])
+    @test Match.both(budget(), one, without_one) == Match.NO_VALUE
+    @test Match.both(budget(), Match.Lit(1.0), without_one) == Match.Lit(1.0)
+    @test !Match.exact(one, Match.Lit(1.0))
     # disjoint types share no value
     @test Match.both(
         budget(), Match.Wild(Bit.Type, Type[]), Match.Wild(Grid.Type, Type[])
