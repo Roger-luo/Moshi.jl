@@ -31,6 +31,29 @@ end
     @test x == y
 end # selfref{T}
 
+@data mutable MutList begin
+    struct Nil
+        size::Int
+    end
+    struct Cons
+        head::Int
+        tail::MutList
+    end
+end
+
+@testset "mutable selfref setproperty! checks the field type" begin
+    x = MutList.Cons(1, MutList.Nil(0))
+    # the storage field is `Any`, so a failed set must not store the value
+    @test_throws MethodError x.tail = 42
+    @test x.tail.size == 0
+    @test_throws MethodError setproperty!(x, 2, 42)
+    @test x.tail.size == 0
+    x.tail = MutList.Nil(1)
+    @test x.tail.size == 1
+    x.head = 0x02
+    @test x.head === 2
+end
+
 # Issue #33: the ADT name in a default value should refer to `<Name>.Type`, just
 # like everywhere else in the `@data` block. `SExpr[]` must not resolve to the
 # generated module (which would error with `getindex(::Module)`).
