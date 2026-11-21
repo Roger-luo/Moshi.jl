@@ -12,7 +12,7 @@ begin
         @goto unmatched_1
     end
     @label next_2
-    if Base.:(==)(Base.@inbounds(value_1[Base.firstindex(value_1)]), 1)
+    if Base.:(===)(Base.:(==)(Base.@inbounds(value_1[Base.firstindex(value_1)]), 1), true)
         @goto next_3
     else
         @goto unmatched_1
