@@ -64,8 +64,9 @@ end
     @test Tree.Node([Tree.Leaf(1)]) == Tree.Node([Tree.Leaf(1)])
     @test hash(Tree.Node([Tree.Leaf(1)])) == hash(Tree.Node([Tree.Leaf(1)]))
     @test sprint(show, Tree.Leaf(1)) == "Tree.Leaf(1)"
-    # the vector's element type `Tree.Type` prints as its internal name `typeof(Tree)`
-    @test_broken !occursin("typeof", sprint(show, Tree.Node([Tree.Leaf(1)])))
+    # by design the wrapper type is named `typeof(Tree)`, see issue #17
+    @test nameof(Tree.Type) === Symbol("typeof(Tree)")
+    @test occursin("typeof(Tree)", sprint(show, Tree.Node([Tree.Leaf(1)])))
 end
 
 @data Floats begin
