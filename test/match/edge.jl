@@ -88,19 +88,46 @@ end
     end
 end
 
-@testset "literal patterns against missing" begin
-    @test_broken :other == @match missing begin
+@data Cell begin
+    Value(Any)
+end
+
+@testset "a missing comparison does not match" begin
+    @test :other == @match missing begin
         1 => :one
         _ => :other
     end
-    @test_broken :no == @match [missing, 1] begin
+    @test :no == @match [missing, 1] begin
         [1, _] => :one
         _ => :no
     end
-    @test_broken :diff == @match (missing, missing) begin
+    @test :one == @match [1, missing] begin
+        [1, _] => :one
+        _ => :no
+    end
+    @test :diff == @match (missing, missing) begin
         (x, x) => :same
         _ => :diff
     end
+    @test :diff == @match (missing, missing) begin
+        (x, _) && (_, x) => :same
+        _ => :diff
+    end
+    @test :other == @match Cell.Value(missing) begin
+        Cell.Value(0) => :zero
+        _ => :other
+    end
+    @test :missing == @match missing begin
+        1 => :one
+        ::Missing => :missing
+    end
+    ones_in(x) = @match x begin
+        (1, 1) => 2
+        (1, _) || (_, 1) => 1
+        _ => 0
+    end
+    @test Base.return_types(ones_in, (Tuple{Int,Int},)) == [Int]
+    @test ones_in((1, missing)) == 1
 end
 
 @testset "`nothing` as a literal pattern" begin
