@@ -3,18 +3,43 @@ begin
             Data.variant_type(lhs) == Data.variant_type(rhs) || return false
             vtype = Data.variant_type(lhs)
             return if vtype <: Main.TestSnapshot.Shape.Circle
+                    anymissing_1 = false
                     lhs_value_1 = Base.getproperty(lhs, $(QuoteNode(1)))
                     rhs_value_1 = Base.getproperty(rhs, $(QuoteNode(1)))
-                    Base.:(==)(lhs_value_1, rhs_value_1) || return false
-                    return true
+                    eq_1 = Base.:(==)(lhs_value_1, rhs_value_1)
+                    if Base.ismissing(eq_1)
+                        anymissing_1 = true
+                    else
+                        eq_1 || return false
+                    end
+                    return if anymissing_1
+                            Base.missing
+                        else
+                            true
+                        end
                 elseif vtype <: Main.TestSnapshot.Shape.Rect
+                    anymissing_2 = false
                     lhs_value_2 = Base.getproperty(lhs, :w)
                     rhs_value_2 = Base.getproperty(rhs, :w)
-                    Base.:(==)(lhs_value_2, rhs_value_2) || return false
+                    eq_2 = Base.:(==)(lhs_value_2, rhs_value_2)
+                    if Base.ismissing(eq_2)
+                        anymissing_2 = true
+                    else
+                        eq_2 || return false
+                    end
                     lhs_value_3 = Base.getproperty(lhs, :h)
                     rhs_value_3 = Base.getproperty(rhs, :h)
-                    Base.:(==)(lhs_value_3, rhs_value_3) || return false
-                    return true
+                    eq_3 = Base.:(==)(lhs_value_3, rhs_value_3)
+                    if Base.ismissing(eq_3)
+                        anymissing_2 = true
+                    else
+                        eq_3 || return false
+                    end
+                    return if anymissing_2
+                            Base.missing
+                        else
+                            true
+                        end
                 else
                     return false
                 end
