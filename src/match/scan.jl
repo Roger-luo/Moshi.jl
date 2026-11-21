@@ -306,6 +306,10 @@ end
         return Pattern.Err("cannot match the type of data type, specify a variant type")
     else
         Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
+        for key in keys(kwargs)
+            Base.hasfield(head, key) ||
+                return Pattern.Err("type $head has no field $key to match")
+        end
     end
     return Pattern.Call(head, args, kwargs)
 end

@@ -128,6 +128,10 @@ struct Point
     y::Int
 end
 
+struct Box{T}
+    value::T
+end
+
 @data Named begin
     struct P
         x::Int
@@ -143,13 +147,37 @@ end
         Named.P(; y=2) => :two
         _ => :other
     end
-    @test_broken 2 == run_expr(:(@match Point(1, 2) begin
+    @test 2 == @match Point(1, 2) begin
         Point(; y) => y
-    end))
-    @test_broken :two == run_expr(:(@match Point(1, 2) begin
+    end
+    @test :two == @match Point(1, 2) begin
         Point(; y=2) => :two
         _ => :other
-    end))
+    end
+    @test :other == @match Point(1, 3) begin
+        Point(; y=2) => :two
+        _ => :other
+    end
+    @test (1, 2) == @match Point(1, 2) begin
+        Point(a; y) => (a, y)
+    end
+    @test 5 == @match Box(5) begin
+        Box(; value) => value
+    end
+    @test :other == @match 1 begin
+        Point(; y) => y
+        _ => :other
+    end
+    err = try
+        run_expr(:(@match Point(1, 2) begin
+            Point(; z) => z
+            _ => :other
+        end))
+    catch err
+        err
+    end
+    @test err isa ErrorException
+    @test occursin("has no field z", err.msg)
 end
 
 @testset "guards with a non-call condition" begin
