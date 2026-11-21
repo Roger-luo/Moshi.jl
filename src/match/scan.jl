@@ -265,8 +265,14 @@ function broadcast2pattern(mod::Module, expr)
             return Pattern.Err("too many fields to match in broadcast pattern")
     elseif Data.is_data_type(head)
         return Pattern.Err("cannot match the type of data type, specify a variant type")
+    elseif !(head isa Type)
+        return Pattern.Err("broadcast pattern head `$(expr.args[1])` is not a type")
     else
-        Base.fieldcount(head) >= nargs ||
+        count = definite_fieldcount(head)
+        isnothing(count) && return Pattern.Err(
+            "cannot match the fields of `$head`, it has no definite fields"
+        )
+        count >= nargs ||
             return Pattern.Err("too many fields to match in broadcast pattern")
     end
     return Pattern.Broadcast(head, args)
@@ -304,10 +310,27 @@ end
             return Pattern.Err("cannot use named fields in anonymous variant")
     elseif Data.is_data_type(head)
         return Pattern.Err("cannot match the type of data type, specify a variant type")
+    elseif !(head isa Type)
+        return Pattern.Err("call pattern head `$(expr.args[1])` is not a type, \
+             a call pattern matches a constructor such as `Foo(x)`")
     else
-        Base.fieldcount(head) >= nfields || return Pattern.Err("too many fields to match")
+        count = definite_fieldcount(head)
+        isnothing(count) && return Pattern.Err(
+            "cannot match the fields of `$head`, it has no definite fields, \
+             use a concrete type or a type annotation `x::$head`"
+        )
+        count >= nfields || return Pattern.Err("too many fields to match")
     end
     return Pattern.Call(head, args, kwargs)
+end
+
+function definite_fieldcount(type::Type)
+    return try
+        Base.fieldcount(type)
+    catch err
+        err isa ArgumentError || rethrow()
+        nothing
+    end
 end
 
 @scan :quote function jlexpr2pattern(mod::Module, expr)
