@@ -71,7 +71,8 @@ Stacktrace:
 ### Quote Patterns
 
 The quote pattern is a pattern that matches a quoted value. It is the simplest pattern in Moshi.
-Literal values are automatically quoted in Moshi.
+Literal values are automatically quoted in Moshi. `nothing` is a literal too, so it matches
+the value `nothing` instead of binding a variable named `nothing`.
 
 ```julia
 julia> @match 1 begin
