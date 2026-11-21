@@ -36,14 +36,12 @@ function derive_impl(::Val{:Hash}, mod::Module, type::Module)
         end
         fieldtypes = Data.variant_fieldtypes(variant_type)
         last_hash = 0
-        for (idx, (name, type)) in
-            enumerate(zip(Data.variant_fieldnames(variant_type), fieldtypes))
+        for (name, type) in zip(Data.variant_fieldnames(variant_type), fieldtypes)
             type === Hash.Cache && continue
             val = xcall(Data, :variant_getfield, :x, variant_type, QuoteNode(name))
+            prev, next = Symbol(:h, last_hash), Symbol(:h, last_hash + 1)
             push!(body.args, LineNumberNode(@__LINE__() + 1, @__FILE__)) # so we have error message addressed here
-            push!(
-                body.args, :($(Symbol(:h, idx)) = $Base.hash($val, $(Symbol(:h, idx - 1))))
-            )
+            push!(body.args, :($next = $Base.hash($val, $prev)))
             last_hash += 1
         end
         push!(body.args, LineNumberNode(@__LINE__() + 1, @__FILE__)) # so we have error message addressed here

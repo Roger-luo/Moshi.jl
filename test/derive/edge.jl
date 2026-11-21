@@ -38,9 +38,15 @@ StructCacheMiddle(x, y) = StructCacheMiddle(x, Hash.Cache(), y)
     @test hash(CacheOnly.A()) == hash(CacheOnly.A())
     @test hash(StructCacheMiddle(1, 2)) == hash(StructCacheMiddle(1, 2))
     @test hash(StructCacheMiddle(1, 2)) != hash(StructCacheMiddle(1, 3))
-    @test_broken hash(CacheFirst.A(; x=1)) != hash(CacheFirst.A(; x=2))
-    @test_broken hash(CacheMiddle.A(; x=1, y=2)) == hash(CacheMiddle.A(; x=1, y=2))
-    @test_broken hash(CacheMiddle.A(; x=1, y=2)) != hash(CacheMiddle.A(; x=1, y=3))
+    @test hash(CacheFirst.A(; x=1)) != hash(CacheFirst.A(; x=2))
+    @test hash(CacheMiddle.A(; x=1, y=2)) == hash(CacheMiddle.A(; x=1, y=2))
+    @test hash(CacheMiddle.A(; x=1, y=2)) != hash(CacheMiddle.A(; x=1, y=3))
+    # the cache field is left out wherever it sits, and filled on first use
+    a = CacheMiddle.A(; x=1, y=2)
+    type_hash = hash(hash(CacheMiddle.Type))
+    @test hash(a) == hash(2, hash(1, hash(type_hash, hash(CacheMiddle.A))))
+    @test a.cache.is_set && a.cache[] == hash(a)
+    @test CacheMiddle.A(; x=1, y=2) == CacheMiddle.A(; x=1, y=2)
 end
 
 @data Either begin
