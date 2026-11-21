@@ -110,10 +110,37 @@ end
     @test 0 == @match nothing begin
         $(nothing) => 0
     end
-    @test_broken 0 == run_expr(:(@match nothing begin
+    @test 0 == @match nothing begin
         nothing => 0
         _ => 1
-    end))
+    end
+    @test 1 == @match 1 begin
+        nothing => 0
+        _ => 1
+    end
+    # nested, it is a literal as well, not a variable named `nothing`
+    @test 2 == @match (nothing, 2) begin
+        (nothing, x) => x
+        _ => 0
+    end
+    @test 0 == @match (1, 2) begin
+        (nothing, x) => x
+        _ => 0
+    end
+    @test :none == @match Some(nothing) begin
+        Some(nothing) => :none
+        Some(_) => :some
+    end
+    @test :some == @match Some(1) begin
+        Some(nothing) => :none
+        Some(_) => :some
+    end
+    @test [:empty, :empty, :value] == map((nothing, 0, 1)) do x
+        @match x begin
+            nothing || 0 => :empty
+            _ => :value
+        end
+    end |> collect
 end
 
 @testset "Int128 literal" begin
