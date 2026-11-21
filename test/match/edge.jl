@@ -184,24 +184,41 @@ struct Square <: Shape
 end
 
 @testset "call patterns whose head is not a concrete constructor" begin
-    # either an error at run time or a `PatternSyntaxError`, not an internal error
-    reported(err) = err isa Union{Expr,PatternSyntaxError}
-    @test_broken reported(expand_error(:(@match 3 begin
-        1:5 => :range
-        _ => :other
-    end)))
-    @test_broken reported(expand_error(:(@match 1 begin
-        sin(x) => x
-        _ => :other
-    end)))
-    @test_broken reported(expand_error(:(@match 1 // 2 begin
-        1 // 2 => :half
-        _ => :other
-    end)))
-    @test_broken reported(expand_error(:(@match Square(1) begin
-        Shape(x) => x
-        _ => :other
-    end)))
+    # an invalid arm compiles to an error raised when it is run
+    function arm_error(pattern, value)
+        ex = expand_error(:(@match $value begin
+            $pattern => :matched
+            _ => :other
+        end))
+        ex isa Expr || return ex
+        return try
+            run_expr(ex)
+        catch err
+            err.msg
+        end
+    end
+    not_a_type(head) = "call pattern head `$head` is not a type"
+    @test startswith(arm_error(:(1:5), 3), not_a_type(:(:)))
+    @test startswith(arm_error(:(sin(x)), 1), not_a_type(:sin))
+    @test startswith(arm_error(:(1 // 2), :(1 // 2)), not_a_type(:(//)))
+    @test startswith(arm_error(:(sin.(x)), 1), "broadcast pattern head `sin` is not a type")
+
+    no_fields(head) = "cannot match the fields of `$head`, it has no definite fields"
+    @test startswith(arm_error(:(Shape(x)), :(Square(1))), no_fields(Shape))
+    @test startswith(arm_error(:(Union{Int,String}(x)), 1), no_fields(Union{Int,String}))
+    @test startswith(arm_error(:(Tuple(x)), (1,)), no_fields(Tuple))
+    @test startswith(arm_error(:(Shape.(x)), :([Square(1)])), no_fields(Shape))
+
+    # concrete and parametric struct heads still match
+    @test 1 == @match Square(1) begin
+        Square(x) => x
+    end
+    @test (1, 2) == @match 1 + 2im begin
+        Complex(re, im) => (re, im)
+    end
+    @test (1, 2) == @match (1, 2) begin
+        Tuple{Int,Int}(a, b) => (a, b)
+    end
 end
 
 @testset "keyword-like pattern `(a = 1)` does not overflow the stack" begin
