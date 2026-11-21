@@ -115,6 +115,18 @@ end
     return Pattern.Quote(expr.args[1])
 end
 
+const INTEGER_LITERAL_MACROS = (
+    Symbol("@int128_str"), Symbol("@uint128_str"), Symbol("@big_str")
+)
+
+# integer literals too large for `Int64`/`UInt64` parse to `Core.@int128_str "..."` etc.
+@scan :macrocall function macrocall2pattern(mod::Module, expr)
+    name = expr.args[1]
+    name isa GlobalRef && name.mod === Core && name.name in INTEGER_LITERAL_MACROS ||
+        return Pattern.Err("unsupported pattern expression: $(expr)")
+    return Pattern.Quote(Base.eval(mod, expr))
+end
+
 @scan :(&&) function and2pattern(mod::Module, expr)
     return Pattern.And(expr2pattern(mod, expr.args[1]), expr2pattern(mod, expr.args[2]))
 end
