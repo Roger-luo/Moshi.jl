@@ -172,10 +172,25 @@ end
 
 @testset "malformed match bodies throw PatternSyntaxError" begin
     @test expand_error(:(@match 1 begin end)) isa Expr # fails when run
-    @test_broken expand_error(:(@match 1 begin
+    arm_line = @__LINE__() + 3
+    err = expand_error(:(@match 1 begin
+        1 => :one
         1 -> 2
-    end)) isa PatternSyntaxError
-    @test_broken expand_error(:(@match 1 x)) isa PatternSyntaxError
+        _ => :other
+    end))
+    @test err isa PatternSyntaxError
+    @test startswith(err.msg, "invalid match arm, expected `pattern => result`: ")
+    @test endswith(err.msg, ": 1->2")
+    @test !occursin(":other", err.msg) # names the bad arm, not the whole body
+    @test err.source.line == arm_line
+    @test endswith(string(err.source.file), "edge.jl")
+    @test occursin("edge.jl:$arm_line", sprint(showerror, err))
+
+    err = expand_error(:(@match 1 x))
+    @test err isa PatternSyntaxError
+    @test startswith(err.msg, "invalid match body")
+    @test err.source.line == @__LINE__() - 3
+    @test expand_error(:(@match 1 (x, y))) isa PatternSyntaxError
 end
 
 abstract type Shape end
