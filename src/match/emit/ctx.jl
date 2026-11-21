@@ -30,18 +30,19 @@ function emit_check_duplicated_variables(ctx::PatternContext)
     stmts = []
     for (var, values) in ctx.scope
         length(values) > 1 || continue
-        compare_expr = []
-        for (i, each) in enumerate(values)
-            push!(compare_expr, each)
-
-            if i < length(values)
-                push!(compare_expr, :(==))
-            end
+        first_value, rest = Iterators.peel(values)
+        for each in rest
+            push!(stmts, equal_expr(first_value, each))
         end
-        push!(stmts, Expr(:comparison, compare_expr...))
     end
     return foldl(and_expr, stmts; init=true)
 end
+
+"""
+Code testing `lhs == rhs` as a match condition. A `missing` result does not match, so `==`
+is compared to `true` rather than used as the condition directly.
+"""
+equal_expr(lhs, rhs) = xcall(Base, :(===), xcall(Base, :(==), lhs, rhs), true)
 
 function emit_bind_match_values(ctx::PatternContext)
     return map(collect(keys(ctx.scope))) do k

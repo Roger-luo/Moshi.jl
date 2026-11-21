@@ -8,7 +8,7 @@ function decons(::Type{Pattern.Variable}, ctx::PatternContext, pat::Pattern.Type
         # branch of an or pattern binds the name to the same placeholder
         name = pat.:1
         if get(ctx.variable_count, name, 0) > 0
-            return xcall(Base, :(==), placeholder(ctx, name, 1), value)
+            return equal_expr(placeholder(ctx, name, 1), value)
         end
         bound = var!(ctx, name)
         ctx[name] = bound

@@ -1,12 +1,12 @@
 begin
     value_1 = x
-    if Base.:(==)(value_1, 1)
+    if Base.:(===)(Base.:(==)(value_1, 1), true)
         @goto matched_1
     else
         @goto next_1
     end
     @label next_1
-    if Base.:(==)(value_1, 2)
+    if Base.:(===)(Base.:(==)(value_1, 2), true)
         @goto matched_1
     else
         @goto unmatched_1
