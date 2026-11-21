@@ -35,6 +35,7 @@ end
     # nested `||` are checked at each level
     @test expand_error(:(@match x begin
         OrBind.Pair(c, (OrBind.One(a) || OrBind.Two(a, _)) || OrBind.Two(_, a)) => a
+        _ => 0
     end)) isa Expr
     @test expand_error(:(@match x begin
         OrBind.Pair(c, (OrBind.One(a) || OrBind.Two(_, b)) || OrBind.Two(_, a)) => a
