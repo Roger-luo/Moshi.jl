@@ -15,6 +15,9 @@ const REACH = Mode(true, true)
 "Mode for earlier arms: only values they surely accept."
 const COVER = Mode(false, false)
 
+"Mode for exhaustiveness, as in Rust: unreadable parts match every value; tests match none."
+const EXHAUST = Mode(true, false)
+
 unreadable(mode::Mode)::Space = mode.widen ? ANY : NO_VALUE
 
 """
@@ -46,6 +49,51 @@ function branches!(f, reading::Reading, pat::Pattern.Type)::Tuple
     return results
 end
 
+"Direct subpatterns of `pat`, held in its fields directly or in vectors and dicts."
+function children(pat::Pattern.Type)::Vector{Pattern.Type}
+    out = Pattern.Type[]
+    for name in Data.variant_fieldnames(pat)
+        field = getproperty(pat, name)
+        items = field isa Union{AbstractVector,AbstractDict} ? values(field) : (field,)
+        append!(out, Iterators.filter(item -> item isa Pattern.Type, items))
+    end
+    return out
+end
+
+"""
+True when `pat` holds a guard or repeats a name. `reading` gains the names `pat` binds
+before its first test.
+"""
+tested!(reading::Reading, pat::Pattern.Type)::Bool =
+    tested!(reading, variant_type(pat), pat)
+function tested!(reading::Reading, ::Type, pat::Pattern.Type)
+    return any(child -> tested!(reading, child), children(pat))
+end
+tested!(reading::Reading, ::Type{Pattern.Guard}, pat::Pattern.Type) = true
+function tested!(reading::Reading, ::Type{Pattern.Variable}, pat::Pattern.Type)
+    return bind!(reading, pat.:1)
+end
+function tested!(reading::Reading, ::Type{Pattern.Or}, pat::Pattern.Type)
+    return any(branches!(tested!, reading, pat))
+end
+
+"Add to `out` the variants `pat` names for the matched value itself, outside its fields."
+top_variants!(out::Vector{Type}, pat::Pattern.Type)::Vector{Type} =
+    top_variants!(out, variant_type(pat), pat)
+top_variants!(out::Vector{Type}, ::Type, pat::Pattern.Type) = out
+function top_variants!(out::Vector{Type}, ::Type{Pattern.Call}, pat::Pattern.Type)
+    return Data.is_variant_type(pat.head) ? push!(out, pat.head) : out
+end
+function top_variants!(
+    out::Vector{Type}, ::Type{<:Union{Pattern.And,Pattern.Or}}, pat::Pattern.Type
+)
+    top_variants!(out, pat.:1)
+    return top_variants!(out, pat.:2)
+end
+function top_variants!(out::Vector{Type}, ::Type{Pattern.TypeAnnotate}, pat::Pattern.Type)
+    return top_variants!(out, pat.body)
+end
+
 "Values both `left` and `right` accept; `NO_VALUE` in `COVER` mode when `both` widens."
 function meet(reading::Reading, left::Space, right::Space)::Space
     reading.mode.widen || exact(left, right) || return NO_VALUE
@@ -58,7 +106,7 @@ lower(pat::Pattern.Type, mode::Mode, budget::Budget)::Space =
 
 "Space of values `pat` accepts; `reading` gains the names `pat` binds."
 lower!(reading::Reading, pat::Pattern.Type)::Space = lower!(reading, variant_type(pat), pat)
-lower!(reading::Reading, ::Type, pat::Pattern.Type) = unreadable(reading.mode)
+lower!(reading::Reading, ::Type, pat::Pattern.Type) = lower_unreadable!(reading, pat)
 lower!(reading::Reading, ::Type{Pattern.Wildcard}, pat::Pattern.Type) = ANY
 function lower!(reading::Reading, ::Type{Pattern.Variable}, pat::Pattern.Type)
     return bind!(reading, pat.:1) && !reading.mode.tests_pass ? NO_VALUE : ANY
@@ -84,12 +132,12 @@ function lower!(reading::Reading, ::Type{Pattern.TypeAnnotate}, pat::Pattern.Typ
     return both(reading.budget, lower!(reading, pat.body), unreadable(reading.mode))
 end
 function lower!(reading::Reading, ::Type{Pattern.Call}, pat::Pattern.Type)
-    Data.is_variant_type(pat.head) || return unreadable(reading.mode)
+    Data.is_variant_type(pat.head) || return lower_unreadable!(reading, pat)
     variant = Base.typename(Base.unwrap_unionall(pat.head)).wrapper
     # explicit type parameters (`Opt.Some{Int}`) match only part of the variant
     variant === pat.head || reading.mode.widen || return NO_VALUE
     fieldnames = Data.variant_fieldnames(variant)
-    all(in(fieldnames), keys(pat.kwargs)) || return unreadable(reading.mode)
+    all(in(fieldnames), keys(pat.kwargs)) || return lower_unreadable!(reading, pat)
     fields = Space[ANY for _ in 1:Data.variant_nfields(variant)]
     for (idx, arg) in enumerate(pat.args)
         fields[idx] = lower!(reading, arg)
@@ -99,4 +147,10 @@ function lower!(reading::Reading, ::Type{Pattern.Call}, pat::Pattern.Type)
         fields[idx] = meet(reading, fields[idx], lower!(reading, arg))
     end
     return ctor(variant, fields)
+end
+
+"Space of an unreadable pattern; a test inside it still counts."
+function lower_unreadable!(reading::Reading, pat::Pattern.Type)::Space
+    tested!(reading, pat) && !reading.mode.tests_pass && return NO_VALUE
+    return unreadable(reading.mode)
 end
