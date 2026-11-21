@@ -27,12 +27,18 @@ function StorageInfo(def::TypeDef, parent::Variant, params::Vector{Symbol})
     return StorageInfo(storage_name, storage_head, variant_head, parent, types, annotations)
 end
 
+# a type parameter shadows a global of the same name
+function is_type_param(def::TypeDef, name::Symbol)
+    return any(param -> param.name === name, def.head.params)
+end
+
 function guess_self_as_any(def::TypeDef, expr)
     if expr isa Type || expr isa QuoteNode
         return expr
     elseif expr isa Symbol
         expr === def.head.name && return Any
-        isdefined(def.mod, expr) || return expr # type params
+        is_type_param(def, expr) && return expr
+        isdefined(def.mod, expr) || return expr
         return getproperty(def.mod, expr)
     elseif Meta.isexpr(expr, :.)
         if expr.args[1] === def.head.name && expr.args[2].value === :Type
@@ -67,6 +73,7 @@ function guess_self_as_annotation(def::TypeDef, expr)
         return expr
     elseif expr isa Symbol
         expr === def.head.name && return :Type
+        is_type_param(def, expr) && return expr
         isdefined(def.mod, expr) || return expr
         return getproperty(def.mod, expr)
     elseif Meta.isexpr(expr, :.) # <Self>.Type
