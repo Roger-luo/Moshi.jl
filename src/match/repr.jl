@@ -9,7 +9,7 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
     And(Pattern, Pattern)
     Or(Pattern, Pattern)
     Kw(Symbol, Pattern)
-    Guard(Expr)
+    Guard(Any) # condition: an expression, a variable or a literal
 
     struct Ref
         head # must be some constant object

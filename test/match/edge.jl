@@ -158,15 +158,39 @@ end
         end => :guard
     end
     flag = true
-    @test_broken :guard == run_expr(:(@match 1 begin
+    @test :guard == @match 1 begin
         x && if flag
         end => :guard
         _ => :no
-    end))
-    @test_broken :no == run_expr(:(@match 1 begin
+    end
+    flag = false
+    @test :no == @match 1 begin
+        x && if flag
+        end => :guard
+        _ => :no
+    end
+    @test :no == @match 1 begin
         x && if false
         end => :guard
         _ => :no
+    end
+    @test :guard == @match 1 begin
+        x && if true
+        end => :guard
+    end
+    # a pattern variable as the whole condition
+    pick(v) = @match v begin
+        (b, x) && if b
+        end => x
+        (_, x) => -x
+    end
+    @test pick((true, 2)) == 2
+    @test pick((false, 2)) == -2
+    # a guard covers nothing, even an always-true one
+    @test_logs Core.eval(@__MODULE__, :(@match 1 begin
+        x && if true
+        end => 1
+        x => 2
     end))
 end
 
