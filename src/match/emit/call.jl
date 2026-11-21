@@ -41,7 +41,7 @@ function decons_call(head::Type, ctx::PatternContext, pat::Pattern.Type)
         end
         kwargs_conds = mapfoldl(and_expr, pat.kwargs; init=true) do kw
             key, val = kw
-            return decons(ctx, val)(:($Core.getfield($value, $key)))
+            return decons(ctx, val)(:($Core.getfield($value, $(QuoteNode(key)))))
         end
     end
 
