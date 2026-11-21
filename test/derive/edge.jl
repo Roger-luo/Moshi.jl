@@ -82,17 +82,37 @@ end
 
 @data Maybe begin
     A(Any)
+    B(Any, Any)
 end
 @derive Maybe[Eq]
 
 struct MaybeStruct
     x::Any
+    y::Any
 end
+MaybeStruct(x) = MaybeStruct(x, 0)
 @derive MaybeStruct[Eq]
 
-@testset "missing fields propagate through ==" begin
+@data Concrete begin
+    A(Int, Float64)
+end
+@derive Concrete[Eq]
+
+@testset "missing fields propagate through == like tuples" begin
     @test isequal(Maybe.A(missing), Maybe.A(missing))
     @test isequal(MaybeStruct(missing), MaybeStruct(missing))
-    @test_broken ismissing(Maybe.A(missing) == Maybe.A(missing))
-    @test_broken ismissing(MaybeStruct(missing) == MaybeStruct(missing))
+    @test ismissing(Maybe.A(missing) == Maybe.A(missing))
+    @test ismissing(MaybeStruct(missing) == MaybeStruct(missing))
+    # a differing field decides, whether it comes before or after the missing one
+    for (x, y) in (((missing, 1), (missing, 2)), ((1, missing), (2, missing)))
+        @test (Maybe.B(x...) == Maybe.B(y...)) === (x == y) === false
+        @test (MaybeStruct(x...) == MaybeStruct(y...)) === false
+    end
+    @test ismissing(Maybe.B(missing, 1) == Maybe.B(missing, 1))
+    @test (Maybe.A(missing) == Maybe.B(missing, 1)) === false
+    @test !isequal(Maybe.B(missing, 1), Maybe.B(missing, 2))
+    # fields that never compare `missing` keep `==` a `Bool`
+    @test Base.return_types(==, (Concrete.Type, Concrete.Type)) == [Bool]
+    @test Base.return_types(isequal, (Maybe.Type, Maybe.Type)) == [Bool]
+    @test Base.return_types(isequal, (MaybeStruct, MaybeStruct)) == [Bool]
 end

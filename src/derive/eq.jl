@@ -59,19 +59,18 @@ function eq_derive_struct_field(func, type::Union{DataType,UnionAll})
     # Build the field comparisons as a line-number-free block so that, when
     # spliced into the generated method, coverage attributes runtime hits to
     # the splice site instead of shadowed interior lines.
-    compares = Expr(:block)
+    anymissing = missing_flag(func)
+    compares = Expr(:block, init_missing_flag(anymissing)...)
     for (field, fieldtype) in zip(names, types)
         fieldtype <: Hash.Cache && continue
         @gensym lhs_value rhs_value
         push!(compares.args, :($lhs_value = $Base.getfield(lhs, $(QuoteNode(field)))))
         push!(compares.args, :($rhs_value = $Base.getfield(rhs, $(QuoteNode(field)))))
-        push!(compares.args, :($func($lhs_value, $rhs_value) || return false))
+        push!(compares.args, compare_field(func, lhs_value, rhs_value, anymissing))
     end
+    push!(compares.args, compare_result(anymissing))
 
-    isempty(cache_indices) && return quote
-        $compares
-        return true
-    end
+    isempty(cache_indices) && return compares
 
     cache_field = names[first(cache_indices)]
     @gensym lhs_hash rhs_hash
@@ -82,10 +81,38 @@ function eq_derive_struct_field(func, type::Union{DataType,UnionAll})
             return $lhs_hash[] == $rhs_hash[]
         else
             $compares
-            return true
         end
     end
 end # eq_derive_struct_field
+
+"""
+Variable recording that a field compared `missing`, for `==` only: `isequal` must return a
+`Bool` even when inference cannot tell what the fields' `isequal` returns.
+"""
+missing_flag(func) = func == :($Base.:(==)) ? gensym(:anymissing) : nothing
+
+"Statements to run before the field comparisons: `anymissing = false` when there is a flag."
+init_missing_flag(anymissing) = isnothing(anymissing) ? [] : [:($anymissing = false)]
+
+"""
+`func(lhs, rhs)` as one step of a derived comparison: return `false` when the values differ.
+A `missing` result is recorded in `anymissing` instead, as `==` on tuples does.
+"""
+function compare_field(func, lhs, rhs, anymissing)
+    isnothing(anymissing) && return :($func($lhs, $rhs) || return false)
+    @gensym eq
+    return Expr(
+        :block,
+        :($eq = $func($lhs, $rhs)),
+        :($Base.ismissing($eq) ? ($anymissing = true) : ($eq || return false)),
+    )
+end
+
+"The result once no field differed: `missing` when some field compared `missing`."
+function compare_result(anymissing)
+    isnothing(anymissing) && return :(return true)
+    return :(return $anymissing ? $Base.missing : true)
+end
 
 function eq_derive_variant_field(func, variant_type)
     cache_indices = findall(Data.variant_fieldtypes(variant_type)) do type
@@ -93,7 +120,8 @@ function eq_derive_variant_field(func, variant_type)
     end
     length(cache_indices) > 1 && error("Only one field of type Hash.Cache is allowed")
 
-    body = expr_map(
+    anymissing = missing_flag(func)
+    compares = expr_map(
         Data.variant_fieldnames(variant_type), Data.variant_fieldtypes(variant_type)
     ) do field, type
         type <: Hash.Cache && return nothing
@@ -102,14 +130,16 @@ function eq_derive_variant_field(func, variant_type)
         return quote
             $lhs_value = $Base.getproperty(lhs, $(QuoteNode(field)))
             $rhs_value = $Base.getproperty(rhs, $(QuoteNode(field)))
-            $func($lhs_value, $rhs_value) || return false
+            $(compare_field(func, lhs_value, rhs_value, anymissing))
         end # quote
     end
-
-    isempty(cache_indices) && return quote
-        $body
-        return true
+    body = quote
+        $(init_missing_flag(anymissing)...)
+        $compares
+        $(compare_result(anymissing))
     end
+
+    isempty(cache_indices) && return body
 
     hash_cache_idx = first(cache_indices)
     @gensym lhs_hash rhs_hash
@@ -121,7 +151,6 @@ function eq_derive_variant_field(func, variant_type)
             return $lhs_hash[] == $rhs_hash[]
         else
             $body
-            return true
         end
     end
 end # eq_derive_variant_field
