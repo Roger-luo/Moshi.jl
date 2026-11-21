@@ -8,7 +8,6 @@ const JLType = Union{Symbol,Expr,DataType,UnionAll}
 
     And(Pattern, Pattern)
     Or(Pattern, Pattern)
-    Kw(Symbol, Pattern)
     Guard(Expr)
 
     struct Ref

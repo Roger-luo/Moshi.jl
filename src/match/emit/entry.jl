@@ -48,6 +48,11 @@ function decons(::Type, ctx::PatternContext, pat::Pattern.Type)
     return error("invalid pattern: $pat")
 end
 
+# an invalid sub-pattern; a whole invalid arm is emitted as a run-time error instead
+function decons(::Type{Pattern.Err}, ::PatternContext, pat::Pattern.Type)
+    return throw(PatternSyntaxError(pat.:1))
+end
+
 """
 `body` when `cond` holds. `cond` runs as jumps rather than as a `Bool` value, so a pattern
 variable assigned on every path to `body` is defined there; an `||` in a `Bool` value
