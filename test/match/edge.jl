@@ -204,17 +204,60 @@ end
     end)))
 end
 
-@testset "keyword-like pattern `(a = 1)` does not overflow the stack" begin
-    # skipped, not run: the overflow can hang the test process. It comes from printing a
-    # `Pattern.Kw`, which `show(::IO, ::Pattern.Type)` has no case for.
-    @test_skip expand_error(:(@match 1 begin
+@testset "keyword patterns" begin
+    # `Foo(x = 1)` reads like the constructor call, the same as `Foo(; x = 1)`
+    @test :two == @match Named.P(1, 2) begin
+        Named.P(y=2) => :two
+        _ => :other
+    end
+    @test (1, 2) == @match Named.P(1, 2) begin
+        Named.P(a, y=b) => (a, b)
+    end
+    @test 2 == @match Named.P(1, 2) begin
+        Named.P(y=y) => y
+    end
+    @test :other == @match Named.P(1, 3) begin
+        Named.P(x=1, y=2) => :both
+        _ => :other
+    end
+    err = try
+        run_expr(:(@match Point(1, 2) begin
+            Point(y=1; y=2) => :twice
+            _ => :other
+        end))
+    catch err
+        err
+    end
+    @test occursin("field y is matched more than once", err.msg)
+
+    # outside a call, a whole arm fails when run, a sub-pattern when expanded
+    arm = expand_error(:(@match 1 begin
         (a = 1) => 1
         _ => 0
-    end)) isa PatternSyntaxError
-    @test_skip expand_error(:(@match (1, 2) begin
+    end))
+    @test arm isa Expr
+    err = try
+        run_expr(arm)
+    catch err
+        err
+    end
+    @test occursin("keyword pattern `a = 1` is only allowed as a field", err.msg)
+    err = expand_error(:(@match (1, 2) begin
         (a=1, b) => 1
         _ => 0
-    end)) isa PatternSyntaxError
+    end))
+    @test err isa PatternSyntaxError
+    @test occursin("keyword pattern `a = 1`", err.msg)
+    @test err.source.line > 0
+end
+
+@testset "an invalid sub-pattern is a PatternSyntaxError" begin
+    err = expand_error(:(@match (Point(1, 2), 3) begin
+        (Point(a, b, c), _) => 1
+        _ => 0
+    end))
+    @test err isa PatternSyntaxError
+    @test err.msg == "too many fields to match"
 end
 
 @testset "scoping" begin

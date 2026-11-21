@@ -215,7 +215,10 @@ end
 end
 
 @scan :(=), :kw function eq2pattern(mod::Module, expr)
-    return Pattern.Kw(expr.args[1], expr2pattern(mod, expr.args[2]))
+    return Pattern.Err(
+        "keyword pattern `$(expr.args[1]) = $(expr.args[2])` is only allowed as a \
+         field of a call pattern, such as `Foo(x = 1)`"
+    )
 end
 
 @scan :(::) function type2pattern(mod::Module, expr)
@@ -276,16 +279,21 @@ end
     args = Pattern.Type[]
     kwargs = Dict{Symbol,Pattern.Type}()
 
+    function push_kwarg!(key, val)
+        haskey(kwargs, key) && return false
+        kwargs[key] = expr2pattern(mod, val)
+        return true
+    end
     for each in expr.args[2:end]
         if Meta.isexpr(each, :parameters)
             for kw in each.args
-                key, val = if kw isa Symbol
-                    (kw, kw)
-                else
-                    kw.args
-                end
-                kwargs[key] = expr2pattern(mod, val)
+                key, val = kw isa Symbol ? (kw, kw) : kw.args
+                push_kwarg!(key, val) ||
+                    return Pattern.Err("field $key is matched more than once")
             end
+        elseif Meta.isexpr(each, :kw) # `Foo(x = 1)`, the same as `Foo(; x = 1)`
+            push_kwarg!(each.args...) ||
+                return Pattern.Err("field $(each.args[1]) is matched more than once")
         else
             push!(args, expr2pattern(mod, each))
         end

@@ -155,7 +155,7 @@ function Base.show(io::IO, pattern::Pattern.Type)
     elseif isa_variant(pattern, Pattern.Expression)
         show_expr(io, pattern)
     else
-        error("unhandled pattern: $pattern")
+        error("unhandled pattern: $(variant_type(pattern))") # not `$pattern`: show recurses
     end
 end # show_variant
 
