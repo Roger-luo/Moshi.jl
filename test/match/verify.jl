@@ -81,6 +81,21 @@ const CHAIN = foldl(
 "Expand `ex` at run time, inside `@test_logs`."
 expand(ex) = Core.eval(@__MODULE__, :(() -> $ex))
 
+"Message of the `PatternSyntaxError` that expanding `ex` in `mod` throws."
+function expansion_error(ex, mod::Module)::String
+    try
+        Core.eval(mod, :(() -> $ex))
+    catch err
+        err isa LoadError && (err = err.error)
+        err isa Match.PatternSyntaxError && return err.msg
+        rethrow()
+    end
+    return error("expanding $ex threw no error")
+end
+
+"True when expanding `ex` throws a `PatternSyntaxError` whose message matches `pattern`."
+fails(pattern::Regex, ex)::Bool = occursin(pattern, expansion_error(ex, @__MODULE__))
+
 "Arms of `@match v body`."
 arms_of(body::Expr)::Vector{Pattern.Type} = EmitInfo(@__MODULE__, :v, body).cases
 
@@ -448,157 +463,165 @@ chain(atom, n::Int) = foldl((lhs, rhs) -> Expr(:&&, lhs, rhs), fill(atom, n))
 end
 
 @testset "non-exhaustive" begin
-    logs, _ = Test.collect_test_logs() do
-        expand(:(@match Shape.Empty() begin
-            Shape.Circle(r) => r
-        end))
-    end
-    @test only(logs).group === :non_exhaustive_match
+    @test fails(r"^non-exhaustive match: ", :(@match Shape.Empty() begin
+        Shape.Circle(r) => r
+    end))
     # a literal field leaves the literal in the hint of the other field
-    @test_logs (:warn, r"no arm matches `Shape\.Rect\(_, _\)`, `Shape\.Rect\(1\.0, _\)`;") expand(
+    @test fails(
+        r"no arm matches `Shape\.Rect\(_, _\)`, `Shape\.Rect\(1\.0, _\)`;",
         :(@match Shape.Empty() begin
             Shape.Empty() => 0
             Shape.Circle(_) => 1
             Shape.Rect(1.0, 2.0) => 2
-        end)
+        end),
     )
-    @test_logs (:warn, r"no arm matches `Shape\.Rect\(_, _\)`;") expand(
+    @test fails(r"no arm matches `Shape\.Rect\(_, _\)`;", :(@match Shape.Empty() begin
+        Shape.Empty() => 0
+        Shape.Circle(r) => r
+    end))
+    @test fails(
+        r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;",
         :(@match Shape.Empty() begin
-            Shape.Empty() => 0
             Shape.Circle(r) => r
-        end)
+        end),
     )
-    @test_logs (:warn, r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;") expand(
-        :(@match Shape.Empty() begin
-            Shape.Circle(r) => r
-        end)
-    )
-    @test_logs (:warn, r"no arm matches `Grid\.Mono\(Bit\.One\(\)\)`;") expand(
-        :(@match Grid.Blank() begin
+    @test fails(
+        r"no arm matches `Grid\.Mono\(Bit\.One\(\)\)`;", :(@match Grid.Blank() begin
             Grid.Blank() => 0
             Grid.Mono(Bit.Zero()) => 1
             Grid.Duo(_, _) => 2
         end)
     )
-    @test_logs (:warn, r"`Grid\.Duo\(Bit\.Zero\(\), Bit\.One\(\)\)`") expand(
+    @test fails(
+        r"`Grid\.Duo\(Bit\.Zero\(\), Bit\.One\(\)\)`",
         :(@match Grid.Blank() begin
             Grid.Duo(Bit.One(), _) => 0
             Grid.Duo(_, Bit.Zero()) => 1
             Grid.Blank() || Grid.Mono(_) => 2
-        end)
+        end),
     )
-    @test_logs (:warn, r"`Five\.V2\(\)`, `Five\.V3\(\)`, `Five\.V4\(\)` and more;") expand(
-        :(@match Five.V1() begin
+    @test fails(
+        r"`Five\.V2\(\)`, `Five\.V3\(\)`, `Five\.V4\(\)` and more;", :(@match Five.V1() begin
             Five.V1() => 1
         end)
     )
-    @test_logs (:warn, r"`Opt\.None\(\)`") expand(:(@match Opt.Some(1) begin
+    @test fails(r"`Opt\.None\(\)`", :(@match Opt.Some(1) begin
         Opt.Some{Int}(x) => x
     end))
     # variants named on one side of `&&` or `||`, or under a type annotation, name the type
-    @test_logs (:warn, r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;") expand(
+    @test fails(
+        r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;",
         :(@match Shape.Empty() begin
             x && Shape.Circle(_) => x
-        end)
+        end),
     )
-    @test_logs (:warn, r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;") expand(
+    @test fails(
+        r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;",
         :(@match Shape.Empty() begin
             (
                 if 1 == 0
                 end
             ) || Shape.Circle(_) => 0
-        end)
+        end),
     )
-    @test_logs (:warn, r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;") expand(
+    @test fails(
+        r"no arm matches `Shape\.Empty\(\)`, `Shape\.Rect\(_, _\)`;",
         :(@match Shape.Empty() begin
             Shape.Circle(r)::Shape.Type => r
-        end)
+        end),
     )
     # hints do not overlap
-    @test_logs (
-        :warn,
+    @test fails(
         r"no arm matches `Grid\.Duo\(Bit\.One\(\), _\)`, `Grid\.Duo\(Bit\.Zero\(\), Bit\.One\(\)\)`;",
-    ) expand(:(@match Grid.Blank() begin
-        Grid.Duo(Bit.Zero(), Bit.Zero()) => 0
-        Grid.Blank() || Grid.Mono(_) => 1
-    end))
-    # an arm outside a gap leaves the gap's hint whole
-    @test_logs (:warn, r"unreachable match arm") (
-        :warn, r"no arm matches `Grid\.Duo\(_, Bit\.Zero\(\)\)`;"
-    ) expand(:(@match Grid.Blank() begin
-        Grid.Duo(_, Bit.One()) => 0
-        Grid.Duo(Bit.Zero(), Bit.One()) => 1
-        Grid.Blank() || Grid.Mono(_) => 2
-    end))
-    # a hint names only variants that fit the field's declared type
-    @test_logs (:warn, r"unreachable match arm") (
-        :warn, r"no arm matches `Shape\.Circle\(_\)`;"
-    ) expand(:(@match Shape.Empty() begin
-        Shape.Circle(Bit.Zero()) => 0
-        Shape.Empty() => 1
-        Shape.Rect(_, _) => 2
-    end))
-    @test_logs (:warn, r"no arm matches `Grid\.Blank\(\)`, `Grid\.Duo\(_, _\)`;") expand(
         :(@match Grid.Blank() begin
+            Grid.Duo(Bit.Zero(), Bit.Zero()) => 0
+            Grid.Blank() || Grid.Mono(_) => 1
+        end),
+    )
+    # an arm outside a gap leaves the gap's hint whole
+    @test_logs (:warn, r"unreachable match arm") @test fails(
+        r"no arm matches `Grid\.Duo\(_, Bit\.Zero\(\)\)`;",
+        :(@match Grid.Blank() begin
+            Grid.Duo(_, Bit.One()) => 0
+            Grid.Duo(Bit.Zero(), Bit.One()) => 1
+            Grid.Blank() || Grid.Mono(_) => 2
+        end),
+    )
+    # a hint names only variants that fit the field's declared type
+    @test_logs (:warn, r"unreachable match arm") @test fails(
+        r"no arm matches `Shape\.Circle\(_\)`;", :(@match Shape.Empty() begin
+            Shape.Circle(Bit.Zero()) => 0
+            Shape.Empty() => 1
+            Shape.Rect(_, _) => 2
+        end)
+    )
+    @test fails(
+        r"no arm matches `Grid\.Blank\(\)`, `Grid\.Duo\(_, _\)`;", :(@match Grid.Blank() begin
             $CHAIN => 1
         end)
     )
     # `Count` holds `Int`, so `Bit` patterns leave `Count(_)` unmatched
-    @test_logs (:warn, r"no arm matches `Tagged\.Count\(_\)`;") expand(
+    @test fails(
+        r"no arm matches `Tagged\.Count\(_\)`;",
         :(@match Tagged.Count(1) begin
             Tagged.Flag(Bit.Zero()) || Tagged.Count(Bit.Zero()) => 0
             Tagged.Flag(Bit.One()) || Tagged.Count(Bit.One()) => 1
-        end)
+        end),
     )
     # an arm matching no value still names the `@data` type
-    @test_logs (:warn, r"unreachable match arm") (
-        :warn, r"no arm matches `Bit\.Zero\(\)`, `Bit\.One\(\)`;"
-    ) expand(:(@match Bit.Zero() begin
-        Bit.Zero() && Bit.One() => 0
-    end))
+    @test_logs (:warn, r"unreachable match arm") @test fails(
+        r"no arm matches `Bit\.Zero\(\)`, `Bit\.One\(\)`;",
+        :(@match Bit.Zero() begin
+            Bit.Zero() && Bit.One() => 0
+        end),
+    )
 
     @testset "guarded arm covers nothing" begin
-        @test_logs (:warn, r"no arm matches `Shape\.Circle\(_\)`;") expand(
-            :(@match Shape.Empty() begin
+        @test fails(
+            r"no arm matches `Shape\.Circle\(_\)`;", :(@match Shape.Empty() begin
                 Shape.Circle(r) && if r > 0
                 end => r
                 Shape.Empty() => 0
                 Shape.Rect(_, _) => 1
             end)
         )
-        @test_logs (:warn, r"no arm matches `Grid\.Duo\(_, _\)`;") expand(
-            :(@match Grid.Blank() begin
+        @test fails(
+            r"no arm matches `Grid\.Duo\(_, _\)`;", :(@match Grid.Blank() begin
                 Grid.Duo(a, a) => 0
                 Grid.Blank() || Grid.Mono(_) => 1
             end)
         )
-        @test_logs (
-            :warn, r"`Shape\.Empty\(\)`, `Shape\.Circle\(_\)`, `Shape\.Rect\(_, _\)`"
-        ) expand(:(@match Shape.Empty() begin
-            Shape.Circle(r) && if r > 0
-            end => r
-        end))
+        @test fails(
+            r"`Shape\.Empty\(\)`, `Shape\.Circle\(_\)`, `Shape\.Rect\(_, _\)`",
+            :(@match Shape.Empty() begin
+                Shape.Circle(r) && if r > 0
+                end => r
+            end),
+        )
         # also inside a type annotation
-        @test_logs (:warn, r"no arm matches `Grid\.Mono\(_\)`;") expand(
+        @test fails(
+            r"no arm matches `Grid\.Mono\(_\)`;",
             :(@match Grid.Blank() begin
                 (Grid.Mono(_) && if 1 == 0
                 end)::Grid.Type => 0
                 Grid.Blank() => 1
                 Grid.Duo(_, _) => 2
-            end)
+            end),
         )
     end
 
-    @testset "warns once, at the match line" begin
+    @testset "errors at the match line" begin
         line = (@__LINE__) + 2
-        logs, _ = Test.collect_test_logs() do
-            expand(:(@match Shape.Empty() begin
+        err = try
+            Core.eval(@__MODULE__, :(() -> @match Shape.Empty() begin
                 Shape.Empty() => 0
             end))
+        catch err
+            err.error
         end
-        @test length(logs) == 1
-        @test logs[1].file == string(@__FILE__)
-        @test logs[1].line == line
+        @test err isa Match.PatternSyntaxError
+        @test String(err.source.file) == string(@__FILE__)
+        @test err.source.line == line
     end
 end
 
@@ -673,30 +696,30 @@ end
 
 @testset "tests inside unreadable patterns" begin
     # a guard nested in a tuple pattern still covers nothing
-    @test_logs (:warn, r"no arm matches `Holder\.Hold\(_\)`;") expand(
-        :(@match Holder.Hold((1, 2)) begin
+    @test fails(
+        r"no arm matches `Holder\.Hold\(_\)`;", :(@match Holder.Hold((1, 2)) begin
             Holder.Hold((a && if a > 0
             end, b)) => 0
         end)
     )
     # so does a guard on one side of `||` in a tuple pattern
-    @test_logs (:warn, r"no arm matches `Holder\.Hold\(_\)`;") expand(
+    @test fails(
+        r"no arm matches `Holder\.Hold\(_\)`;",
         :(@match Holder.Hold((1, 2)) begin
             Holder.Hold((Bit.Zero() || if 1 == 0
             end, b)) => 0
-        end)
+        end),
     )
     # so does a name bound twice in a tuple pattern
-    @test_logs (:warn, r"no arm matches `Holder\.Hold\(_\)`;") expand(
-        :(@match Holder.Hold((1, 2)) begin
-            Holder.Hold((a, a)) => 0
-        end)
-    )
+    @test fails(r"no arm matches `Holder\.Hold\(_\)`;", :(@match Holder.Hold((1, 2)) begin
+        Holder.Hold((a, a)) => 0
+    end))
     # a repeat inside the tuple makes only its side of `||` cover nothing
-    @test_logs (:warn, r"no arm matches `Holder\.Hold\(Bit\.One\(\)\)`;") expand(
+    @test fails(
+        r"no arm matches `Holder\.Hold\(Bit\.One\(\)\)`;",
         :(@match Holder.Hold((1, 2)) begin
             Holder.Hold((a, a) || (Bit.Zero() && a)) => 0
-        end)
+        end),
     )
 end
 
@@ -722,12 +745,10 @@ const F = parentmodule(@__MODULE__).Elsewhere.Far
 end
 
 @testset "missing patterns compile where the match is" begin
-    logs, _ = Test.collect_test_logs() do
-        Core.eval(Aliased, :(v -> @match v begin
-            F.Near() => 0
-        end))
-    end
-    hint = match(r"no arm matches `([^`]+)`", only(logs).message)[1]
+    message = expansion_error(:(@match v begin
+        F.Near() => 0
+    end), Aliased)
+    hint = match(r"no arm matches `([^`]+)`", message)[1]
     @test endswith(hint, "Elsewhere.Far.Away()")
     fn = Core.eval(Aliased, :(v -> @match v begin
         $(Meta.parse(hint)) => 1
@@ -811,10 +832,15 @@ function grid_pattern(rng, mode::Symbol, depth::Int=2, binds::Bool=true)
     return :(Grid.Duo(_, _))
 end
 
-"Compile `v -> @match v body` without showing its warnings."
+"""
+Compile `v -> @match v body` without showing its warnings. A final `_` arm throws the
+run-time fall-through error, so non-exhaustive bodies compile.
+"""
 function compile(body::Expr)
+    fallback = :(_ => error("matching non-exhaustive"))
+    guarded = Expr(:block, body.args..., fallback)
     return last(
-        Test.collect_test_logs(() -> Core.eval(@__MODULE__, :(v -> @match v $body)))
+        Test.collect_test_logs(() -> Core.eval(@__MODULE__, :(v -> @match v $guarded)))
     )
 end
 

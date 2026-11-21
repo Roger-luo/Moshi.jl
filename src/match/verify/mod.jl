@@ -25,16 +25,16 @@ const BUDGET = 100_000
 const SHOWN = 3
 
 """
-Warn, at macro expansion, about unreachable arms and values no arm matches. The warnings
-have log groups `:unreachable_match_arm` and `:non_exhaustive_match`.
+Check the arms at macro expansion. Warn about unreachable arms, with log group
+`:unreachable_match_arm`. Throw `PatternSyntaxError` when some value has no matching arm.
 
 Exhaustiveness needs arms that name variants of one `@data` type, and assumes the value has
 that type. Reachability assumes only declared field types, so a final `_` arm stays
 reachable. As in Rust, a guard or a repeated name covers nothing, since its test can fail.
 Unreadable parts (the type in a type annotation, parametrized variant heads, interpolated
 values, custom call patterns) never make a later arm unreachable. For exhaustiveness, they
-match every value. Each unreachable-arm warning is certain. A non-exhaustive warning can
-name values that only guarded arms match. Some mistakes behind unreadable parts go
+match every value. Each unreachable-arm warning is certain. As in Rust, the non-exhaustive
+error can name values that only guarded arms match. Some mistakes behind unreadable parts go
 unreported. After `budget` steps, a check stops with a warning.
 """
 function verify(info, budget::Int=BUDGET)
@@ -50,9 +50,8 @@ function verify(info, budget::Int=BUDGET)
         isempty(patterns) && return nothing
         shown = join(("`$(show_space(p, info.mod))`" for p in first(patterns, SHOWN)), ", ")
         more = length(patterns) > SHOWN ? " and more" : ""
-        @warn "non-exhaustive match: no arm matches $shown$more; add matching arms or a `_` arm" _module =
-            info.mod _file = line_file(info.source) _line = line_number(info.source) _group =
-            :non_exhaustive_match
+        msg = "non-exhaustive match: no arm matches $shown$more; add matching arms or a `_` arm"
+        throw(PatternSyntaxError(msg, something(info.source, LineNumberNode(0))))
     catch err
         err isa OutOfSteps || rethrow()
         @warn "match too complex to check: stopped after $budget steps; unreachable arms and missing patterns may go unreported" _module =

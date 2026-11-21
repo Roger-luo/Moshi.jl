@@ -413,21 +413,21 @@ julia> g(x) = @match x begin
 └ @ Main REPL[3]:3
 ```
 
-If some value has no matching arm, the match is non-exhaustive. The warning names example patterns of such values, nested ones included:
+If some value has no matching arm, the match is non-exhaustive, and `@match` throws an error. As in Rust, an exhaustive match is required. The error names example patterns of such values, nested ones included:
 
 ```julia
 julia> f(g) = @match g begin
            Grid.Blank() => 0
            Grid.Mono(Bit.Zero()) => 1
        end
-┌ Warning: non-exhaustive match: no arm matches `Grid.Mono(Bit.One())`; add matching arms or a `_` arm
-└ @ Main REPL[4]:1
+ERROR: LoadError: non-exhaustive match: no arm matches `Grid.Mono(Bit.One())`; add matching arms or a `_` arm
+  at REPL[4]:1
 ```
 
 Reachability assumes only declared field types, so a final `_` arm stays reachable: it catches values of other types.
-Exhaustiveness assumes that the value has the `@data` type of the variants in the arms. Add a `_` arm to handle the remaining values.
+Exhaustiveness assumes that the value has the `@data` type of the variants in the arms. Add a `_` arm to handle the remaining values, for example `_ => error("unexpected value")`.
 
-As in Rust, an arm with a guard covers nothing, since its condition can fail. A variable bound twice, such as `a` in `Point(a, a)`, tests equality and counts as a guard.
+As in Rust, an arm with a guard covers nothing, since its condition can fail. A match that needs a guard to be exhaustive needs a `_` arm. A variable bound twice, such as `a` in `Point(a, a)`, tests equality and counts as a guard.
 
 `@match` cannot read some patterns: parametrized variant heads such as `Opt.Some{Int}`, interpolated values such as `$x`, and call patterns of other types, such as a struct pattern `Box(x)`.
 In a type annotation such as `p::Grid.Type`, `@match` reads `p` but cannot read the type.
@@ -441,12 +441,12 @@ A missing-pattern hint shows a field of other values as `_`, so `Count(_)` after
 The checks stop after a fixed number of steps. If a match needs more steps, `@match` warns that the match is too complex to check.
 In that match, `@match` can then miss unreachable arms and missing values.
 
-The unreachable-arm warnings have log group `:unreachable_match_arm`, and the non-exhaustive warnings have log group `:non_exhaustive_match`. A logger can filter them out, for example with [LoggingExtras.jl](https://github.com/JuliaLogging/LoggingExtras.jl):
+The unreachable-arm warnings have log group `:unreachable_match_arm`. A logger can filter them out, for example with [LoggingExtras.jl](https://github.com/JuliaLogging/LoggingExtras.jl):
 
 ```julia
 using Logging, LoggingExtras
 
-global_logger(EarlyFilteredLogger(log -> log.group ∉ (:unreachable_match_arm, :non_exhaustive_match), global_logger()))
+global_logger(EarlyFilteredLogger(log -> log.group !== :unreachable_match_arm, global_logger()))
 ```
 
 ## The Pattern Language
