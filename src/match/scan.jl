@@ -28,11 +28,23 @@ function EmitInfo(mod::Module, value, body; source::LineNumberNode=LineNumberNod
                 push!(exprs, stmt.args[3])
                 push!(lines, line_info)
             else
-                throw(PatternSyntaxError("invalid pattern table: $body"; source=line_info))
+                throw(
+                    PatternSyntaxError(
+                        "invalid match arm, expected `pattern => result`: \
+                         $(inline_expr(stmt))",
+                        line_info,
+                    ),
+                )
             end
         end
     else
-        throw(PatternSyntaxError("invalid pattern: $body"; source=source))
+        throw(
+            PatternSyntaxError(
+                "invalid match body, expected `pattern => result` \
+                 or a `begin ... end` block of them: $body",
+                source,
+            )
+        )
     end
 
     return EmitInfo(
@@ -46,6 +58,14 @@ function EmitInfo(mod::Module, value, body; source::LineNumberNode=LineNumberNod
         gensym("return"),
         source,
     )
+end
+
+"`ex` as one line for an error message: no line numbers, single-statement blocks unwrapped."
+function inline_expr(ex)
+    ex isa Expr || return ex
+    args = [inline_expr(arg) for arg in ex.args if !(arg isa LineNumberNode)]
+    ex.head === :block && length(args) == 1 && return only(args)
+    return Expr(ex.head, args...)
 end
 
 function toplevel_expr2pattern(mod::Module, expr)
