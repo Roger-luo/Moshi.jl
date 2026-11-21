@@ -82,14 +82,39 @@ end
     end)) isa ArgumentError
 end
 
-@testset "empty @data body reports an ArgumentError" begin
-    err = try
-        Core.eval(@__MODULE__, :(@data Empty begin end))
-    catch err
-        err
+@testset "a @data body without variants reports an ArgumentError" begin
+    function data_error(body)
+        err = try
+            Core.eval(@__MODULE__, :(@data Empty $body))
+        catch err
+            err
+        end
+        return err isa LoadError ? err.error : err
     end
-    err isa LoadError && (err = err.error)
-    @test_broken err isa ArgumentError
+    no_variants = ArgumentError("`Empty` has no variants, @data needs at least one")
+    @test data_error(:(
+        begin end
+    )) == no_variants
+    @test data_error(Expr(:block, LineNumberNode(1, :file), nothing)) == no_variants
+    @test data_error(:(
+        begin
+            export A
+        end
+    )) == no_variants
+
+    # statements that are not variants
+    @test data_error(:(
+        begin
+            A()
+            "dangling"
+        end
+    )) == ArgumentError("docstring \"dangling\" in @data body is not followed by a variant")
+    @test data_error(:(
+        begin
+            A()
+            1
+        end
+    )) == ArgumentError("invalid variant expression: 1")
 end
 
 @data GenericDefault{T} begin

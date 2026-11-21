@@ -62,6 +62,8 @@ function TypeDef(
         end
         push_variants!(variants, expr, nothing, current_line)
     end
+    isempty(variants) &&
+        throw(ArgumentError("`$(head.name)` has no variants, @data needs at least one"))
     validate_variant_names(head, variants)
     validate_exports(head, variants, exports)
     return TypeDef(mod, ismutable, head, variants, exports, source)
@@ -178,6 +180,16 @@ function Variant(expr::Expr; doc=nothing, source=nothing)
     else
         throw(ArgumentError("invalid variant expression: $expr"))
     end
+end
+
+function Variant(expr::AbstractString; doc=nothing, source=nothing)
+    return throw(
+        ArgumentError("docstring \"$expr\" in @data body is not followed by a variant")
+    )
+end
+
+function Variant(expr; doc=nothing, source=nothing)
+    return throw(ArgumentError("invalid variant expression: $expr"))
 end
 
 function NamedField(expr::JLKwField; source=nothing)
