@@ -94,6 +94,7 @@ function eval_default(def::TypeDef, expr)
     name = def.head.name
     if expr isa Symbol
         expr === name && return :Type
+        is_type_param(def, expr) && return expr
         isdefined(def.mod, expr) && return GlobalRef(def.mod, expr)
         return expr
     elseif Meta.isexpr(expr, :.)
