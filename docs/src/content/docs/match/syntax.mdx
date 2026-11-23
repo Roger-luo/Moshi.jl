@@ -413,26 +413,40 @@ julia> g(x) = @match x begin
 └ @ Main REPL[3]:3
 ```
 
+If some value has no matching arm, the match is non-exhaustive. The warning names example patterns of such values, nested ones included:
+
+```julia
+julia> f(g) = @match g begin
+           Grid.Blank() => 0
+           Grid.Mono(Bit.Zero()) => 1
+       end
+┌ Warning: non-exhaustive match: no arm matches `Grid.Mono(Bit.One())`; add matching arms or a `_` arm
+└ @ Main REPL[4]:1
+```
+
 Reachability assumes only declared field types, so a final `_` arm stays reachable: it catches values of other types.
+Exhaustiveness assumes that the value has the `@data` type of the variants in the arms. Add a `_` arm to handle the remaining values.
 
 As in Rust, an arm with a guard covers nothing, since its condition can fail. A variable bound twice, such as `a` in `Point(a, a)`, tests equality and counts as a guard.
 
 `@match` cannot read some patterns: parametrized variant heads such as `Opt.Some{Int}`, interpolated values such as `$x`, and call patterns of other types, such as a struct pattern `Box(x)`.
 In a type annotation such as `p::Grid.Type`, `@match` reads `p` but cannot read the type.
 An unreadable part in an earlier arm never makes a later arm unreachable. In the arm under check, `@match` counts an unreadable part as matching every value.
+For exhaustiveness, unreadable parts count as matching every value: they can hide a missing case.
 
 Literal patterns such as `1`, `"a"`, `'c'` and `:sym` are readable: an arm repeating an earlier literal is unreachable.
 Since `==` relates values of different types, only the same literal counts, so `1.0` after `1` stays reachable.
+A missing-pattern hint shows a field of other values as `_`, so `Count(_)` after `Count(1)` also includes `Count(1)`.
 
 The checks stop after a fixed number of steps. If a match needs more steps, `@match` warns that the match is too complex to check.
-In that match, `@match` can then miss unreachable arms.
+In that match, `@match` can then miss unreachable arms and missing values.
 
-The unreachable-arm warnings have log group `:unreachable_match_arm`, so a logger can filter them out, for example with [LoggingExtras.jl](https://github.com/JuliaLogging/LoggingExtras.jl):
+The unreachable-arm warnings have log group `:unreachable_match_arm`, and the non-exhaustive warnings have log group `:non_exhaustive_match`. A logger can filter them out, for example with [LoggingExtras.jl](https://github.com/JuliaLogging/LoggingExtras.jl):
 
 ```julia
 using Logging, LoggingExtras
 
-global_logger(EarlyFilteredLogger(log -> log.group !== :unreachable_match_arm, global_logger()))
+global_logger(EarlyFilteredLogger(log -> log.group ∉ (:unreachable_match_arm, :non_exhaustive_match), global_logger()))
 ```
 
 ## The Pattern Language
