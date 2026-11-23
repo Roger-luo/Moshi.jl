@@ -67,6 +67,46 @@ function emit_each_variant_kw_cons(info::EmitInfo, storage::StorageInfo)
     return codegen_ast(jl)
 end
 
+@pass function emit_variant_kw_cons_inferred(info::EmitInfo)
+    return expr_map(
+        x -> emit_each_variant_kw_cons_inferred(info, x), info.storages; skip_nothing=true
+    )
+end
+
+# `A(; x, y = 0)` without type parameters forwards to the inferred positional
+# constructor `A(x::T, y::Int)`, see `emit_each_variant_cons_inferred`.
+function emit_each_variant_kw_cons_inferred(info::EmitInfo, storage::StorageInfo)
+    isempty(info.params) && return nothing # `emit_variant_kw_cons` already infers nothing
+    storage.parent.kind == Named || return nothing
+    isempty(storage.parent.fields) && return nothing
+    is_inferrable(info.params, storage) || return nothing
+    # a default such as `zero(T)` cannot be evaluated before `T` is inferred
+    any(storage.parent.fields) do field
+        return field.default !== no_default && mentions(field.default, info.params)
+    end && return nothing
+
+    fields = storage.parent.fields
+    jl = JLFunction(;
+        name=storage.parent.name,
+        kwargs=[
+            if field.default === no_default
+                field.name
+            else
+                Expr(:kw, field.name, eval_default(info.def, field.default))
+            end for field in fields
+        ],
+        body=quote
+            $(Expr(:meta, :inline))
+            return $(storage.parent.name)($([field.name for field in fields]...))
+        end,
+    )
+    return codegen_ast(jl)
+end
+
+mentions(expr::Symbol, names) = expr in names
+mentions(expr::Expr, names) = any(arg -> mentions(arg, names), expr.args)
+mentions(expr, names) = false
+
 function eval_global_ref(mod::Module, expr)
     if expr isa Symbol && isdefined(mod, expr)
         return GlobalRef(mod, expr)

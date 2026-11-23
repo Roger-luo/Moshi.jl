@@ -102,12 +102,40 @@ end
     end
 end
 
+@data GenericTree{T} begin
+    Leaf()
+    struct Node
+        value::T
+        left::GenericTree{T}
+        right::GenericTree{T}
+    end
+end
+
+@data ParamDefault{T} begin
+    struct A
+        x::T
+        y::T = zero(T)
+    end
+end
+
 @testset "keyword constructor of a generic named variant infers its parameter" begin
     @test GenericDefault.A(1.0, 0) isa GenericDefault.Type{Float64}
     @test GenericDefault.A{Float64}(; x=1.0) isa GenericDefault.Type{Float64}
     @test GenericDefault.B(1.0) isa GenericDefault.Type{Float64}
-    @test_broken GenericDefault.A(; x=1.0) isa GenericDefault.Type{Float64}
-    @test_broken GenericDefault.B(; x=1.0) isa GenericDefault.Type{Float64}
+    @test GenericDefault.A(; x=1.0) isa GenericDefault.Type{Float64}
+    @test GenericDefault.B(; x=1.0) isa GenericDefault.Type{Float64}
+    a = GenericDefault.A(; y=2, x="s")
+    @test a isa GenericDefault.Type{String}
+    @test (a.x, a.y) == ("s", 2)
+    @test_throws UndefKeywordError GenericDefault.A(; y=2)
+
+    # a parameter only in a self-reference is pinned by the other fields
+    @test GenericTree.Node(; value=1, left=GenericTree.Leaf(), right=GenericTree.Leaf()) isa
+        GenericTree.Type{Int}
+
+    # `T` only appears in a default, so it cannot be inferred
+    @test ParamDefault.A{Float64}(; x=1.0).y === 0.0
+    @test_throws MethodError ParamDefault.A(; x=1.0)
 end
 
 module ShadowedParam
