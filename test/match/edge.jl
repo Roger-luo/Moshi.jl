@@ -143,11 +143,42 @@ end
     end))
 end
 
-@testset "Int128 literal" begin
-    @test_broken :max == run_expr(:(@match typemax(Int128) begin
-        170141183460469231731687303715884105727 => :max
+@testset "integer literals larger than Int64" begin
+    big_literal(x) = @match x begin
+        170141183460469231731687303715884105727 => :int128
+        -170141183460469231731687303715884105727 => :negative
+        0xffffffffffffffffffffffffffffffff => :uint128
+        1000000000000000000000000000000000000000000 => :big
+        (0, 170141183460469231731687303715884105727) => :nested
         _ => :no
-    end))
+    end
+    @test big_literal(typemax(Int128)) === :int128
+    @test big_literal(-typemax(Int128)) === :negative
+    @test big_literal(typemax(UInt128)) === :uint128
+    @test big_literal(big(10)^42) === :big
+    @test big_literal((0, typemax(Int128))) === :nested
+    @test big_literal(typemax(Int128) - 1) === :no
+    @test big_literal(big(10)^42 + 1) === :no
+
+    # they are literals for the reachability check too
+    @test_logs (:warn, r"unreachable match arm") macroexpand(
+        @__MODULE__, :(@match typemax(Int128) begin
+            170141183460469231731687303715884105727 => 1
+            170141183460469231731687303715884105727 => 2
+            _ => 3
+        end)
+    )
+
+    # other macro calls are still not patterns
+    err = try
+        run_expr(:(@match "a" begin
+            r"a" => 1
+            _ => 0
+        end))
+    catch err
+        err
+    end
+    @test occursin("unsupported pattern expression", err.msg)
 end
 
 struct Point
