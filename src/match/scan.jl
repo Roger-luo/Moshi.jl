@@ -49,13 +49,14 @@ function EmitInfo(mod::Module, value, body; source::LineNumberNode=LineNumberNod
 end
 
 function toplevel_expr2pattern(mod::Module, expr)
-    expr isa Symbol &&
+    pattern = expr2pattern(mod, expr)
+    Data.isa_variant(pattern, Pattern.Variable) &&
         isdefined(mod, expr) &&
         return Pattern.Err("you are using a pattern variable \
                            name that is already defined \
                            in the module: $(expr). This can be \
                            ambiguous and cause unexpected behavior.")
-    return expr2pattern(mod, expr)
+    return pattern
 end
 
 const SCAN_PASS = Dict{Module,Dict{Symbol,Function}}()
@@ -102,6 +103,8 @@ end
 
 function expr2pattern(mod::Module, expr)
     expr === :_ && return Pattern.Wildcard()
+    # unlike `true`/`false`, the parser leaves `nothing` as a symbol
+    expr === :nothing && return Pattern.Quote(nothing)
     expr isa Symbol && return Pattern.Variable(expr)
     expr isa Expr || return Pattern.Quote(expr)
 
