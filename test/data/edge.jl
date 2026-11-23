@@ -115,12 +115,26 @@ using Moshi.Data: @data
 struct T end
 @data Box{T} begin
     A(T)
+    B(Vector{T})
+    struct C
+        x::T
+        y::T = T(0)
+    end
 end
 end # module
 
 @testset "a type parameter shadows a global of the same name" begin
-    @test_broken ShadowedParam.Box.A{Int}(1).:1 === 1
-    @test_broken ShadowedParam.Box.A(1) isa ShadowedParam.Box.Type{Int}
+    Box = ShadowedParam.Box
+    @test Box.A{Int}(1).:1 === 1
+    @test Box.A(1) isa Box.Type{Int}
+    @test Box.B([1.0]) isa Box.Type{Float64}
+    @test Box.B([1.0]).:1 == [1.0]
+    c = Box.C{Float64}(; x=1.0)
+    @test c isa Box.Type{Float64}
+    @test c.y === 0.0
+    @test Box.C(1, 2).y === 2
+    # the global is still usable as a type argument
+    @test Box.A(ShadowedParam.T()) isa Box.Type{ShadowedParam.T}
 end
 
 @data Opt{T} begin
